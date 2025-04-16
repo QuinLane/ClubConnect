@@ -2,31 +2,29 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Layout from "./pages/Layout";
-// import ClubAdminPage from "./pages/ClubAdminPage";
+import Template from "./pages/Template"; // LandingPage
 import ClubDetailsPage from "./pages/ClubDetailsPage";
+import EventPage from "./pages/eventPage";
 // import SUAdminPage from "./pages/SUAdminPage";
-// import PrivateRoute from "./pages/PrivateRoute"; // optional for later
-// import other pages if needed...
+// import ClubAdminPage from "./pages/ClubAdminPage";
+// import NotFound from "./pages/NotFound";
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Root route (optional) */}
-        {/* <Route path="/" element={<LandingPage />} /> */}
+        <Route path="/" element={<Layout />}>
+          {/* Landing page */}
+          <Route index element={<EventPage />} />
 
-        {/* Public routes */}
-        {/* <Route path="admin" element={<SUAdminPage />} /> */}
-        {/* <Route path="clubadmin" element={<ClubAdminPage />} /> */}
-
-        {/* Nested routes under /app */}
-        <Route path="/app" element={<Layout />}>
+          {/* Nested pages */}
           <Route path="club" element={<ClubDetailsPage />} />
-          {/* Add more nested routes here */}
-        </Route>
+          {/* <Route path="admin" element={<SUAdminPage />} /> */}
+          {/* <Route path="clubadmin" element={<ClubAdminPage />} /> */}
 
-        {/* Optional 404 */}
-        {/* <Route path="*" element={<NotFound />} /> */}
+          {/* Catch-all (404) */}
+          {/* <Route path="*" element={<NotFound />} /> */}
+        </Route>
       </Routes>
     </Router>
   );
