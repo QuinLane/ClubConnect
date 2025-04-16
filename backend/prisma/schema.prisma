@@ -9,26 +9,117 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "mysql" // or "postgresql" if using PostgreSQL
   url      = env("DATABASE_URL")
 }
 
-
-model Club {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model User {
+  userID       Int       @id @default(autoincrement())
+  userType     UserType
+  username     String    @unique
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  executives   Executive[]
+  rsvps        RSVP[]
+  announcements Announcement[]
+  sentMessages   Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
 }
 
+model Club {
+  clubID       Int       @id @default(autoincrement())
+  clubName     String    @unique
+  description  String?
+  createdAt    DateTime  @default(now())
+  executives   Executive[]
+  events       Event[]
+  forms        Form[]
+  announcements Announcement[]
+}
 
+model Executive {
+  executiveID  Int    @id @default(autoincrement())
+  userID       Int
+  clubID       Int
+  position     String
 
-//do migration command: npx prisma migrate dev --name init
+  user User @relation(fields: [userID], references: [userID])
+  club Club @relation(fields: [clubID], references: [clubID])
+}
 
+model Event {
+  eventID     Int      @id @default(autoincrement())
+  clubID      Int
+  eventName   String
+  eventDate   DateTime
+  location    String?
+  description String?
 
-model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String @unique
+  club  Club  @relation(fields: [clubID], references: [clubID])
+  rsvps RSVP[]
+}
+
+model RSVP {
+  rsvpID   Int      @id @default(autoincrement())
+  userID   Int
+  eventID  Int
+  rsvpDate DateTime @default(now())
+
+  user  User  @relation(fields: [userID], references: [userID])
+  event Event @relation(fields: [eventID], references: [eventID])
+
+  @@unique([userID, eventID])
+}
+
+model Form {
+  formID      Int       @id @default(autoincrement())
+  clubID      Int
+  formType    FormType
+  status      FormStatus @default(Pending)
+  submittedAt DateTime  @default(now())
+  details     String?
+
+  club Club @relation(fields: [clubID], references: [clubID])
+}
+
+model Announcement {
+  announcementID Int      @id @default(autoincrement())
+  userID         Int
+  clubID         Int?     // NULL if SU admin posts without club
+  title          String
+  content        String
+  postedAt       DateTime @default(now())
+
+  user User @relation(fields: [userID], references: [userID])
+  club Club? @relation(fields: [clubID], references: [clubID])
+}
+
+model Message {
+  messageID  Int      @id @default(autoincrement())
+  senderID   Int
+  receiverID Int
+  content    String
+  sentAt     DateTime @default(now())
+  isRead     Boolean  @default(false)
+
+  sender   User @relation("SentMessages", fields: [senderID], references: [userID])
+  receiver User @relation("ReceivedMessages", fields: [receiverID], references: [userID])
+}
+
+enum UserType {
+  Student
+  SUAdmin
+}
+
+enum FormType {
+  ClubCreation
+  EventApproval
+  Funding
+}
+
+enum FormStatus {
+  Pending
+  Approved
+  Rejected
 }
