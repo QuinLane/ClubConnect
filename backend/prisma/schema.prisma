@@ -25,3 +25,10 @@ model Club {
 
 
 //do migration command: npx prisma migrate dev --name init
+
+
+model User {
+  id    Int    @id @default(autoincrement())
+  name  String
+  email String @unique
+}

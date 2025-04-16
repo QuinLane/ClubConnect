@@ -3,14 +3,10 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  try {
-    const clubs = await prisma.club.findMany();
-    console.log("Clubs:", clubs);
-  } catch (error) {
-    console.error("Error:", error);
-  } finally {
-    await prisma.$disconnect();
-  }
+  const allUsers = await prisma.user.findMany();
+  console.log(allUsers);
 }
 
-main();
+main()
+  .catch((e) => console.error(e))
+  .finally(() => prisma.$disconnect());
