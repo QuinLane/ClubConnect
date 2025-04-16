@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Layout from "./pages/Layout";
+
 import ClubDetailsPage from "./pages/ClubDetailsPage";
 import LoginPage from "./pages/LoginPage";
 // import SUAdminPage from "./pages/SUAdminPage";
@@ -12,6 +13,7 @@ const App = () => {
   return (
     <Router>
       <Routes>
+
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
 
@@ -22,8 +24,9 @@ const App = () => {
         {/* Nested Routes */}
         <Route path="/app" element={<Layout />}>
           <Route path="club" element={<ClubDetailsPage />} />
-          {/* Add more nested routes here */}
-        </Route>
+          {/* <Route path="admin" element={<SUAdminPage />} /> */}
+          {/* <Route path="clubadmin" element={<ClubAdminPage />} /> */}
+
 
         {/* 404 fallback */}
         {/* <Route path="*" element={<NotFound />} /> */}
