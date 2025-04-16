@@ -1,0 +1,27 @@
+Info for reference for this directory
+
+Firebase.js - intializes all firebase services (Auth,Firestore,Realtime Database) 
+and exports them to use in other parts in the app. Acts as central hub for Firebase access
+
+index.css - global css styles for the whole app
+
+main.jsx - Entry point for the react app. Renders root component into DOM (currently HomePage)
+
+assets - stores all of our static assets (images,logos, fonts, etc.)
+
+structure - contains all the structure files for our Firebase Firestore collections. 
+this defines the schema and helper/creation functions for our data. Imported whenever needing
+to validate/create data
+
+Components - Reusable UI components that can be used across different pages. Typically smaller
+Ex: button,form,card.
+Building block for the UI, imported into pages to create full screens.
+
+Pages - Stores page-level components that represent entire screens or routes in our app.
+Each page typically combines multiple components to create the complete page. Rendered based on a router which well add later
+
+Breakdown:
+-Main.jsx renders HomePage(Currently) as the start point of the app.
+-HomePage is the main page that currently handles authentication.
+
+
