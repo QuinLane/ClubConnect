@@ -2,29 +2,34 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Layout from "./pages/Layout";
-import Template from "./pages/Template"; // LandingPage
+
 import ClubDetailsPage from "./pages/ClubDetailsPage";
-import EventPage from "./pages/eventPage";
+import LoginPage from "./pages/LoginPage";
 // import SUAdminPage from "./pages/SUAdminPage";
 // import ClubAdminPage from "./pages/ClubAdminPage";
-// import NotFound from "./pages/NotFound";
+// import PrivateRoute from "./pages/PrivateRoute"; // optional
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Layout />}>
-          {/* Landing page */}
-          <Route index element={<EventPage />} />
 
-          {/* Nested pages */}
+        {/* Public Routes */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Admin Pages (optional) */}
+        {/* <Route path="/admin" element={<SUAdminPage />} /> */}
+        {/* <Route path="/clubadmin" element={<ClubAdminPage />} /> */}
+
+        {/* Nested Routes */}
+        <Route path="/app" element={<Layout />}>
           <Route path="club" element={<ClubDetailsPage />} />
           {/* <Route path="admin" element={<SUAdminPage />} /> */}
           {/* <Route path="clubadmin" element={<ClubAdminPage />} /> */}
 
-          {/* Catch-all (404) */}
-          {/* <Route path="*" element={<NotFound />} /> */}
-        </Route>
+
+        {/* 404 fallback */}
+        {/* <Route path="*" element={<NotFound />} /> */}
       </Routes>
     </Router>
   );
