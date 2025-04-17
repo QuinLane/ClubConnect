@@ -1,10 +1,10 @@
 import React from 'react';
 
-const Bio = ({ text, width = '300px', height = '200px' }) => {
+const Bio = ({ text, width = '400px', height = '400px' }) => {
   return (
     <div style={{
-      width: '400px',
-      height: '400px',
+      width: width,
+      height: height,
       backgroundColor: '#ffffff',
       border: '1px solid #e0e0e0',
       borderRadius: '8px',
