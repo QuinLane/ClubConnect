@@ -10,7 +10,7 @@ import {
   Calendar, 
   ShieldHalf, 
   Bell, 
-  Settings, 
+  StickyNote, 
   User 
 } from 'lucide-react';
 
@@ -35,7 +35,7 @@ export default function Sidebar() {
     <div className="text-white w-64 h-full flex flex-col p-4 shadow-lg"
     style={{
       width: "13%",
-      backgroundColor: "white"
+      backgroundColor: "white",
     }}>
       <img 
           src={logo} 
@@ -43,10 +43,30 @@ export default function Sidebar() {
           style={{
             height: "9%",
             width: "90%",
-            paddingBottom: "10%"
             }}
           
         />
+      <div style={{
+        marginBottom: "10%",
+        display: "flex",
+        justifyContent: "space-evenly"
+        }}>
+          <IconButton
+            icon={User}
+            navigateTo="/app/profile"
+            activeIcon={activeIcon}
+            iconName="profile"
+            setActiveIcon={setActiveIcon}
+          />
+
+          <IconButton
+            icon={Bell}
+            navigateTo="/app/notifications"
+            activeIcon={activeIcon}
+            iconName="notifications"
+            setActiveIcon={setActiveIcon}
+          />
+        </div>
 
       <nav className="flex-1 space-y-2">
         <SidebarButton
@@ -77,43 +97,17 @@ export default function Sidebar() {
         />
 
         <SidebarButton
-          icon={Users}
-          label="Network"
-          navigateTo="/app/network"
+          icon={StickyNote}
+          label="Forms"
+          navigateTo="/app/Forms"
           activeIcon={activeIcon}
-          iconName="network"
+          iconName="StickyNote"
           setActiveIcon={setActiveIcon}
         />
       </nav>
 
       {/* User Actions */}
       <div className="mt-auto space-y-4 pt-4 border-t border-indigo-600">
-        <div className="flex justify-between px-2">
-          <IconButton
-            icon={Bell}
-            navigateTo="/app/notifications"
-            activeIcon={activeIcon}
-            iconName="notifications"
-            setActiveIcon={setActiveIcon}
-          />
-x
-          <IconButton
-            icon={Settings}
-            navigateTo="/app/settings"
-            activeIcon={activeIcon}
-            iconName="settings"
-            setActiveIcon={setActiveIcon}
-          />
-
-          <IconButton
-            icon={User}
-            navigateTo="/app/profile"
-            activeIcon={activeIcon}
-            iconName="profile"
-            setActiveIcon={setActiveIcon}
-          />
-        </div>
-
         <button
           onClick={handleLogout}
           style={{
