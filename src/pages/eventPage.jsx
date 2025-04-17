@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Logo from '../components/clubEventPages/logo';
 import Bio from '../components/clubEventPages/bio';
+import Carousel from '../components/clubEventPages/compressedEventCarosel'; // Add this import
 
 const EventPage = ({ 
   eventTitle = "Annual Charity Gala", 
@@ -10,17 +11,18 @@ const EventPage = ({
   eventDate = "Saturday, November 18, 2023",
   eventTime = "6:30 PM - 11:00 PM",
   logoSize = 80,
-  titleSize = '2rem'
+  titleSize = '2rem',
+  carouselImages = [ // Add this new prop for carousel images
+    "/images/event-gallery1.jpg",
+    "/images/event-gallery2.jpg",
+    "/images/event-gallery3.jpg"
+  ]
 }) => {
   const [isRSVPed, setIsRSVPed] = useState(false);
 
   const handleRSVPClick = () => {
     setIsRSVPed(!isRSVPed);
   };
-
-  // Fixed dimensions for both containers
-  const containerWidth = '300px';
-  const containerHeight = '200px';
 
   return (
     <div style={{
@@ -79,14 +81,12 @@ const EventPage = ({
           marginBottom: '30px',
           flexWrap: 'wrap'
         }}>
-          {/* Bio Component with fixed dimensions */}
           <Bio 
             text={bioText} 
             width={'400px'}
             height={'400px'}
           />
 
-          {/* Photo Container - Fixed Size */}
           <div style={{
             width: '400px',
             height: '400px',
@@ -109,7 +109,6 @@ const EventPage = ({
           </div>
         </div>
 
-
         {/* Date/Time and Buttons Row */}
         <div style={{
           display: 'flex',
@@ -117,7 +116,8 @@ const EventPage = ({
           alignItems: 'center',
           marginTop: '40px',
           flexWrap: 'wrap',
-          gap: '20px'
+          gap: '20px',
+          marginBottom: '40px' // Added margin to separate from carousel
         }}>
           <div style={{ flex: 1 }}>
             <div style={{
@@ -179,6 +179,27 @@ const EventPage = ({
               View Club
             </button>
           </div>
+        </div>
+
+        {/* New Carousel Section */}
+        <div style={{
+          marginTop: '60px',
+          borderTop: '1px solid #e0e0e0',
+          paddingTop: '40px'
+        }}>
+          <h2 style={{
+            fontSize: '1.8rem',
+            color: '#2c3e50',
+            marginBottom: '20px',
+            textAlign: 'center'
+          }}>
+            Event Gallery
+          </h2>
+          <Carousel 
+            images={carouselImages}
+            autoPlay={true}
+            interval={4000} // 4 seconds between slides
+          />
         </div>
       </div>
     </div>
