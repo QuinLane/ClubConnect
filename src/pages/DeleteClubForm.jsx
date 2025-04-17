@@ -1,30 +1,33 @@
 import { useState } from 'react';
 
-export default function LoginPage() {
-  const [ucid, setUcid] = useState('');
-  const [password, setPassword] = useState('');
+export default function DeleteClubPage() {
+  const [clubId, setClubId] = useState('');
+  const [confirmation, setConfirmation] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     
     try {
-      const res = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
+      if (confirmation.toLowerCase() !== 'delete') {
+        throw new Error('Please type "delete" to confirm');
+      }
+
+      const res = await fetch(`http://localhost:3001/api/clubs/${clubId}`, {
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ucid, password }),
       });
       
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Login failed');
+        throw new Error(err.message || 'Failed to delete club');
       }
       
-      alert('Login successful');
-      // TODO: Save token and redirect
+      alert('Club deleted successfully!');
+      // TODO: Redirect to dashboard
     } catch (err) {
       setError(err.message);
     } finally {
@@ -33,20 +36,21 @@ export default function LoginPage() {
   };
 
   return (
-    <div id='outer' style={{
+    <div style={{
       minHeight: '100vh',
       backgroundColor: '#f8f9fa',
+      display: 'flex',
       justifyContent: 'center',
+      alignItems: 'center',
       padding: '1rem'
     }}>
       <div style={{
-        justifySelf: 'center',
-        width: '26%',
+        width: '100%',
+        maxWidth: '500px',
         backgroundColor: 'white',
         borderRadius: '0.5rem',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        padding: '70px 20px',
-        margin: '20%'
+        padding: '2rem'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ 
@@ -55,14 +59,14 @@ export default function LoginPage() {
             color: '#1a1a1a',
             marginBottom: '0.5rem'
           }}>
-            Welcome To ClubConnect
+            Delete Club
           </h2>
           <p style={{ color: '#6b7280' }}>
-            Sign in to access your account
+            This action cannot be undone
           </p>
         </div>
 
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <label style={{ 
               display: 'block',
@@ -71,16 +75,17 @@ export default function LoginPage() {
               color: '#374151',
               marginBottom: '0.5rem'
             }}>
-              UCID
+              Club ID *
             </label>
             <input
               type="text"
-              value={ucid}
-              onChange={(e) => setUcid(e.target.value)}
-              placeholder="Enter your UCID"
+              value={clubId}
+              onChange={(e) => setClubId(e.target.value)}
+              placeholder="Enter club ID to delete"
               required
               style={{
                 width: '100%',
+                backgroundColor: 'white',
                 padding: '0.75rem',
                 borderRadius: '0.375rem',
                 border: '1px solid #d1d5db',
@@ -99,16 +104,17 @@ export default function LoginPage() {
               color: '#374151',
               marginBottom: '0.5rem'
             }}>
-              Password
+              Type "delete" to confirm *
             </label>
             <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              type="text"
+              value={confirmation}
+              onChange={(e) => setConfirmation(e.target.value)}
+              placeholder="Type 'delete' to confirm"
               required
               style={{
                 width: '100%',
+                backgroundColor: 'white',
                 padding: '0.75rem',
                 borderRadius: '0.375rem',
                 border: '1px solid #d1d5db',
@@ -139,7 +145,7 @@ export default function LoginPage() {
               width: '100%',
               padding: '0.75rem',
               borderRadius: '0.375rem',
-              backgroundColor: isLoading ? '#9ca3af' : '#4f46e5',
+              backgroundColor: isLoading ? '#9ca3af' : '#dc2626',
               color: 'white',
               fontWeight: '500',
               border: 'none',
@@ -148,7 +154,7 @@ export default function LoginPage() {
               marginTop: '0.5rem'
             }}
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Deleting...' : 'Delete Club'}
           </button>
         </form>
       </div>
