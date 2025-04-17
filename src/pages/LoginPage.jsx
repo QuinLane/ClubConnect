@@ -33,20 +33,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div id='outer' style={{
-      minHeight: '100vh',
-      backgroundColor: '#f8f9fa',
+    <div style={{
+      height: '100vh',
+      display: 'flex',
       justifyContent: 'center',
-      padding: '1rem'
+      alignItems: 'center',
+      backgroundColor: '#f8f9fa',
+      padding: '1rem',
+      overflow: 'hidden' // Prevent scrolling
     }}>
       <div style={{
-        justifySelf: 'center',
-        width: '26%',
+        width: '100%',
+        maxWidth: '400px',
         backgroundColor: 'white',
         borderRadius: '0.5rem',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        padding: '70px 20px',
-        margin: '20%'
+        padding: '2rem',
       }}>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ 
@@ -63,6 +65,7 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Input fields remain the same */}
           <div>
             <label style={{ 
               display: 'block',
