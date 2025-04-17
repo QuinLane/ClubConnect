@@ -2,13 +2,11 @@ import React, { useState } from 'react';
 import Logo from '../components/clubEventPages/logo';
 import Bio from '../components/clubEventPages/bio';
 
-const EventPage = ({ 
-  eventTitle = "Annual Charity Gala", 
+const ClubPage = ({ 
+  clubName = "Kya Slay Club", 
   logoUrl = "/images/club-logo.png",
-  eventPhoto = "/images/event-photo.jpg",
   bioText = `...`,
-  eventDate = "Saturday, November 18, 2023",
-  eventTime = "6:30 PM - 11:00 PM",
+  memberCount = 42,  // Added member count prop
   logoSize = 80,
   titleSize = '2rem'
 }) => {
@@ -17,10 +15,6 @@ const EventPage = ({
   const handleRSVPClick = () => {
     setIsRSVPed(!isRSVPed);
   };
-
-  // Fixed dimensions for both containers
-  const containerWidth = '300px';
-  const containerHeight = '200px';
 
   return (
     <div style={{
@@ -60,7 +54,7 @@ const EventPage = ({
             color: '#2c3e50',
             lineHeight: '1.2'
           }}>
-            {eventTitle}
+            {clubName}
           </h1>
           
           <div style={{ 
@@ -71,46 +65,20 @@ const EventPage = ({
           </div>
         </div>
 
-        {/* Photo and Bio Row */}
+        {/* Single Large Bio Container */}
         <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '30px',
-          marginBottom: '30px',
-          flexWrap: 'wrap'
+          width: '900px',
+          height: '200px',
+          marginBottom: '30px'
         }}>
-          {/* Bio Component with fixed dimensions */}
           <Bio 
             text={bioText} 
-            width={'400px'}
-            height={'400px'}
+            width="100%"
+            height="100%"
           />
-
-          {/* Photo Container - Fixed Size */}
-          <div style={{
-            width: '400px',
-            height: '400px',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            border: '1px solid #e0e0e0',
-            flexShrink: 0
-          }}>
-            <img 
-              src={eventPhoto} 
-              alt={eventTitle}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'center'
-              }}
-            />
-          </div>
         </div>
 
-
-        {/* Date/Time and Buttons Row */}
+        {/* Member Count and Buttons Row */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -126,14 +94,7 @@ const EventPage = ({
               color: '#2c3e50',
               marginBottom: '8px'
             }}>
-              {eventDate}
-            </div>
-            <div style={{
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: '#4a5568'
-            }}>
-              {eventTime}
+              Number of members: {memberCount}
             </div>
           </div>
           
@@ -159,7 +120,7 @@ const EventPage = ({
                 }
               }}
             >
-              {isRSVPed ? 'RSVP Confirmed!' : 'RSVP Now'}
+              {isRSVPed ? 'Joined!' : 'Join Club'}
             </button>
             
             <button style={{
@@ -176,7 +137,7 @@ const EventPage = ({
                 backgroundColor: '#f0f7ff'
               }
             }}>
-              View Club
+              View Events
             </button>
           </div>
         </div>
@@ -185,4 +146,4 @@ const EventPage = ({
   );
 };
 
-export default EventPage;
+export default ClubPage;

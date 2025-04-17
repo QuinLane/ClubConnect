@@ -5,6 +5,8 @@ import Layout from "./pages/Layout";
 import Template from "./pages/Template"; // LandingPage
 import ClubDetailsPage from "./pages/ClubDetailsPage";
 import EventPage from "./pages/eventPage";
+import ClubPage from "./pages/clubPage";
+
 // import SUAdminPage from "./pages/SUAdminPage";
 // import ClubAdminPage from "./pages/ClubAdminPage";
 // import NotFound from "./pages/NotFound";
@@ -15,7 +17,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Layout />}>
           {/* Landing page */}
-          <Route index element={<EventPage />} />
+          <Route index element={<ClubPage />} />
 
           {/* Nested pages */}
           <Route path="club" element={<ClubDetailsPage />} />
