@@ -1,5 +1,5 @@
 import express from "express";
-import * as executiveController from "../controllers/executiveController.js";
+import * as executiveController from "../controllers/executivesController.js";
 import Joi from "joi";
 
 const executiveSchema = Joi.object({

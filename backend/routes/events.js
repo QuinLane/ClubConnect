@@ -5,9 +5,8 @@ import Joi from "joi";
 const eventSchema = Joi.object({
   clubID: Joi.number().integer().required(),
   eventName: Joi.string().required(),
-  eventDate: Joi.date().required(),
-  location: Joi.string().allow(null),
   description: Joi.string().allow(null),
+  reservationID: Joi.number().integer().required(),
 });
 
 const router = express.Router();

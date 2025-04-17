@@ -1,25 +1,43 @@
 import express from "express";
-import * as formController from "../controllers/formController.js";
 import Joi from "joi";
-
-const formSchema = Joi.object({
-  clubID: Joi.number().integer().required(),
-  formType: Joi.string()
-    .valid("ClubCreation", "EventApproval", "Funding")
-    .required(),
-  status: Joi.string()
-    .valid("Pending", "Approved", "Rejected")
-    .default("Pending"),
-  details: Joi.string().allow(null),
-});
+import * as formController from "../controllers/formController.js";
+import { validate } from "../middleware/validate.js";
+import {
+  authenticate,
+  requireSUAdmin,
+  requireClubAdmin,
+} from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Form CRUD
-router.get("/", formController.getAllForms); // Get all forms
-router.get("/:formID", formController.getFormById); // Get form by ID
-router.post("/", formController.createForm); // Create form
-router.put("/:formID", formController.updateForm); // Update form (e.g., approve/reject)
-router.delete("/:formID", formController.deleteForm); // Delete form
+// Joi schema for form submission
+const formSchema = Joi.object({
+  formType: Joi.string()
+    .valid("ClubCreation", "EventApproval", "Funding")
+    .required(),
+  details: Joi.object().required(),
+});
+
+// Joi schema for form approval
+const approvalSchema = Joi.object({
+  status: Joi.string().valid("Approved", "Rejected").required(),
+});
+
+// Form routes
+router.get("/", formController.getAllForms);
+router.post(
+  "/:clubID",
+  authenticate,
+  requireClubAdmin,
+  validate(formSchema),
+  formController.submitForm
+);
+router.put(
+  "/:formID/approve",
+  authenticate,
+  requireSUAdmin,
+  validate(approvalSchema),
+  formController.handleFormApproval
+);
 
 export default router;

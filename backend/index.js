@@ -9,7 +9,7 @@ import rsvpRoutes from "./routes/rsvps.js";
 import formRoutes from "./routes/forms.js";
 import announcementRoutes from "./routes/announcements.js";
 import messageRoutes from "./routes/messages.js";
-
+import venueRoutes from "./routes/venues.js";
 // Load environment variables
 dotenv.config();
 
@@ -29,6 +29,7 @@ app.use("/api/rsvps", rsvpRoutes);
 app.use("/api/forms", formRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/venues", venueRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {
