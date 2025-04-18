@@ -1,78 +1,92 @@
 import React from 'react';
-import CompressedEventCarousel from '../components/clubEventPages/compressedEventCarosel';
+import MemberTable from "../components/tables/memberTable";
+import ExecutiveTable from "../components/tables/executiveTable";
 
-const DashboardPage = () => {
-  // Sample data - replace with your actual data
-  const managedClubs = [
-    {
-      imageUrl: 'https://example.com/club1.jpg',
-      title: 'Computer Science Club',
-      date: 'Managed since Jan 2023'
-    },
-    {
-      imageUrl: 'https://example.com/club2.jpg',
-      title: 'Debate Society',
-      date: 'Managed since Mar 2023'
-    },
-    {
-      imageUrl: 'https://example.com/club3.jpg',
-      title: 'Photography Club',
-      date: 'Managed since Sep 2022'
-    },
-    {
-      imageUrl: 'https://example.com/club4.jpg',
-      title: 'Entrepreneurship Club',
-      date: 'Managed since Nov 2023'
-    }
+const ManageMembers = () => {
+  // Temporary test data
+  const testMembers = [
+    { email: 'member1@club.com', status: 'Active' },
+    { email: 'member2@club.com', status: 'Pending' },
+    { email: 'member3@club.com', status: 'Active' },
+    { email: 'alice@club.com', status: 'Active' },
+    { email: 'charlie@club.com', status: 'Active' },
+    { email: 'charlie@club.com', status: 'Active' },
+
+    { email: 'charlie@club.com', status: 'Active' },
+    { email: 'charlie@club.com', status: 'Active' },
+    { email: 'charlie@club.com', status: 'Active' },
+    { email: 'charlie@club.com', status: 'Active' },
+    { email: 'charlie@club.com', status: 'Active' },
+    { email: 'charlie@club.com', status: 'Active' },
+    { email: 'charlie@club.com', status: 'Active' },
+    { email: 'charlie@club.com', status: 'Active' },
+
+    { email: 'dana@club.com', status: 'Pending' }
   ];
 
-  const memberClubs = [
-    {
-      imageUrl: 'https://example.com/club5.jpg',
-      title: 'Chess Club',
-      date: 'Member since Feb 2023'
-    },
-    {
-      imageUrl: 'https://example.com/club6.jpg',
-      title: 'Music Society',
-      date: 'Member since Aug 2022'
-    },
-    {
-      imageUrl: 'https://example.com/club7.jpg',
-      title: 'Robotics Club',
-      date: 'Member since Oct 2023'
-    }
-  ];
+  const [executives, setExecutives] = React.useState([
+    { email: 'president@club.com', role: 'President' },
+    { email: 'vp@club.com', role: 'Vice President' },
+    { email: 'treasurer@club.com', role: 'Finance' },
+    { email: 'events@club.com', role: 'Events Coordinator' },
+    { email: 'events@club.com', role: 'Events Coordinator' },
+    { email: 'events@club.com', role: 'Events Coordinator' },
+    { email: 'events@club.com', role: 'Events Coordinator' },
+    { email: 'events@club.com', role: 'Events Coordinator' },
+    { email: 'events@club.com', role: 'Events Coordinator' },
 
-  const myEvents = [
-    {
-      imageUrl: 'https://example.com/event1.jpg',
-      title: 'Tech Conference 2023',
-      date: 'Dec 15, 2023'
-    },
-    {
-      imageUrl: 'https://example.com/event2.jpg',
-      title: 'Hackathon Finals',
-      date: 'Jan 20, 2024'
-    },
-    {
-      imageUrl: 'https://example.com/event3.jpg',
-      title: 'Alumni Networking',
-      date: 'Feb 5, 2024'
-    },
-    {
-      imageUrl: 'https://example.com/event4.jpg',
-      title: 'Career Fair',
-      date: 'Mar 10, 2024'
-    },
-    {
-      imageUrl: 'https://example.com/event5.jpg',
-      title: 'Workshop: Public Speaking',
-      date: 'Apr 2, 2024'
-    }
-  ];
 
-  // Styles
+
+    { email: 'secretary@club.com', role: 'Secretary' },
+    { email: 'pr@club.com', role: 'Public Relations' }
+  ]);
+
+  // State for new executive form
+  const [newExecutive, setNewExecutive] = React.useState({
+    email: '',
+    role: ''
+  });
+
+  // Styles for the add executive form
+  const addExecutiveBoxStyles = {
+    border: '1px solid #ddd',
+    padding: '15px',
+    marginTop: '20px',
+    backgroundColor: '#f9f9f9',
+    borderRadius: '5px'
+  };
+
+  const inputStyles = {
+    width: '100%',
+    padding: '8px',
+    marginBottom: '10px',
+    border: '1px solid #ddd',
+    borderRadius: '4px'
+  };
+
+  const addButtonStyles = {
+    padding: '8px 15px',
+    backgroundColor: '#005587',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: 'bold'
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewExecutive(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddExecutive = () => {
+    if (newExecutive.email && newExecutive.role) {
+      setExecutives([...executives, newExecutive]);
+      setNewExecutive({ email: '', role: '' });
+    }
+  };
+
+  // Main container styles
   const containerStyles = {
     backgroundColor: '#f8f9fa',
     minHeight: '100vh',
@@ -85,6 +99,7 @@ const DashboardPage = () => {
     overflowX: 'hidden'
   };
 
+  // Header container styles
   const headerContainerStyles = {
     backgroundColor: '#2c3e50',
     color: 'white',
@@ -93,6 +108,7 @@ const DashboardPage = () => {
     width: '100%'
   };
 
+  // Header styles
   const headerStyles = {
     textAlign: 'center',
     margin: '0 auto',
@@ -101,6 +117,7 @@ const DashboardPage = () => {
     width: '100%'
   };
 
+  // Subheader styles
   const subheaderStyles = {
     textAlign: 'center',
     color: '#bdc3c7',
@@ -110,6 +127,7 @@ const DashboardPage = () => {
     width: '100%'
   };
 
+  // Main content styles
   const contentStyles = {
     flex: 1,
     padding: '20px',
@@ -119,41 +137,108 @@ const DashboardPage = () => {
     boxSizing: 'border-box'
   };
 
+  // Tables container styles
+  const tablesContainerStyles = {
+    display: 'flex',
+    gap: '30px',
+    height: 'calc(100vh - 200px)',
+    minHeight: '500px',
+    width: '100%'
+  };
+
+  // Column styles
+  const columnStyles = {
+    flex: 1,
+    backgroundColor: 'white',
+    padding: '20px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 15px rgba(0,0,0,0.1)',
+    minWidth: '300px',
+    overflowY: 'auto',
+    height: '100%',
+    boxSizing: 'border-box'
+  };
+
+  // Column header styles
+  const columnHeaderStyles = {
+    color: '#2c3e50',
+    marginBottom: '20px',
+    paddingBottom: '10px',
+    borderBottom: '2px solid #ecf0f1',
+    fontSize: '1.3rem',
+    position: 'sticky',
+    top: 0,
+    backgroundColor: 'white',
+    zIndex: 1
+  };
+
   return (
     <div style={containerStyles}>
       {/* Header Section */}
       <div style={headerContainerStyles}>
         <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
-          <h1 style={headerStyles}>Student Dashboard</h1>
-          <h2 style={subheaderStyles}>Your Clubs and Events</h2>
+          <h1 style={headerStyles}>Member Management System</h1>
+          <h2 style={subheaderStyles}>Organization Leadership Portal</h2>
         </div>
       </div>
       
       {/* Main Content */}
       <div style={contentStyles}>
-        {/* Clubs I Manage (Executive) */}
-        <CompressedEventCarousel
-          events={managedClubs}
-          title="Clubs I Manage"
-          showTitle={true}
-        />
+        <div style={tablesContainerStyles}>
+          {/* Left Column - MemberTable */}
+          <div style={columnStyles}>
+     
+            <MemberTable members={testMembers} />
+          </div>
+          
+          {/* Right Column - ExecutiveTable */}
+          <div style={columnStyles}>
+           
+            <ExecutiveTable executives={executives} />
+            
+            {/* Add Executive Form */}
+            <div style={addExecutiveBoxStyles}>
+              <h4 style={{ marginTop: 0, marginBottom: '15px', color: '#2c3e50' }}>Add New Executive</h4>
+              <input
+                type="text"
+                name="email"
+                placeholder="ucalgary email"
+                style={inputStyles}
+                value={newExecutive.email}
+                onChange={handleInputChange}
+              />
+              <input
+                type="text"
+                name="role"
+                placeholder="role"
+                style={inputStyles}
+                value={newExecutive.role}
+                onChange={handleInputChange}
+              />
+              <button 
+                style={addButtonStyles}
+                onClick={handleAddExecutive}
+              >
+                Add Executive
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        {/* Clubs I'm a Member Of */}
-        <CompressedEventCarousel
-          events={memberClubs}
-          title="Clubs I'm a Member Of"
-          showTitle={true}
-        />
-
-        {/* My Events (RSVP'd) */}
-        <CompressedEventCarousel
-          events={myEvents}
-          title="My Events"
-          showTitle={true}
-        />
+      {/* Debugging footer - remove in production */}
+      <div style={{
+        textAlign: 'center',
+        padding: '10px',
+        color: '#7f8c8d',
+        fontSize: '0.8rem',
+        backgroundColor: '#ecf0f1',
+        width: '100%'
+      }}>
+        Component loaded at: {new Date().toLocaleTimeString()}
       </div>
     </div>
   );
 };
 
-export default DashboardPage;
+export default ManageMembers
