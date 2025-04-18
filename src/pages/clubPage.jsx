@@ -18,6 +18,7 @@ const ClubPage = ({
   memberCount = 42,
   logoSize = 80,
   titleSize = '2rem',
+  isExec = true, // Add the isExec prop to check if the user is an exec
 }) => {
   const [isRSVPed, setIsRSVPed] = useState(false);
 
@@ -34,7 +35,6 @@ const ClubPage = ({
     { imageUrl: "/images/event1.jpg", title: "Monthly Meetup4", date: "June 15, 2023", titleOnImage: true },
     { imageUrl: "/images/event1.jpg", title: "Monthly Meetup3", date: "June 15, 2023", titleOnImage: true },
     { type: "club", imageUrl: "/images/club-logo.png", title: "Chess Enthusiasts" }, // 👈 Club example
-
   ];
 
   return (
@@ -137,38 +137,78 @@ const ClubPage = ({
             </div>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <button
-              onClick={handleRSVPClick}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: isRSVPed ? '#388e3c' : '#005587',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s'
-              }}
-            >
-              {isRSVPed ? 'Joined!' : 'Join Club'}
-            </button>
-            <button
-              onClick={() => alert("Redirect to application form")}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: '#f57c00',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s'
-              }}
-            >
-              Apply for Position
-            </button>
+            {/* Conditionally render buttons based on whether the user is an exec */}
+            {isExec ? (
+              <>
+                <button
+                  onClick={() => alert("Create event functionality")}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#388e3c',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  Create Event
+                </button>
+                <button
+                  onClick={() => alert("Manage members functionality")}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#f57c00',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  Manage Members
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleRSVPClick}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: isRSVPed ? '#388e3c' : '#005587',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  {isRSVPed ? 'Joined!' : 'Join Club'}
+                </button>
+                <button
+                  onClick={() => alert("Redirect to application form")}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#f57c00',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  Apply for Position
+                </button>
+              </>
+            )}
           </div>
         </div>
 

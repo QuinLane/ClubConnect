@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Logo from '../components/clubEventPages/logo';
 import Bio from '../components/clubEventPages/bio';
-import Carousel from '../components/clubEventPages/compressedEventCarosel'; // Add this import
 
 const EventPage = ({ 
   eventTitle = "Annual Charity Gala", 
@@ -12,16 +11,20 @@ const EventPage = ({
   eventTime = "6:30 PM - 11:00 PM",
   logoSize = 80,
   titleSize = '2rem',
-  carouselImages = [ // Add this new prop for carousel images
-    "/images/event-gallery1.jpg",
-    "/images/event-gallery2.jpg",
-    "/images/event-gallery3.jpg"
-  ]
+  isExec = true, // New prop to determine if the user is an exec
+  approvalStatus = "Pending", // New prop for approval status
+  onCancelEvent = () => {} // New function to handle event cancellation
 }) => {
   const [isRSVPed, setIsRSVPed] = useState(false);
 
   const handleRSVPClick = () => {
     setIsRSVPed(!isRSVPed);
+  };
+
+  const handleCancelEvent = () => {
+    if (window.confirm("Are you sure you want to cancel this event?")) {
+      onCancelEvent(); // Trigger the cancel event function passed as a prop
+    }
   };
 
   return (
@@ -181,26 +184,41 @@ const EventPage = ({
           </div>
         </div>
 
-        {/* New Carousel Section */}
-        <div style={{
-          marginTop: '60px',
-          borderTop: '1px solid #e0e0e0',
-          paddingTop: '40px'
-        }}>
-          <h2 style={{
-            fontSize: '1.8rem',
-            color: '#2c3e50',
-            marginBottom: '20px',
-            textAlign: 'center'
+        {/* Approval Status for Executives */}
+        {isExec && (
+          <div style={{
+            marginTop: '20px',
+            padding: '12px',
+            backgroundColor: '#f0f0f0',
+            borderRadius: '6px',
+            border: '1px solid #e0e0e0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '1.1rem',
+            fontWeight: '600'
           }}>
-            Event Gallery
-          </h2>
-          <Carousel 
-            images={carouselImages}
-            autoPlay={true}
-            interval={4000} // 4 seconds between slides
-          />
-        </div>
+            <div>
+              Approval Status: <span style={{ color: approvalStatus === 'Approved' ? '#388e3c' : '#e74c3c' }}>{approvalStatus}</span>
+            </div>
+            <button 
+              onClick={handleCancelEvent}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#e74c3c',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+            >
+              Cancel Event
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
