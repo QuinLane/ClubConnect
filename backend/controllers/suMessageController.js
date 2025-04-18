@@ -15,21 +15,25 @@ export const sendSUMessage = async (req, res) => {
         .json({ error: "Only students can send messages to SU" });
     }
 
-    let thread = await prisma.sUMessage.findFirst({
-      where: { senderID: parseInt(userID), receiverID: null, isActive: true },
+    // Check for any active thread involving the user
+    const activeThread = await prisma.sUMessage.findFirst({
+      where: {
+        OR: [
+          { senderID: parseInt(userID), receiverID: null, isActive: true },
+          { receiverID: parseInt(userID), senderID: null, isActive: true },
+        ],
+      },
       select: { threadID: true },
     });
 
-    if (!thread) {
-      thread = await prisma.sUMessage.findFirst({
-        where: { receiverID: parseInt(userID), senderID: null, isActive: true },
-        select: { threadID: true },
-      });
+    // If an active thread exists, reuse its threadID
+    let threadID;
+    if (activeThread) {
+      threadID = activeThread.threadID;
+    } else {
+      // Create a new threadID (increment based on total messages)
+      threadID = (await prisma.sUMessage.count()) + 1;
     }
-
-    const threadID = thread
-      ? thread.threadID
-      : (await prisma.sUMessage.count()) + 1;
 
     const message = await prisma.sUMessage.create({
       data: {

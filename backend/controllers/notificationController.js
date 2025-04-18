@@ -109,7 +109,7 @@ export const sendNotificationToClub = async (req, res) => {
       }
     }
 
-    const members = await prisma.executive.findMany({
+    const members = await prisma.memberOf.findMany({
       where: { clubID: parseInt(clubID) },
       select: { userID: true },
     });

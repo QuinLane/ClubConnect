@@ -16,22 +16,17 @@ async function initSUClub() {
       return;
     }
 
-    // Create SU club
-    const suClub = await prisma.club.create({
+    await prisma.club.create({
       data: {
         clubID: 1,
         clubName: "Student Union",
-        description:
-          "Central Student Union for managing campus-wide activities",
+        description: "Central Student Union",
         createdAt: new Date(),
+        president: 2, // Default SU admin userID
       },
     });
-
-    console.log("SU club created:", suClub);
-
-    // Create default SU roles (optional)
-    await prisma.clubRole.createMany({
-      data: [{ clubID: 1, roleName: "SU Admin" }],
+    await prisma.executive.create({
+      data: { userID: 2, clubID: 1, role: "President" },
     });
 
     console.log("Default SU roles created");

@@ -74,10 +74,16 @@ export const deleteVenue = async (req, res) => {
 
 // Note: available to all
 export const createReservation = async (req, res) => {
-  const { venueID, eventID, date } = req.body;
+  const { venueID, eventID, date, startTime, endTime } = req.body;
   try {
     const reservation = await prisma.reservation.create({
-      data: { venueID: parseInt(venueID), eventID: parseInt(eventID), date },
+      data: {
+        venueID: parseInt(venueID),
+        eventID: parseInt(eventID),
+        date: new Date(date),
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+      },
     });
     res.status(201).json(reservation);
   } catch (error) {

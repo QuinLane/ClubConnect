@@ -20,48 +20,52 @@ model User {
   receivedMessages      SUMessage[]             @relation("ReceivedMessages")
   sentNotifications     Notification[]          @relation("SentNotifications")
   receivedNotifications NotificationRecipient[] @relation("ReceivedNotifications")
+  presidentClubs        Club[]                  @relation("ClubPresident")
+  memberships           MemberOf[]              @relation("UserMemberships")
+}
+
+model MemberOf {
+  userID Int
+  clubID Int
+  user   User @relation("UserMemberships", fields: [userID], references: [userID])
+  club   Club @relation("ClubMembers", fields: [clubID], references: [clubID])
+
+  @@id([userID, clubID])
 }
 
 model Club {
-  clubID        Int            @id @default(autoincrement())
-  clubName      String         @unique
-  description   String?
-  createdAt     DateTime       @default(now())
-  executives    Executive[]
-  events        Event[]
-  forms         Form[]
-  notifications Notification[] @relation("ClubNotifications")
-  roles         ClubRole[]
+  clubID           Int            @id @default(autoincrement())
+  clubName         String         @unique
+  description      String?
+  createdAt        DateTime       @default(now())
+  president        Int
+  presidentUser    User           @relation("ClubPresident", fields: [president], references: [userID])
+  executives       Executive[]
+  members          MemberOf[]     @relation("ClubMembers")
+  events           Event[]
+  forms            Form[]
+  notifications    Notification[] @relation("ClubNotifications")
+  socialMediaLinks String?
+  website          String?
+  clubEmail        String?
 }
 
 model Executive {
-  userID      Int
-  clubID      Int
-  clubRoleID  Int?
-  user        User      @relation(fields: [userID], references: [userID])
-  club        Club      @relation(fields: [clubID], references: [clubID])
-  clubRole    ClubRole? @relation(fields: [clubRoleID], references: [clubRoleID])
+  userID Int
+  clubID Int
+  role   String?
+  user   User    @relation(fields: [userID], references: [userID])
+  club   Club    @relation(fields: [clubID], references: [clubID])
 
   @@id([clubID, userID])
 }
 
-model ClubRole {
-  clubRoleID Int         @id @default(autoincrement())
-  clubID     Int
-  roleName   String
-  club       Club        @relation(fields: [clubID], references: [clubID])
-  executives Executive[]
-
-  @@unique([clubID, roleName])
-}
-
 model RSVP {
-  rsvpID   Int      @id @default(autoincrement())
-  userID   Int
-  eventID  Int
-  rsvpDate DateTime @default(now())
-  user     User     @relation(fields: [userID], references: [userID])
-  event    Event    @relation(fields: [eventID], references: [eventID])
+  rsvpID  Int   @id @default(autoincrement())
+  userID  Int
+  eventID Int
+  user    User  @relation(fields: [userID], references: [userID])
+  event   Event @relation(fields: [eventID], references: [eventID])
 
   @@unique([userID, eventID])
 }
@@ -83,7 +87,7 @@ model SUMessage {
   content    String
   sentAt     DateTime @default(now())
   isRead     Boolean  @default(false)
-  isActive   Boolean @default(true) //tracks if the message thread is active
+  isActive   Boolean  @default(true) //tracks if the message thread is active
   threadID   Int // Groups messages into a thread
   sender     User?    @relation("SentMessages", fields: [senderID], references: [userID])
   receiver   User?    @relation("ReceivedMessages", fields: [receiverID], references: [userID])
@@ -117,6 +121,7 @@ model Venue {
   capacity     Int
   address      String
   type         String?
+  openHours    String? // E.g., "9:00-17:00"
   reservations Reservation[]
 }
 
@@ -135,12 +140,14 @@ model Event {
 model Reservation {
   reservationID Int      @id @default(autoincrement())
   date          DateTime
+  startTime     DateTime
+  endTime       DateTime
   venueID       Int
   venue         Venue    @relation(fields: [venueID], references: [venueID], onDelete: Cascade)
   eventID       Int      @unique
   event         Event    @relation(fields: [eventID], references: [eventID])
 
-  @@unique([venueID, date])
+  @@unique([venueID, date, startTime, endTime])
 }
 
 enum UserType {

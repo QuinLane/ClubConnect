@@ -9,7 +9,6 @@ export const getAllExecutives = async (req, res) => {
       include: {
         user: true,
         club: true,
-        clubRole: true,
       },
     });
     res.status(200).json(executives);
@@ -31,7 +30,6 @@ export const getExecutiveById = async (req, res) => {
       include: {
         user: true,
         club: true,
-        clubRole: true,
       },
     });
     if (!executive) {
@@ -47,18 +45,17 @@ export const getExecutiveById = async (req, res) => {
 
 // Note: Only SU admins
 export const createExecutive = async (req, res) => {
-  const { userID, clubID, clubRoleID } = req.body;
+  const { userID, clubID, role } = req.body;
   try {
     const executive = await prisma.executive.create({
       data: {
         userID: parseInt(userID),
         clubID: parseInt(clubID),
-        clubRoleID: clubRoleID ? parseInt(clubRoleID) : null,
+        role: role || null,
       },
       include: {
         user: true,
         club: true,
-        clubRole: true,
       },
     });
     res.status(201).json(executive);
@@ -72,7 +69,7 @@ export const createExecutive = async (req, res) => {
 // Note: Only SU admins
 export const updateExecutive = async (req, res) => {
   const { clubID, userID } = req.params;
-  const { newUserID, newClubID, clubRoleID } = req.body;
+  const { newUserID, newClubID, role } = req.body;
   try {
     const executive = await prisma.executive.update({
       where: {
@@ -81,12 +78,11 @@ export const updateExecutive = async (req, res) => {
       data: {
         userID: newUserID ? parseInt(newUserID) : undefined,
         clubID: newClubID ? parseInt(newClubID) : undefined,
-        clubRoleID: clubRoleID ? parseInt(clubRoleID) : null,
+        role: role || null,
       },
       include: {
         user: true,
         club: true,
-        clubRole: true,
       },
     });
     res.status(200).json(executive);
@@ -123,7 +119,6 @@ export const getExecutivesByClub = async (req, res) => {
       include: {
         user: true,
         club: true,
-        clubRole: true,
       },
     });
     res.status(200).json(executives);
@@ -143,7 +138,6 @@ export const getExecutivesByUser = async (req, res) => {
       include: {
         user: true,
         club: true,
-        clubRole: true,
       },
     });
     res.status(200).json(executives);
@@ -157,19 +151,18 @@ export const getExecutivesByUser = async (req, res) => {
 // Note: Only SU admins
 export const assignRoleToExecutive = async (req, res) => {
   const { clubID, userID } = req.params;
-  const { clubRoleID } = req.body;
+  const { role } = req.body;
   try {
     const executive = await prisma.executive.update({
       where: {
         clubID_userID: { clubID: parseInt(clubID), userID: parseInt(userID) },
       },
       data: {
-        clubRoleID: clubRoleID ? parseInt(clubRoleID) : null,
+        role: role || null,
       },
       include: {
         user: true,
         club: true,
-        clubRole: true,
       },
     });
     res.status(200).json(executive);

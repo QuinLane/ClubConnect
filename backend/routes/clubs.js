@@ -68,13 +68,6 @@ router.delete(
   requireSUAdmin,
   clubController.deleteClub
 );
-router.post(
-  "/:clubID/roles",
-  authenticate,
-  requireClubAdmin,
-  validate(addRoleSchema),
-  clubController.addClubRole
-);
 router.put(
   "/:clubID/executives/:userID",
   authenticate,

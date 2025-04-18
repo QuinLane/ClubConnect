@@ -75,7 +75,8 @@ export const deleteEvent = async (req, res) => {
 
 // Note: Only called internally by formController after approval
 export const createEvent = async (req, res) => {
-  const { name, description, clubID, date, venueID } = req.body;
+  const { name, description, clubID, date, startTime, endTime, venueID } =
+    req.body;
   try {
     const event = await prisma.event.create({
       data: {
@@ -91,7 +92,15 @@ export const createEvent = async (req, res) => {
     });
 
     await venueController.createReservation(
-      { body: { venueID: parseInt(venueID), eventID: event.eventID, date } },
+      {
+        body: {
+          venueID: parseInt(venueID),
+          eventID: event.eventID,
+          date,
+          startTime,
+          endTime,
+        },
+      },
       res
     );
 

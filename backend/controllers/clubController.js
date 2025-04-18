@@ -8,8 +8,9 @@ export const getAllClubs = async (req, res) => {
   try {
     const clubs = await prisma.club.findMany({
       include: {
-        executives: { include: { user: true, clubRole: true } },
-        roles: true, // Include club-specific roles
+        executives: { include: { user: true } },
+        members: { include: { user: true } },
+        presidentUser: true,
       },
     });
     res.status(200).json(clubs);
@@ -25,8 +26,9 @@ export const getClubById = async (req, res) => {
     const club = await prisma.club.findUnique({
       where: { clubID: parseInt(clubID) },
       include: {
-        executives: { include: { user: true, clubRole: true } },
-        roles: true,
+        executives: { include: { user: true } },
+        members: { include: { user: true } },
+        presidentUser: true,
       },
     });
     if (!club) {
@@ -40,21 +42,38 @@ export const getClubById = async (req, res) => {
 
 // Note: Only SU admins should be able to do this
 export const createClub = async (req, res) => {
-  const { clubName, description } = req.body;
+  const {
+    clubName,
+    description,
+    president,
+    socialMediaLinks,
+    website,
+    clubEmail,
+  } = req.body;
   try {
     const club = await prisma.club.create({
       data: {
         clubName,
         description,
         createdAt: new Date(),
+        president: parseInt(president),
+        socialMediaLinks: socialMediaLinks || [],
+        website,
+        clubEmail,
       },
     });
-    // Optionally create default roles
-    await prisma.clubRole.createMany({
-      data: [
-        { clubID: club.clubID, roleName: "President" },
-        { clubID: club.clubID, roleName: "Vice President" },
-      ],
+    await prisma.memberOf.create({
+      data: {
+        userID: parseInt(president),
+        clubID: club.clubID,
+      },
+    });
+    await prisma.executive.create({
+      data: {
+        userID: parseInt(president),
+        clubID: club.clubID,
+        role: "President",
+      },
     });
     res.status(201).json(club);
   } catch (error) {
@@ -65,7 +84,18 @@ export const createClub = async (req, res) => {
 // Note: Only club admins should be able to do this
 export const updateClub = async (req, res) => {
   const { clubID } = req.params;
-  const data = req.body; // { clubName, description }
+  const data = req.body; // { clubName, description, president, socialMediaLinks, website, clubEmail }
+  if (data.president) {
+    const member = await prisma.memberOf.findUnique({
+      where: {
+        userID_clubID: {
+          clubID: parseInt(clubID),
+          userID: parseInt(data.president),
+        },
+      },
+    });
+    if (!member) throw new Error("President must be a club member");
+  }
   try {
     const club = await prisma.club.update({
       where: { clubID: parseInt(clubID) },
@@ -93,14 +123,13 @@ export const deleteClub = async (req, res) => {
 // Note: Only club admins can update roles
 export const updateClubRoles = async (req, res) => {
   const { clubID, userID } = req.params;
-  const { clubRoleID } = req.body; // Now assigns a ClubRole instead of updating position
+  const { role } = req.body; // Now assigns a role string
   try {
     const executive = await prisma.executive.update({
       where: {
         clubID_userID: { clubID: parseInt(clubID), userID: parseInt(userID) },
       },
-      data: { clubRoleID: clubRoleID ? parseInt(clubRoleID) : null },
-      include: { clubRole: true },
+      data: { role: role || null },
     });
     res.status(200).json(executive);
   } catch (error) {
@@ -109,39 +138,54 @@ export const updateClubRoles = async (req, res) => {
       .json({ error: `Failed to update club role: ${error.message}` });
   }
 };
-
-// Note: Only club admins can add roles
-export const addClubRole = async (req, res) => {
+// Note: Only club admins can add executives (via Executive table)
+export const addExec = async (req, res) => {
   const { clubID } = req.params;
-  const { roleName } = req.body; // Creates a new ClubRole
+  const { userID, role } = req.body;
   try {
-    const clubRole = await prisma.clubRole.create({
-      data: {
-        clubID: parseInt(clubID),
-        roleName,
+    const member = await prisma.memberOf.findUnique({
+      where: {
+        userID_clubID: {
+          clubID: parseInt(clubID),
+          userID: parseInt(userID),
+        },
       },
     });
-    res.status(201).json(clubRole);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: `Failed to add club role: ${error.message}` });
-  }
-};
-
-// Note: Only club admins can add members (via Executive table)
-export const addMember = async (req, res) => {
-  const { clubID } = req.params;
-  const { userID } = req.body;
-  try {
+    if (!member) {
+      await prisma.memberOf.create({
+        data: {
+          userID: parseInt(userID),
+          clubID: parseInt(clubID),
+        },
+      });
+    }
     const executive = await prisma.executive.create({
       data: {
         userID: parseInt(userID),
         clubID: parseInt(clubID),
-        clubRoleID: null, // General member, no specific role
+        role: role || null,
       },
     });
     res.status(201).json(executive);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to add executive: ${error.message}` });
+  }
+};
+
+// Note: Only club admins can add members (via MemberOf table)
+export const addMember = async (req, res) => {
+  const { clubID } = req.params;
+  const { userID } = req.body;
+  try {
+    const member = await prisma.memberOf.create({
+      data: {
+        userID: parseInt(userID),
+        clubID: parseInt(clubID),
+      },
+    });
+    res.status(201).json(member);
   } catch (error) {
     res.status(500).json({ error: `Failed to add member: ${error.message}` });
   }
@@ -152,6 +196,12 @@ export const removeMember = async (req, res) => {
   const { clubID, userID } = req.params;
   try {
     await prisma.executive.deleteMany({
+      where: {
+        clubID: parseInt(clubID),
+        userID: parseInt(userID),
+      },
+    });
+    await prisma.memberOf.deleteMany({
       where: {
         clubID: parseInt(clubID),
         userID: parseInt(userID),
@@ -171,16 +221,17 @@ export const getUserClubs = async (req, res) => {
   try {
     const clubs = await prisma.club.findMany({
       where: {
-        executives: {
+        members: {
           some: {
             userID: parseInt(userID),
           },
         },
       },
       include: {
-        executives: { include: { user: true, clubRole: true } },
-        roles: true,
+        executives: { include: { user: true } },
+        members: { include: { user: true } },
         events: true,
+        presidentUser: true,
       },
     });
     res.status(200).json(clubs);
@@ -200,13 +251,12 @@ export const getUserExecClubs = async (req, res) => {
         executives: {
           some: {
             userID: parseInt(userID),
-            clubRoleID: { not: null }, // Only clubs where user has a role
+            role: { not: null }, // Only clubs where user has a role
           },
         },
       },
       include: {
-        executives: { include: { user: true, clubRole: true } },
-        roles: true,
+        executives: { include: { user: true } },
         events: true,
       },
     });
@@ -222,11 +272,10 @@ export const getUserExecClubs = async (req, res) => {
 export const getClubMembers = async (req, res) => {
   const { clubID } = req.params;
   try {
-    const members = await prisma.executive.findMany({
+    const members = await prisma.memberOf.findMany({
       where: { clubID: parseInt(clubID) },
       include: {
         user: true,
-        clubRole: true,
       },
     });
     res.status(200).json(members);
@@ -246,12 +295,15 @@ export const searchClubs = async (req, res) => {
         OR: [
           { clubName: { contains: query, mode: "insensitive" } },
           { description: { contains: query, mode: "insensitive" } },
+          { website: { contains: query, mode: "insensitive" } },
+          { clubEmail: { contains: query, mode: "insensitive" } },
         ],
       },
       include: {
-        executives: { include: { user: true, clubRole: true } },
-        roles: true,
+        executives: { include: { user: true } },
+        members: { include: { user: true } },
         events: true,
+        presidentUser: true,
       },
     });
     res.status(200).json(clubs);
@@ -302,7 +354,7 @@ export const checkClubAdminPermissions = async (userID, clubID) => {
 export const getClubExecutives = async (clubID) => {
   const execs = await prisma.executive.findMany({
     where: { clubID },
-    include: { user: true, clubRole: true }, // Include role details
+    include: { user: true },
   });
   return execs;
 };
