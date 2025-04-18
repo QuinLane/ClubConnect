@@ -8,17 +8,18 @@ datasource db {
 }
 
 model User {
-  userID           Int            @id @default(autoincrement())
-  userType         UserType
-  username         String         @unique
-  email            String         @unique
-  passwordHash     String
-  createdAt        DateTime       @default(now())
-  executives       Executive[]
-  rsvps            RSVP[]
-  announcements    Announcement[]
-  sentMessages     Message[]      @relation("SentMessages")
-  receivedMessages Message[]      @relation("ReceivedMessages")
+  userID                Int                     @id @default(autoincrement())
+  userType              UserType
+  username              String                  @unique
+  email                 String                  @unique
+  passwordHash          String
+  createdAt             DateTime                @default(now())
+  executives            Executive[]
+  rsvps                 RSVP[]
+  sentMessages          SUMessage[]             @relation("SentMessages")
+  receivedMessages      SUMessage[]             @relation("ReceivedMessages")
+  sentNotifications     Notification[]          @relation("SentNotifications")
+  receivedNotifications NotificationRecipient[] @relation("ReceivedNotifications")
 }
 
 model Club {
@@ -29,18 +30,19 @@ model Club {
   executives    Executive[]
   events        Event[]
   forms         Form[]
-  announcements Announcement[]
+  notifications Notification[] @relation("ClubNotifications")
   roles         ClubRole[]
 }
 
 model Executive {
-  executiveID Int       @id @default(autoincrement())
   userID      Int
   clubID      Int
   clubRoleID  Int?
   user        User      @relation(fields: [userID], references: [userID])
   club        Club      @relation(fields: [clubID], references: [clubID])
   clubRole    ClubRole? @relation(fields: [clubRoleID], references: [clubRoleID])
+
+  @@id([clubID, userID])
 }
 
 model ClubRole {
@@ -74,26 +76,39 @@ model Form {
   club        Club       @relation(fields: [clubID], references: [clubID])
 }
 
-model Announcement {
-  announcementID Int      @id @default(autoincrement())
-  userID         Int
-  clubID         Int?
-  title          String
-  content        String
-  postedAt       DateTime @default(now())
-  user           User     @relation(fields: [userID], references: [userID])
-  club           Club?    @relation(fields: [clubID], references: [clubID])
-}
-
-model Message {
+model SUMessage {
   messageID  Int      @id @default(autoincrement())
-  senderID   Int
-  receiverID Int
+  senderID   Int? // Null for SU messages
+  receiverID Int? // Null for messages to SU, userID for SU replies
   content    String
   sentAt     DateTime @default(now())
   isRead     Boolean  @default(false)
-  sender     User     @relation("SentMessages", fields: [senderID], references: [userID])
-  receiver   User     @relation("ReceivedMessages", fields: [receiverID], references: [userID])
+  isActive   Boolean @default(true) //tracks if the message thread is active
+  threadID   Int // Groups messages into a thread
+  sender     User?    @relation("SentMessages", fields: [senderID], references: [userID])
+  receiver   User?    @relation("ReceivedMessages", fields: [receiverID], references: [userID])
+}
+
+model Notification {
+  notificationID Int                     @id @default(autoincrement())
+  title          String
+  content        String
+  postedAt       DateTime                @default(now())
+  senderID       Int
+  clubID         Int? // Optional, for club-specific notifications
+  sender         User                    @relation("SentNotifications", fields: [senderID], references: [userID])
+  club           Club?                   @relation("ClubNotifications", fields: [clubID], references: [clubID])
+  recipients     NotificationRecipient[] @relation("NotificationRecipients")
+}
+
+model NotificationRecipient {
+  notificationID Int
+  userID         Int
+  isRead         Boolean      @default(false)
+  notification   Notification @relation("NotificationRecipients", fields: [notificationID], references: [notificationID])
+  user           User         @relation("ReceivedNotifications", fields: [userID], references: [userID])
+
+  @@id([notificationID, userID])
 }
 
 model Venue {
@@ -112,7 +127,7 @@ model Event {
   clubID      Int
   club        Club         @relation(fields: [clubID], references: [clubID], onDelete: Cascade)
   reservation Reservation?
-  rsvps       RSVP[] // List of RSVPs represents attendees
+  rsvps       RSVP[]
 
   @@map("event")
 }

@@ -11,6 +11,9 @@ import announcementRoutes from "./routes/announcements.js";
 import messageRoutes from "./routes/messages.js";
 import venueRoutes from "./routes/venues.js";
 import userRoutes from "./routes/users.js";
+import suMessageRoutes from "./routes/suMessages.js";
+import notificationRoutes from "./routes/notifications.js";
+import suRoutes from "./routes/su.js";
 import clubsRoutes from "./routes/clubs.js"
 // Load environment variables
 dotenv.config();
@@ -45,7 +48,9 @@ app.use("/api/announcements", announcementRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/venues", venueRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/clubs", clubsRoutes);
+app.use("/api/su-messages", suMessageRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/su", suRoutes);app.use("/api/clubs", clubsRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {

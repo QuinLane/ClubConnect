@@ -20,7 +20,7 @@ const roleSchema = Joi.object({
 
 // Executive routes
 router.get("/", executiveController.getAllExecutives);
-router.get("/:executiveID", executiveController.getExecutiveById);
+router.get("/:clubID/:userID", executiveController.getExecutiveById);
 router.get("/club/:clubID", executiveController.getExecutivesByClub);
 router.get("/user/:userID", executiveController.getExecutivesByUser);
 router.post(
@@ -31,20 +31,20 @@ router.post(
   executiveController.createExecutive
 );
 router.put(
-  "/:executiveID",
+  "/:clubID/:userID",
   authenticate,
   requireSUAdmin,
   validate(executiveSchema),
   executiveController.updateExecutive
 );
 router.delete(
-  "/:executiveID",
+  "/:clubID/:userID",
   authenticate,
   requireSUAdmin,
   executiveController.deleteExecutive
 );
 router.put(
-  "/:executiveID/role",
+  "/:clubID/:userID/role",
   authenticate,
   requireSUAdmin,
   validate(roleSchema),
