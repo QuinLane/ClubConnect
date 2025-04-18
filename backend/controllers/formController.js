@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import * as clubController from "./clubController.js";
-import * as eventController from "./eventController.js"; // To be created
+import * as eventController from "./eventController.js";
 
 const prisma = new PrismaClient();
 
@@ -36,6 +36,38 @@ export const getAllForms = async (req, res) => {
   }
 };
 
+// Note: Available to all (SU admins will filter on frontend)
+export const getFormById = async (req, res) => {
+  const { formID } = req.params;
+  try {
+    const form = await prisma.form.findUnique({
+      where: { formID: parseInt(formID) },
+      include: { club: true },
+    });
+    if (!form) {
+      return res.status(404).json({ error: "Form not found" });
+    }
+    res.status(200).json(form);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to fetch form: ${error.message}` });
+  }
+};
+
+// Note: Available to all (SU admins will filter on frontend)
+export const getOpenForms = async (req, res) => {
+  try {
+    const forms = await prisma.form.findMany({
+      where: { status: "Pending" },
+      include: { club: true },
+    });
+    res.status(200).json(forms);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch open forms: ${error.message}` });
+  }
+};
+
 // Note: Only SU admins can approve/reject forms
 export const handleFormApproval = async (req, res) => {
   const { formID } = req.params;
@@ -64,11 +96,9 @@ export const handleFormApproval = async (req, res) => {
         result = await clubController.createClub({ body: details }, res);
         break;
       case "EventApproval":
-        // Assumes eventController.js has a createEvent function
         result = await eventController.createEvent({ body: details }, res);
         break;
       case "Funding":
-        // Handle funding request (placeholder for future implementation)
         result = res.status(200).json({ message: "Funding request approved" });
         break;
       default:
