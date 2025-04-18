@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import  logo  from '../assets/logo.png';
+import logo from '../assets/logo.png';
 import SidebarButton from './SideButton';
 import IconButton from './IconButton';
 import { 
@@ -11,7 +11,8 @@ import {
   ShieldHalf, 
   Bell, 
   StickyNote, 
-  User 
+  User,
+  MessageSquareText // 👈 Importing a suitable message icon from Lucide
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -19,7 +20,6 @@ export default function Sidebar() {
   const [activeIcon, setActiveIcon] = useState('home');
 
   const handleLogout = () => {
-    // Replace with your actual logout logic
     console.log('Logging out...');
     navigate('/');
   };
@@ -38,35 +38,34 @@ export default function Sidebar() {
       backgroundColor: "white",
     }}>
       <img 
-          src={logo} 
-          alt="ClubConnect Logo" 
-          style={{
-            height: "9%",
-            width: "90%",
-            }}
-          
-        />
+        src={logo} 
+        alt="ClubConnect Logo" 
+        style={{
+          height: "9%",
+          width: "90%",
+        }}
+      />
+
       <div style={{
         marginBottom: "10%",
         display: "flex",
         justifyContent: "space-evenly"
-        }}>
-          <IconButton
-            icon={User}
-            navigateTo="/app/profile"
-            activeIcon={activeIcon}
-            iconName="profile"
-            setActiveIcon={setActiveIcon}
-          />
-
-          <IconButton
-            icon={Bell}
-            navigateTo="/app/notifications"
-            activeIcon={activeIcon}
-            iconName="notifications"
-            setActiveIcon={setActiveIcon}
-          />
-        </div>
+      }}>
+        <IconButton
+          icon={User}
+          navigateTo="/app/profile"
+          activeIcon={activeIcon}
+          iconName="profile"
+          setActiveIcon={setActiveIcon}
+        />
+        <IconButton
+          icon={Bell}
+          navigateTo="/app/notifications"
+          activeIcon={activeIcon}
+          iconName="notifications"
+          setActiveIcon={setActiveIcon}
+        />
+      </div>
 
       <nav className="flex-1 space-y-2">
         <SidebarButton
@@ -77,7 +76,6 @@ export default function Sidebar() {
           iconName="home"
           setActiveIcon={setActiveIcon}
         />
-
         <SidebarButton
           icon={ShieldHalf}
           label="Explore Clubs"
@@ -86,7 +84,6 @@ export default function Sidebar() {
           iconName="clubs"
           setActiveIcon={setActiveIcon}
         />
-
         <SidebarButton
           icon={Calendar}
           label="Explore Events"
@@ -95,7 +92,6 @@ export default function Sidebar() {
           iconName="explore"
           setActiveIcon={setActiveIcon}
         />
-
         <SidebarButton
           icon={StickyNote}
           label="Forms"
@@ -104,9 +100,18 @@ export default function Sidebar() {
           iconName="StickyNote"
           setActiveIcon={setActiveIcon}
         />
+
+        {/* 👉 Messages button added here */}
+        <SidebarButton
+          icon={MessageSquareText}
+          label="Messages"
+          navigateTo="/app/chat"
+          activeIcon={activeIcon}
+          iconName="messages"
+          setActiveIcon={setActiveIcon}
+        />
       </nav>
 
-      {/* User Actions */}
       <div className="mt-auto space-y-4 pt-4 border-t border-indigo-600">
         <button
           onClick={handleLogout}
@@ -124,9 +129,6 @@ export default function Sidebar() {
             color: 'white',
             fontSize: '0.875rem',
             transition: 'all 0.2s ease',
-            ':hover': {
-              backgroundColor: '#dc2626'
-            }
           }}
         >
           <LogOut size={18} />

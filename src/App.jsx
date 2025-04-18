@@ -12,6 +12,10 @@ import DeleteClubForm from "./pages/DeleteClubForm";
 import FundingRequestForm from "./pages/FundingRequestForm";
 import ManageMembersPage from "./pages/manageMembersPage";
 import RequestPage from "./pages/requestPage";
+import Chat from "./pages/chatPage";
+import Form from "./pages/studentFormPage"
+import CompletedForm from "./pages/completedForm";
+import EventRequest from "./pages/eventRequestPage";
 
 // 404 Fallback Component
 const NotFound = () => {
@@ -69,6 +73,13 @@ const App = () => {
           <Route path="funding-request" element={<FundingRequestForm />} />
           <Route path="manage-members" element={<ManageMembersPage />} />
           <Route path="requests" element={<RequestPage />} />
+          <Route path="chat" element={<Chat />} />
+          <Route path="form" element={<Form />} />
+          <Route path="completedForm" element={<CompletedForm />} />
+            <Route path="eventRequest" element={<EventRequest />} />
+          
+
+
         </Route>
 
         {/* 404 Fallback */}

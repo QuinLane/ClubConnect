@@ -7,11 +7,14 @@ const Layout = () => {
   const showSidebar = !location.pathname.includes('/login');
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
       {showSidebar && <Sidebar />}
-      <div className={`${showSidebar ? 'flex-1' : 'w-full'} overflow-auto bg-gray-50`}>
+
+      {/* Main Content */}
+      <main className={`flex-1 overflow-y-auto ${showSidebar ? 'ml-[20px]' : ''} p-4`}>
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 };
