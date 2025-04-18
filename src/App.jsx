@@ -19,8 +19,9 @@ import CompletedForm from "./pages/completedForm";
 import EventRequest from "./pages/eventRequestPage";
 import DashboardPage from "./pages/dashboardPage";
 import AdminDashboardPage from "./pages/adminDashboardPage";
-import ExploreClubsPage from "./pages/exploreClubsPage"
-import ExploreEventsPage from "./pages/eventsExplorePage"
+import ExploreClubsPage from "./pages/ExploreClubs"
+import ExploreEventsPage from "./pages/ExploreEvents"
+import StudentFormPage from "./pages/studentFormPage"
 
 // 404 Fallback Component
 const NotFound = () => {
@@ -81,10 +82,8 @@ const App = () => {
           <Route path="chat" element={<Chat />} />
           <Route path="form" element={<Form />} />
           <Route path="completedForm" element={<CompletedForm />} />
-            <Route path="eventRequest" element={<EventRequest />} />
-          
-
-
+          <Route path="eventRequest" element={<EventRequest />} />
+          <Route path="student-forms" element={<StudentFormPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="admin-dashboard" element={<AdminDashboardPage />} />
           <Route path="explore-clubs" element={<ExploreClubsPage />} />

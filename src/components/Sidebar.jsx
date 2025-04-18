@@ -95,7 +95,7 @@ export default function Sidebar() {
         <SidebarButton
           icon={StickyNote}
           label="Forms"
-          navigateTo="/app/Forms"
+          navigateTo="/app/student-forms"
           activeIcon={activeIcon}
           iconName="StickyNote"
           setActiveIcon={setActiveIcon}
