@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Layout from "./pages/Layout";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/Register";
 import ClubPage from "./pages/clubPage"; // Renamed from ClubDetailsPage for clarity
 import EventPage from "./pages/eventPage";
 import ChatBoardPage from "./pages/chatBoardPage";
@@ -65,7 +66,7 @@ const App = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
-
+        <Route path="/register" element={<RegisterPage />} />
         {/* Nested Routes under /app with Layout */}
         <Route path="/app" element={<Layout />}>
           <Route path="club" element={<ClubPage />} />

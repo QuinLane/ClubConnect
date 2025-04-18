@@ -71,7 +71,7 @@ export default function Sidebar() {
         <SidebarButton
           icon={Home}
           label="Home"
-          navigateTo="/app"
+          navigateTo="/app/dashboard"
           activeIcon={activeIcon}
           iconName="home"
           setActiveIcon={setActiveIcon}
