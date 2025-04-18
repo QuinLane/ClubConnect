@@ -17,7 +17,7 @@ const EventsExplorePage = () => {
           throw new Error('Authentication required. Please log in.');
         }
 
-        const response = await fetch('http://localhost:5000/api/events', {
+        const response = await fetch('http://localhost:5050/api/events', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
