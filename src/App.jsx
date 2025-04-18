@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import RequireRole from "./auth/RequireRole";
 
 import Layout from "./pages/Layout";
 import LoginPage from "./pages/LoginPage";
@@ -22,6 +23,7 @@ import AdminDashboardPage from "./pages/adminDashboardPage";
 import ExploreClubsPage from "./pages/ExploreClubs"
 import ExploreEventsPage from "./pages/ExploreEvents"
 import StudentFormPage from "./pages/studentFormPage"
+import { Forbidden } from "./pages/Forbidden";
 
 // 404 Fallback Component
 const NotFound = () => {
@@ -86,10 +88,14 @@ const App = () => {
           <Route path="delete-club" element={<DeleteClubForm />} />
 
           <Route path="student-forms" element={<StudentFormPage />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="admin-dashboard" element={<AdminDashboardPage />} />
+
+          <Route path="dashboard" element={<RequireRole allowed={["Student"]}><DashboardPage/></RequireRole>}/>
+          <Route path="admin-dashboard" element={<RequireRole allowed={["SUAdmin"]}><AdminDashboardPage /></RequireRole>}/>
+          
           <Route path="explore-clubs" element={<ExploreClubsPage />} />
           <Route path="explore-events" element={<ExploreEventsPage />} />
+          <Route path="forbidden" element={<Forbidden />} />
+
         </Route>
 
         {/* 404 Fallback */}
