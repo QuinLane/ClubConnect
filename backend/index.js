@@ -20,9 +20,9 @@ const prisma = new PrismaClient();
 const port = process.env.PORT || 5050;
 
 const corsOptions = {
-  origin: "http://localhost:5173",
-  credentials: true,
-  optionsSuccessStatus: 200
+  origin: "http://localhost:5173", // Your frontend’s origin
+  credentials: true, // Allow cookies, tokens, etc.
+
 };
 
 app.use(cors(corsOptions));

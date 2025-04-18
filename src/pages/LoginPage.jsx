@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/logo.png";
-
 
 export default function LoginPage() {
   const [email, setEmail] = useState(""); // Changed from UCID to email
@@ -16,7 +14,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5050/api/users/login", {
+      const res = await fetch("http://localhost:5000/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }), // Changed from UCID to email
@@ -70,15 +68,6 @@ export default function LoginPage() {
         }}
       >
         <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-          <img
-            src={logo}
-            alt="ClubConnect Logo"
-            style={{
-              width: "200px",
-              objectFit: "contain",
-              marginBottom: "1rem",
-            }}
-          />
           <h2
             style={{
               fontSize: "1.5rem",
@@ -91,7 +80,6 @@ export default function LoginPage() {
           </h2>
           <p style={{ color: "#6b7280" }}>Sign in to access your account</p>
         </div>
-
 
         <form
           onSubmit={handleLogin}
@@ -190,22 +178,6 @@ export default function LoginPage() {
           >
             {isLoading ? "Signing in..." : "Sign In"}
           </button>
-
-          <p style={{ marginTop: "1rem", textAlign: "center", fontSize: "0.875rem", color: "#374151" }}>
-          Don’t have an account?{" "}
-          <span
-            onClick={() => navigate("/register")}
-            style={{
-              color: "#4f46e5",
-              cursor: "pointer",
-              fontWeight: "500",
-              textDecoration: "underline",
-            }}
-          >
-            Create one
-          </span>
-        </p>
-
         </form>
       </div>
     </div>

@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Layout from "./pages/Layout";
 import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
 import ClubPage from "./pages/clubPage"; // Renamed from ClubDetailsPage for clarity
 import EventPage from "./pages/eventPage";
 import ChatBoardPage from "./pages/chatBoardPage";
@@ -13,6 +12,10 @@ import DeleteClubForm from "./pages/DeleteClubForm";
 import FundingRequestForm from "./pages/FundingRequestForm";
 import ManageMembersPage from "./pages/manageMembersPage";
 import RequestPage from "./pages/requestPage";
+import Chat from "./pages/chatPage";
+import Form from "./pages/studentFormPage"
+import CompletedForm from "./pages/completedForm";
+import EventRequest from "./pages/eventRequestPage";
 import DashboardPage from "./pages/dashboardPage";
 import AdminDashboardPage from "./pages/adminDashboardPage";
 import ExploreClubsPage from "./pages/exploreClubsPage"
@@ -62,7 +65,6 @@ const App = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
 
         {/* Nested Routes under /app with Layout */}
         <Route path="/app" element={<Layout />}>
@@ -75,6 +77,13 @@ const App = () => {
           <Route path="funding-request" element={<FundingRequestForm />} />
           <Route path="manage-members" element={<ManageMembersPage />} />
           <Route path="requests" element={<RequestPage />} />
+          <Route path="chat" element={<Chat />} />
+          <Route path="form" element={<Form />} />
+          <Route path="completedForm" element={<CompletedForm />} />
+            <Route path="eventRequest" element={<EventRequest />} />
+          
+
+
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="admin-dashboard" element={<AdminDashboardPage />} />
           <Route path="explore-clubs" element={<ExploreClubsPage />} />
