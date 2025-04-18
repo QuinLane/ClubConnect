@@ -14,11 +14,13 @@ export const login = async (req, res) => {
     if (!isValid) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
+
     const token = jwt.sign(
       { userID: user.userID, userType: user.userType },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
+    
     res.json({
       token,
       user: {
@@ -28,6 +30,7 @@ export const login = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("[LOGIN ERROR]", error);
     res.status(500).json({ error: "Failed to log in" });
   }
 };

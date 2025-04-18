@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-// import dotenv from "dotenv";
+import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 
 import executiveRoutes from "./routes/executives.js";
@@ -12,21 +12,28 @@ import messageRoutes from "./routes/messages.js";
 import venueRoutes from "./routes/venues.js";
 import userRoutes from "./routes/users.js";
 // Load environment variables
-// dotenv.config();
+dotenv.config();
 
 // Initialize Express and Prisma
 const app = express();
 const prisma = new PrismaClient();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5050;
 
 const corsOptions = {
-  origin: "http://localhost:5173", // Your frontend’s origin
-  credentials: true, // Allow cookies, tokens, etc.
+  origin: "http://localhost:5173",
+  credentials: true,
+  optionsSuccessStatus: 200
 };
 
-// Middleware
 app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.use(express.json());
+
+app.use((req, res, next) => {
+  console.log(`[REQUEST] ${req.method} ${req.path}`);
+  next();
+});
+
 
 // Routes
 app.use("/api/executives", executiveRoutes);
