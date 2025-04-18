@@ -15,6 +15,7 @@ import suRoutes from "./routes/su.js";
 import clubsRoutes from "./routes/clubs.js";
 // // Load environment variables
 // dotenv.config();
+import fileUpload from "express-fileupload";
 
 // Initialize Express and Prisma
 const app = express();
@@ -29,6 +30,13 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
+
+app.use(
+  fileUpload({
+    limits: { fileSize: 1 * 1024 * 1024 }, //1MB Limit
+    abortOnLimit: true, //stop if file exceeds size limit
+  })
+);
 
 app.use(express.json());
 

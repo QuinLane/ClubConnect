@@ -48,6 +48,7 @@ model Club {
   socialMediaLinks String?
   website          String?
   clubEmail        String?
+  image            Bytes?
 }
 
 model Executive {
@@ -133,6 +134,7 @@ model Event {
   club        Club         @relation(fields: [clubID], references: [clubID], onDelete: Cascade)
   reservation Reservation?
   rsvps       RSVP[]
+  image       Bytes?
 
   @@map("event")
 }

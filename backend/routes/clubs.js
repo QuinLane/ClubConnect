@@ -54,14 +54,14 @@ router.post(
   requireSUAdmin,
   validate(clubSchema),
   clubController.createClub
-);
+); //EXPECTS FORMDATA IF YOU NEED TO INCLUDE IMAGE OTHERWISE IT USES DEFAULT
 router.put(
   "/:clubID",
   authenticate,
   requireClubAdmin,
   validate(clubSchema),
   clubController.updateClub
-);
+); //EXPECTS FORMDATA IF YOU NEED TO UPDATE IMAGE
 router.delete(
   "/:clubID",
   authenticate,
