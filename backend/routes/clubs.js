@@ -76,7 +76,7 @@ router.post(
   clubController.addClubRole
 );
 router.put(
-  "/:clubID/executives/:executiveID",
+  "/:clubID/executives/:userID",
   authenticate,
   requireClubAdmin,
   validate(updateRoleSchema),

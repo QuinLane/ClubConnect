@@ -22,10 +22,12 @@ export const getAllExecutives = async (req, res) => {
 
 // Note: Available to all
 export const getExecutiveById = async (req, res) => {
-  const { executiveID } = req.params;
+  const { clubID, userID } = req.params;
   try {
     const executive = await prisma.executive.findUnique({
-      where: { executiveID: parseInt(executiveID) },
+      where: {
+        clubID_userID: { clubID: parseInt(clubID), userID: parseInt(userID) },
+      },
       include: {
         user: true,
         club: true,
@@ -69,14 +71,16 @@ export const createExecutive = async (req, res) => {
 
 // Note: Only SU admins
 export const updateExecutive = async (req, res) => {
-  const { executiveID } = req.params;
-  const { userID, clubID, clubRoleID } = req.body;
+  const { clubID, userID } = req.params;
+  const { newUserID, newClubID, clubRoleID } = req.body;
   try {
     const executive = await prisma.executive.update({
-      where: { executiveID: parseInt(executiveID) },
+      where: {
+        clubID_userID: { clubID: parseInt(clubID), userID: parseInt(userID) },
+      },
       data: {
-        userID: userID ? parseInt(userID) : undefined,
-        clubID: clubID ? parseInt(clubID) : undefined,
+        userID: newUserID ? parseInt(newUserID) : undefined,
+        clubID: newClubID ? parseInt(newClubID) : undefined,
         clubRoleID: clubRoleID ? parseInt(clubRoleID) : null,
       },
       include: {
@@ -95,10 +99,12 @@ export const updateExecutive = async (req, res) => {
 
 // Note: Only SU admins
 export const deleteExecutive = async (req, res) => {
-  const { executiveID } = req.params;
+  const { clubID, userID } = req.params;
   try {
     await prisma.executive.delete({
-      where: { executiveID: parseInt(executiveID) },
+      where: {
+        clubID_userID: { clubID: parseInt(clubID), userID: parseInt(userID) },
+      },
     });
     res.status(204).json();
   } catch (error) {
@@ -150,11 +156,13 @@ export const getExecutivesByUser = async (req, res) => {
 
 // Note: Only SU admins
 export const assignRoleToExecutive = async (req, res) => {
-  const { executiveID } = req.params;
+  const { clubID, userID } = req.params;
   const { clubRoleID } = req.body;
   try {
     const executive = await prisma.executive.update({
-      where: { executiveID: parseInt(executiveID) },
+      where: {
+        clubID_userID: { clubID: parseInt(clubID), userID: parseInt(userID) },
+      },
       data: {
         clubRoleID: clubRoleID ? parseInt(clubRoleID) : null,
       },
