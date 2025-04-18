@@ -1,47 +1,45 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/logo.png";
+import  logo  from '../assets/logo.png';
 
-
-export default function LoginPage() {
-  const [email, setEmail] = useState(""); // Changed from UCID to email
+export default function RegisterPage() {
+  const [ucid, setUcid] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5050/api/users/login", {
+      const res = await fetch("http://localhost:5050/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }), // Changed from UCID to email
-        credentials: "include", // For cookies if using them
+        body: JSON.stringify({
+          userID: parseInt(ucid),
+          username,
+          email,
+          password,
+          userType: "Student",
+          createdAt: new Date().toISOString(),
+        }),
+        credentials: "include",
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Login failed");
+        throw new Error(err.error || "Registration failed");
       }
 
-      const { token, user } = await res.json();
-
-      // Store the token in localStorage or context
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Redirect based on user type
-      if (user.userType === "SUAdmin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/dashboard");
-      }
+      alert("Account created! Please login.");
+      navigate("/login");
     } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
+      setError(err.message || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -79,81 +77,59 @@ export default function LoginPage() {
               marginBottom: "1rem",
             }}
           />
-          <h2
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: "600",
-              color: "#1a1a1a",
-              marginBottom: "0.5rem",
-            }}
-          >
-            Welcome To ClubConnect
+          <h2 style={{ fontSize: "1.5rem", fontWeight: "600", color: "#1a1a1a", marginBottom: "0.5rem" }}>
+            Create an Account
           </h2>
-          <p style={{ color: "#6b7280" }}>Sign in to access your account</p>
+          <p style={{ color: "#6b7280" }}>Register to join ClubConnect</p>
         </div>
 
 
-        <form
-          onSubmit={handleLogin}
-          style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-        >
+        <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: "500",
-                color: "#374151",
-                marginBottom: "0.5rem",
-              }}
-            >
-              Email
-            </label>
+            <label style={labelStyle}>UCID</label>
+            <input
+              type="number"
+              value={ucid}
+              onChange={(e) => setUcid(e.target.value)}
+              placeholder="Enter your UCID"
+              required
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
+              required
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
-              style={{
-                width: "100%",
-                padding: "0.75rem",
-                borderRadius: "0.375rem",
-                border: "1px solid #d1d5db",
-                outline: "none",
-                transition: "all 0.2s",
-                boxSizing: "border-box",
-              }}
+              style={inputStyle}
             />
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.875rem",
-                fontWeight: "500",
-                color: "#374151",
-                marginBottom: "0.5rem",
-              }}
-            >
-              Password
-            </label>
+            <label style={labelStyle}>Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              style={{
-                width: "100%",
-                padding: "0.75rem",
-                borderRadius: "0.375rem",
-                border: "1px solid #d1d5db",
-                outline: "none",
-                transition: "all 0.2s",
-                boxSizing: "border-box",
-              }}
+              style={inputStyle}
             />
           </div>
 
@@ -188,26 +164,44 @@ export default function LoginPage() {
               marginTop: "0.5rem",
             }}
           >
-            {isLoading ? "Signing in..." : "Sign In"}
+            {isLoading ? "Registering..." : "Register"}
           </button>
 
           <p style={{ marginTop: "1rem", textAlign: "center", fontSize: "0.875rem", color: "#374151" }}>
-          Don’t have an account?{" "}
-          <span
-            onClick={() => navigate("/register")}
-            style={{
-              color: "#4f46e5",
-              cursor: "pointer",
-              fontWeight: "500",
-              textDecoration: "underline",
-            }}
-          >
-            Create one
-          </span>
-        </p>
+            Already have an account?{" "}
+            <span
+              onClick={() => navigate("/login")}
+              style={{
+                color: "#4f46e5",
+                cursor: "pointer",
+                fontWeight: "500",
+                textDecoration: "underline",
+              }}
+            >
+              Log in
+            </span>
+          </p>
 
         </form>
       </div>
     </div>
   );
 }
+
+const labelStyle = {
+  display: "block",
+  fontSize: "0.875rem",
+  fontWeight: "500",
+  color: "#374151",
+  marginBottom: "0.5rem",
+};
+
+const inputStyle = {
+  width: "100%",
+  padding: "0.75rem",
+  borderRadius: "0.375rem",
+  border: "1px solid #d1d5db",
+  outline: "none",
+  transition: "all 0.2s",
+  boxSizing: "border-box",
+};

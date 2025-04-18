@@ -36,17 +36,26 @@ export const login = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
-  const { username, email, password, userType } = req.body;
+  const { userID, username, email, password, userType, createdAt } = req.body;
   try {
-    const passwordHash = await bcrypt.hash(password, 10); // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { username, email, passwordHash, userType },
+      data: {
+        userID,
+        username,
+        email,
+        passwordHash,
+        userType,
+        createdAt: new Date(createdAt),
+      },
     });
     res.status(201).json(user);
   } catch (error) {
+    console.error("[CREATE USER ERROR]", error);
     res.status(500).json({ error: "Failed to create user" });
   }
 };
+
 
 export const getAllUsers = async (req, res) => {};
 export const getUserById = async (req, res) => {};
