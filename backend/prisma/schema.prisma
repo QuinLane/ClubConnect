@@ -30,14 +30,14 @@ model Club {
   events        Event[]
   forms         Form[]
   announcements Announcement[]
-  roles         ClubRole[] // New relation to club-specific roles
+  roles         ClubRole[]
 }
 
 model Executive {
   executiveID Int       @id @default(autoincrement())
   userID      Int
   clubID      Int
-  clubRoleID  Int? // Optional link to a club role
+  clubRoleID  Int?
   user        User      @relation(fields: [userID], references: [userID])
   club        Club      @relation(fields: [clubID], references: [clubID])
   clubRole    ClubRole? @relation(fields: [clubRoleID], references: [clubRoleID])
@@ -48,9 +48,9 @@ model ClubRole {
   clubID     Int
   roleName   String
   club       Club        @relation(fields: [clubID], references: [clubID])
-  executives Executive[] // Executives assigned to this role
+  executives Executive[]
 
-  @@unique([clubID, roleName]) // Ensures role names are unique within a club
+  @@unique([clubID, roleName])
 }
 
 model RSVP {
@@ -112,7 +112,9 @@ model Event {
   clubID      Int
   club        Club         @relation(fields: [clubID], references: [clubID], onDelete: Cascade)
   reservation Reservation?
-  rsvps       RSVP[]
+  rsvps       RSVP[] // List of RSVPs represents attendees
+
+  @@map("event")
 }
 
 model Reservation {
