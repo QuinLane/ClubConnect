@@ -1,7 +1,17 @@
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
+import fs from "fs/promises"; // For reading default image file
 
 const prisma = new PrismaClient();
+
+// Helper to convert image buffer to base64 or load default image
+const getImageAsBase64 = async (imageBuffer) => {
+  if (!imageBuffer) {
+    const defaultImage = await fs.readFile("public/images/default.webp");
+    return `data:image/webp;base64,${defaultImage.toString("base64")}`;
+  }
+  return `data:image/webp;base64,${imageBuffer.toString("base64")}`;
+};
 
 // Note: Available to all
 export const getAllClubs = async (req, res) => {
@@ -13,7 +23,14 @@ export const getAllClubs = async (req, res) => {
         presidentUser: true,
       },
     });
-    res.status(200).json(clubs);
+    // Convert images to base64
+    const clubsWithImages = await Promise.all(
+      clubs.map(async (club) => ({
+        ...club,
+        image: await getImageAsBase64(club.image),
+      }))
+    );
+    res.status(200).json(clubsWithImages);
   } catch (error) {
     res.status(500).json({ error: `Failed to fetch clubs: ${error.message}` });
   }
@@ -34,7 +51,12 @@ export const getClubById = async (req, res) => {
     if (!club) {
       return res.status(404).json({ error: "Club not found" });
     }
-    res.status(200).json(club);
+    // Convert image to base64
+    const clubWithImage = {
+      ...club,
+      image: await getImageAsBase64(club.image),
+    };
+    res.status(200).json(clubWithImage);
   } catch (error) {
     res.status(500).json({ error: `Failed to fetch club: ${error.message}` });
   }
@@ -51,15 +73,28 @@ export const createClub = async (req, res) => {
     clubEmail,
   } = req.body;
   try {
+    // Check for uploaded image
+    let image = null;
+    if (req.files && req.files.image) {
+      const file = req.files.image;
+      // Validate file type
+      if (!file.mimetype.startsWith("image/")) {
+        return res.status(400).json({ error: "Only image files are allowed" });
+      }
+      // Use Buffer directly (express-fileupload provides data as Buffer)
+      image = file.data;
+    }
+
     const club = await prisma.club.create({
       data: {
         clubName,
         description,
         createdAt: new Date(),
         president: parseInt(president),
-        socialMediaLinks: socialMediaLinks || [],
+        socialMediaLinks: socialMediaLinks ? JSON.parse(socialMediaLinks) : [],
         website,
         clubEmail,
+        image, // Save image as binary data
       },
     });
     await prisma.memberOf.create({
@@ -75,7 +110,12 @@ export const createClub = async (req, res) => {
         role: "President",
       },
     });
-    res.status(201).json(club);
+    // Convert image to base64 for response
+    const clubWithImage = {
+      ...club,
+      image: await getImageAsBase64(club.image),
+    };
+    res.status(201).json(clubWithImage);
   } catch (error) {
     res.status(500).json({ error: `Failed to create club: ${error.message}` });
   }
@@ -84,24 +124,56 @@ export const createClub = async (req, res) => {
 // Note: Only club admins should be able to do this
 export const updateClub = async (req, res) => {
   const { clubID } = req.params;
-  const data = req.body; // { clubName, description, president, socialMediaLinks, website, clubEmail }
-  if (data.president) {
+  const {
+    clubName,
+    description,
+    president,
+    socialMediaLinks,
+    website,
+    clubEmail,
+  } = req.body;
+  if (president) {
     const member = await prisma.memberOf.findUnique({
       where: {
         userID_clubID: {
           clubID: parseInt(clubID),
-          userID: parseInt(data.president),
+          userID: parseInt(president),
         },
       },
     });
     if (!member) throw new Error("President must be a club member");
   }
   try {
+    // Check for uploaded image
+    let image = undefined; // Use undefined to avoid overwriting if no image is provided
+    if (req.files && req.files.image) {
+      const file = req.files.image;
+      if (!file.mimetype.startsWith("image/")) {
+        return res.status(400).json({ error: "Only image files are allowed" });
+      }
+      image = file.data;
+    }
+
     const club = await prisma.club.update({
       where: { clubID: parseInt(clubID) },
-      data,
+      data: {
+        clubName,
+        description,
+        president: president ? parseInt(president) : undefined,
+        socialMediaLinks: socialMediaLinks
+          ? JSON.parse(socialMediaLinks)
+          : undefined,
+        website,
+        clubEmail,
+        image, // Only update image if provided
+      },
     });
-    res.status(200).json(club);
+    // Convert image to base64 for response
+    const clubWithImage = {
+      ...club,
+      image: await getImageAsBase64(club.image),
+    };
+    res.status(200).json(clubWithImage);
   } catch (error) {
     res.status(500).json({ error: `Failed to update club: ${error.message}` });
   }
@@ -138,6 +210,7 @@ export const updateClubRoles = async (req, res) => {
       .json({ error: `Failed to update club role: ${error.message}` });
   }
 };
+
 // Note: Only club admins can add executives (via Executive table)
 export const addExec = async (req, res) => {
   const { clubID } = req.params;
@@ -234,7 +307,14 @@ export const getUserClubs = async (req, res) => {
         presidentUser: true,
       },
     });
-    res.status(200).json(clubs);
+    // Convert images to base64
+    const clubsWithImages = await Promise.all(
+      clubs.map(async (club) => ({
+        ...club,
+        image: await getImageAsBase64(club.image),
+      }))
+    );
+    res.status(200).json(clubsWithImages);
   } catch (error) {
     res
       .status(500)
@@ -260,7 +340,14 @@ export const getUserExecClubs = async (req, res) => {
         events: true,
       },
     });
-    res.status(200).json(clubs);
+    // Convert images to base64
+    const clubsWithImages = await Promise.all(
+      clubs.map(async (club) => ({
+        ...club,
+        image: await getImageAsBase64(club.image),
+      }))
+    );
+    res.status(200).json(clubsWithImages);
   } catch (error) {
     res
       .status(500)
@@ -306,7 +393,14 @@ export const searchClubs = async (req, res) => {
         presidentUser: true,
       },
     });
-    res.status(200).json(clubs);
+    // Convert images to base64
+    const clubsWithImages = await Promise.all(
+      clubs.map(async (club) => ({
+        ...club,
+        image: await getImageAsBase64(club.image),
+      }))
+    );
+    res.status(200).json(clubsWithImages);
   } catch (error) {
     res.status(500).json({ error: `Failed to search clubs: ${error.message}` });
   }

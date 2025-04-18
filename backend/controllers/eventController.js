@@ -1,7 +1,17 @@
 import { PrismaClient } from "@prisma/client";
 import * as venueController from "./venueController.js";
+import fs from "fs/promises"; // For reading default image file
 
 const prisma = new PrismaClient();
+
+// Helper to convert image buffer to base64 or load default image
+const getImageAsBase64 = async (imageBuffer) => {
+  if (!imageBuffer) {
+    const defaultImage = await fs.readFile("public/images/default.webp");
+    return `data:image/webp;base64,${defaultImage.toString("base64")}`;
+  }
+  return `data:image/webp;base64,${imageBuffer.toString("base64")}`;
+};
 
 // Note: Available to all
 export const getAllEvents = async (req, res) => {
@@ -9,11 +19,18 @@ export const getAllEvents = async (req, res) => {
     const events = await prisma.event.findMany({
       include: {
         club: true,
-        rsvps: { include: { user: true } }, // Always include RSVPs with user details
+        rsvps: { include: { user: true } },
         reservation: true,
       },
     });
-    res.status(200).json(events);
+    // Convert images to base64
+    const eventsWithImages = await Promise.all(
+      events.map(async (event) => ({
+        ...event,
+        image: await getImageAsBase64(event.image),
+      }))
+    );
+    res.status(200).json(eventsWithImages);
   } catch (error) {
     res.status(500).json({ error: `Failed to fetch events: ${error.message}` });
   }
@@ -27,14 +44,19 @@ export const getEventById = async (req, res) => {
       where: { eventID: parseInt(eventID) },
       include: {
         club: true,
-        rsvps: { include: { user: true } }, // Always include RSVPs with user details
+        rsvps: { include: { user: true } },
         reservation: true,
       },
     });
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
     }
-    res.status(200).json(event);
+    // Convert image to base64
+    const eventWithImage = {
+      ...event,
+      image: await getImageAsBase64(event.image),
+    };
+    res.status(200).json(eventWithImage);
   } catch (error) {
     res.status(500).json({ error: `Failed to fetch event: ${error.message}` });
   }
@@ -43,18 +65,33 @@ export const getEventById = async (req, res) => {
 // Note: Only club execs can update events
 export const updateEvent = async (req, res) => {
   const { eventID } = req.params;
-  const { name, description } = req.body; // Only allow updating name and description
+  const { name, description } = req.body;
   try {
+    // Check for uploaded image
+    let image = undefined;
+    if (req.files && req.files.image) {
+      const file = req.files.image;
+      if (!file.mimetype.startsWith("image/")) {
+        return res.status(400).json({ error: "Only image files are allowed" });
+      }
+      image = file.data;
+    }
+
     const event = await prisma.event.update({
       where: { eventID: parseInt(eventID) },
-      data: { name, description },
+      data: { name, description, image },
       include: {
         club: true,
-        rsvps: { include: { user: true } }, // Always include RSVPs with user details
+        rsvps: { include: { user: true } },
         reservation: true,
       },
     });
-    res.status(200).json(event);
+    // Convert image to base64
+    const eventWithImage = {
+      ...event,
+      image: await getImageAsBase64(event.image),
+    };
+    res.status(200).json(eventWithImage);
   } catch (error) {
     res.status(500).json({ error: `Failed to update event: ${error.message}` });
   }
@@ -67,7 +104,7 @@ export const deleteEvent = async (req, res) => {
     await prisma.event.delete({
       where: { eventID: parseInt(eventID) },
     });
-    res.status(204).json(); // No content on successful deletion
+    res.status(204).json();
   } catch (error) {
     res.status(500).json({ error: `Failed to delete event: ${error.message}` });
   }
@@ -78,15 +115,26 @@ export const createEvent = async (req, res) => {
   const { name, description, clubID, date, startTime, endTime, venueID } =
     req.body;
   try {
+    // Check for uploaded image
+    let image = null;
+    if (req.files && req.files.image) {
+      const file = req.files.image;
+      if (!file.mimetype.startsWith("image/")) {
+        return res.status(400).json({ error: "Only image files are allowed" });
+      }
+      image = file.data;
+    }
+
     const event = await prisma.event.create({
       data: {
         name,
         description,
         clubID: parseInt(clubID),
+        image,
       },
       include: {
         club: true,
-        rsvps: { include: { user: true } }, // Include RSVPs in response
+        rsvps: { include: { user: true } },
         reservation: true,
       },
     });
@@ -104,7 +152,12 @@ export const createEvent = async (req, res) => {
       res
     );
 
-    res.status(201).json(event);
+    // Convert image to base64
+    const eventWithImage = {
+      ...event,
+      image: await getImageAsBase64(event.image),
+    };
+    res.status(201).json(eventWithImage);
   } catch (error) {
     res.status(500).json({ error: `Failed to create event: ${error.message}` });
   }
@@ -125,7 +178,13 @@ export const getUpcomingEvents = async (req, res) => {
         reservation: true,
       },
     });
-    res.status(200).json(events);
+    const eventsWithImages = await Promise.all(
+      events.map(async (event) => ({
+        ...event,
+        image: await getImageAsBase64(event.image),
+      }))
+    );
+    res.status(200).json(eventsWithImages);
   } catch (error) {
     res
       .status(500)
@@ -150,7 +209,13 @@ export const getUpcomingClubEvents = async (req, res) => {
         reservation: true,
       },
     });
-    res.status(200).json(events);
+    const eventsWithImages = await Promise.all(
+      events.map(async (event) => ({
+        ...event,
+        image: await getImageAsBase64(event.image),
+      }))
+    );
+    res.status(200).json(eventsWithImages);
   } catch (error) {
     res.status(500).json({
       error: `Failed to fetch upcoming club events: ${error.message}`,
@@ -179,7 +244,13 @@ export const getUpcomingUserEvents = async (req, res) => {
         reservation: true,
       },
     });
-    res.status(200).json(events);
+    const eventsWithImages = await Promise.all(
+      events.map(async (event) => ({
+        ...event,
+        image: await getImageAsBase64(event.image),
+      }))
+    );
+    res.status(200).json(eventsWithImages);
   } catch (error) {
     res.status(500).json({
       error: `Failed to fetch upcoming user events: ${error.message}`,
@@ -214,7 +285,13 @@ export const getEventsByClub = async (req, res) => {
         reservation: true,
       },
     });
-    res.status(200).json(events);
+    const eventsWithImages = await Promise.all(
+      events.map(async (event) => ({
+        ...event,
+        image: await getImageAsBase64(event.image),
+      }))
+    );
+    res.status(200).json(eventsWithImages);
   } catch (error) {
     res
       .status(500)
@@ -239,7 +316,13 @@ export const searchEvents = async (req, res) => {
         reservation: true,
       },
     });
-    res.status(200).json(events);
+    const eventsWithImages = await Promise.all(
+      events.map(async (event) => ({
+        ...event,
+        image: await getImageAsBase64(event.image),
+      }))
+    );
+    res.status(200).json(eventsWithImages);
   } catch (error) {
     res
       .status(500)
@@ -277,7 +360,13 @@ export const getUserRecommendedEvents = async (req, res) => {
         reservation: true,
       },
     });
-    res.status(200).json(events);
+    const eventsWithImages = await Promise.all(
+      events.map(async (event) => ({
+        ...event,
+        image: await getImageAsBase64(event.image),
+      }))
+    );
+    res.status(200).json(eventsWithImages);
   } catch (error) {
     res
       .status(500)

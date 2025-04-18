@@ -33,7 +33,7 @@ router.put(
   requireClubAdmin,
   validate(updateEventSchema),
   eventController.updateEvent
-);
+); //EXPECTS FORMDATA IF YOU NEED TO UPDATE IMAGE
 router.delete(
   "/:eventID",
   authenticate,
