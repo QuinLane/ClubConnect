@@ -12,22 +12,11 @@ const userSchema = Joi.object({
 const router = express.Router();
 
 // User CRUD
-router.post("/login", userController.login); // Login endpoint
-router.get("/", userController.getAllUsers); // Get all users
-router.get("/:userID", userController.getUserById); // Get user by ID
 router.post("/", userController.createUser); // Create user
-router.put("/:userID", userController.updateUser); // Update user
-router.delete("/:userID", userController.deleteUser); // Delete user
-
-//Using authentication
-router.post(
-  "/announcements",
-  authenticate,
-  announcementController.createAnnouncement
-);
-
-//Ex using validation
-import { validate } from "../middleware/validate.js";
-router.post("/", validate(userSchema), userController.createUser);
+router.post("/login", userController.login); // Login endpoint
+// router.get("/", userController.getAllUsers); // Get all users
+// router.get("/:userID", userController.getUserById); // Get user by ID
+// router.put("/:userID", userController.updateUser); // Update user
+// router.delete("/:userID", userController.deleteUser); // Delete user
 
 export default router;

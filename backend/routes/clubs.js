@@ -6,7 +6,7 @@ import {
   authenticate,
   requireSUAdmin,
   requireClubAdmin,
-} from "../middleware/auth.js";
+} from "../middleware/authenticate.js";
 
 const router = express.Router();
 

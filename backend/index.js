@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 
 import executiveRoutes from "./routes/executives.js";
@@ -11,7 +11,7 @@ import announcementRoutes from "./routes/announcements.js";
 import messageRoutes from "./routes/messages.js";
 import venueRoutes from "./routes/venues.js";
 // Load environment variables
-dotenv.config();
+// dotenv.config();
 
 // Initialize Express and Prisma
 const app = express();

@@ -6,7 +6,7 @@ import {
   authenticate,
   requireSUAdmin,
   requireClubAdmin,
-} from "../middleware/auth.js";
+} from "../middleware/authenticate.js";
 
 const router = express.Router();
 
@@ -25,6 +25,8 @@ const approvalSchema = Joi.object({
 
 // Form routes
 router.get("/", formController.getAllForms);
+router.get("/open", formController.getOpenForms);
+router.get("/:formID", formController.getFormById);
 router.post(
   "/:clubID",
   authenticate,

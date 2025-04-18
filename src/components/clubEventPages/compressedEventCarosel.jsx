@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import EventCompressed from './compressedElements';
+import EventCompressed from '../clubEventPages/compressedElements';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const CompressedEventCarousel = ({
@@ -28,6 +28,7 @@ const CompressedEventCarousel = ({
   const cardWidth = `calc((100% - ${(visibleCount - 1) * 20}px) / ${visibleCount})`;
   const isLastPage = currentPage === totalPages - 1;
   const remainingItems = events.length - currentPage * visibleCount;
+  const hasPartialGroup = isLastPage && remainingItems < visibleCount && remainingItems > 0;
 
   return (
     <div style={{
@@ -70,7 +71,8 @@ const CompressedEventCarousel = ({
           gap: '20px',
           width: '100%',
           overflow: 'hidden',
-          justifyContent: isLastPage && remainingItems < visibleCount ? 'flex-start' : 'center'
+          justifyContent: hasPartialGroup ? 'flex-start' : 'center',
+          paddingLeft: hasPartialGroup ? 'calc((100% - (280px * 3 + 40px)) / 2)' : '0'
         }}>
           {getVisibleEvents().map((event, index) => (
             <div key={`${currentPage}-${index}`} style={{
@@ -78,7 +80,8 @@ const CompressedEventCarousel = ({
               maxWidth: '280px',
               minWidth: '200px',
               height: '140px',
-              transition: 'transform 0.3s ease'
+              transition: 'transform 0.3s ease',
+              marginLeft: hasPartialGroup && index === 0 ? 'calc((100% - (280px * remainingItems + 20px * (remainingItems - 1))) / 2)' : '0'
             }}>
               <EventCompressed
                 imageUrl={event.imageUrl}
@@ -147,12 +150,6 @@ const arrowStyle = {
   boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
   transition: 'all 0.3s',
   outline: 'none',
-};
-
-const arrowHoverStyle = {
-  ...arrowStyle,
-  backgroundColor: '#005587',
-  color: '#fff',
 };
 
 CompressedEventCarousel.propTypes = {
