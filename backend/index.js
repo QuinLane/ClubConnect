@@ -17,15 +17,18 @@ import userRoutes from "./routes/users.js";
 // Initialize Express and Prisma
 const app = express();
 const prisma = new PrismaClient();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5050;
 
 const corsOptions = {
   origin: "http://localhost:5173", // Your frontend’s origin
   credentials: true, // Allow cookies, tokens, etc.
+  optionsSuccessStatus: 200,
 };
 
 // Middleware
 app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
+
 app.use(express.json());
 
 // Routes

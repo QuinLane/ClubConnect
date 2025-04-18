@@ -10,33 +10,43 @@ import {
 
 const router = express.Router();
 
-// Joi schema for Club (POST)
+// Joi schema for creating/updating clubs
 const clubSchema = Joi.object({
   clubName: Joi.string().required(),
-  description: Joi.string().allow(null),
+  description: Joi.string().allow(""),
 });
 
-// Joi schema for Club (PUT - partial updates)
-const clubUpdateSchema = Joi.object({
-  clubName: Joi.string(),
-  description: Joi.string().allow(null),
-}).min(1);
-
-// Joi schema for adding/updating roles and members
-const roleSchema = Joi.object({
-  roleName: Joi.string().required(), // For creating a new ClubRole
-});
-
+// Joi schema for updating club roles
 const updateRoleSchema = Joi.object({
-  clubRoleID: Joi.number().integer().allow(null), // For assigning a role to an executive
+  clubRoleID: Joi.number().integer().allow(null),
 });
 
-const memberSchema = Joi.object({
+// Joi schema for adding club roles
+const addRoleSchema = Joi.object({
+  roleName: Joi.string().required(),
+});
+
+// Joi schema for adding members
+const addMemberSchema = Joi.object({
   userID: Joi.number().integer().required(),
 });
 
-// Club CRUD
+// Joi schema for searching clubs
+const searchSchema = Joi.object({
+  query: Joi.string().required(),
+});
+
 router.get("/", clubController.getAllClubs);
+router.get("/search", validate(searchSchema), clubController.searchClubs);
+router.get("/stats/:clubID", clubController.getClubStats);
+router.get(
+  "/members/:clubID",
+  authenticate,
+  requireClubAdmin,
+  clubController.getClubMembers
+);
+router.get("/user/:userID", authenticate, clubController.getUserClubs);
+router.get("/user-exec/:userID", authenticate, clubController.getUserExecClubs);
 router.get("/:clubID", clubController.getClubById);
 router.post(
   "/",
@@ -49,7 +59,7 @@ router.put(
   "/:clubID",
   authenticate,
   requireClubAdmin,
-  validate(clubUpdateSchema),
+  validate(clubSchema),
   clubController.updateClub
 );
 router.delete(
@@ -58,27 +68,25 @@ router.delete(
   requireSUAdmin,
   clubController.deleteClub
 );
-
-// Role and member management
+router.post(
+  "/:clubID/roles",
+  authenticate,
+  requireClubAdmin,
+  validate(addRoleSchema),
+  clubController.addClubRole
+);
 router.put(
-  "/:clubID/roles/:executiveID",
+  "/:clubID/executives/:executiveID",
   authenticate,
   requireClubAdmin,
   validate(updateRoleSchema),
   clubController.updateClubRoles
 );
 router.post(
-  "/:clubID/roles",
-  authenticate,
-  requireClubAdmin,
-  validate(roleSchema),
-  clubController.addClubRole
-);
-router.post(
   "/:clubID/members",
   authenticate,
   requireClubAdmin,
-  validate(memberSchema),
+  validate(addMemberSchema),
   clubController.addMember
 );
 router.delete(

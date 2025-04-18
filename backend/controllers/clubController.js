@@ -163,6 +163,131 @@ export const removeMember = async (req, res) => {
   }
 };
 
+// Note: Available to authenticated users
+export const getUserClubs = async (req, res) => {
+  const { userID } = req.params;
+  try {
+    const clubs = await prisma.club.findMany({
+      where: {
+        executives: {
+          some: {
+            userID: parseInt(userID),
+          },
+        },
+      },
+      include: {
+        executives: { include: { user: true, clubRole: true } },
+        roles: true,
+        events: true,
+      },
+    });
+    res.status(200).json(clubs);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch user clubs: ${error.message}` });
+  }
+};
+
+// Note: Available to authenticated users
+export const getUserExecClubs = async (req, res) => {
+  const { userID } = req.params;
+  try {
+    const clubs = await prisma.club.findMany({
+      where: {
+        executives: {
+          some: {
+            userID: parseInt(userID),
+            clubRoleID: { not: null }, // Only clubs where user has a role
+          },
+        },
+      },
+      include: {
+        executives: { include: { user: true, clubRole: true } },
+        roles: true,
+        events: true,
+      },
+    });
+    res.status(200).json(clubs);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch user exec clubs: ${error.message}` });
+  }
+};
+
+// Note: Only club admins
+export const getClubMembers = async (req, res) => {
+  const { clubID } = req.params;
+  try {
+    const members = await prisma.executive.findMany({
+      where: { clubID: parseInt(clubID) },
+      include: {
+        user: true,
+        clubRole: true,
+      },
+    });
+    res.status(200).json(members);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch club members: ${error.message}` });
+  }
+};
+
+// Note: Available to all
+export const searchClubs = async (req, res) => {
+  const { query } = req.query;
+  try {
+    const clubs = await prisma.club.findMany({
+      where: {
+        OR: [
+          { clubName: { contains: query, mode: "insensitive" } },
+          { description: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        executives: { include: { user: true, clubRole: true } },
+        roles: true,
+        events: true,
+      },
+    });
+    res.status(200).json(clubs);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to search clubs: ${error.message}` });
+  }
+};
+
+// Note: Available to all
+export const getClubStats = async (req, res) => {
+  const { clubID } = req.params;
+  try {
+    const memberCount = await prisma.executive.count({
+      where: { clubID: parseInt(clubID) },
+    });
+    const eventCount = await prisma.event.count({
+      where: { clubID: parseInt(clubID) },
+    });
+    const upcomingEventCount = await prisma.event.count({
+      where: {
+        clubID: parseInt(clubID),
+        reservation: {
+          date: { gte: new Date() },
+        },
+      },
+    });
+    res.status(200).json({
+      memberCount,
+      eventCount,
+      upcomingEventCount,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch club stats: ${error.message}` });
+  }
+};
+
 // Checks if user is an executive of the club
 export const checkClubAdminPermissions = async (userID, clubID) => {
   const executive = await prisma.executive.findFirst({
