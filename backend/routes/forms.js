@@ -24,9 +24,9 @@ const approvalSchema = Joi.object({
 });
 
 // Form routes
-router.get("/", formController.getAllForms);
-router.get("/open", formController.getOpenForms);
-router.get("/:formID", formController.getFormById);
+router.get("/", authenticate, formController.getAllForms);
+router.get("/open", authenticate, formController.getOpenForms);
+router.get("/:formID", authenticate, formController.getFormById);
 router.post(
   "/:clubID",
   authenticate,

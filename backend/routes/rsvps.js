@@ -7,7 +7,7 @@ const router = express.Router();
 // RSVP routes
 router.post("/:eventID/:userID", authenticate, rsvpController.submitRSVP);
 router.delete("/:eventID/:userID", authenticate, rsvpController.unsubmitRSVP);
-router.get("/:eventID", rsvpController.getRSVPsForEvent);
+router.get("/:eventID", authenticate, rsvpController.getRSVPsForEvent);
 router.get("/user/:userID", authenticate, rsvpController.getUserRSVPs);
 
 export default router;

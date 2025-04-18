@@ -36,9 +36,14 @@ const searchSchema = Joi.object({
   query: Joi.string().required(),
 });
 
-router.get("/", clubController.getAllClubs);
-router.get("/search", validate(searchSchema), clubController.searchClubs);
-router.get("/stats/:clubID", clubController.getClubStats);
+router.get("/", authenticate, clubController.getAllClubs);
+router.get(
+  "/search",
+  authenticate,
+  validate(searchSchema),
+  clubController.searchClubs
+);
+router.get("/stats/:clubID", authenticate, clubController.getClubStats);
 router.get(
   "/members/:clubID",
   authenticate,

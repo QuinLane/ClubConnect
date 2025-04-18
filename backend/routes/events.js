@@ -18,15 +18,32 @@ const searchSchema = Joi.object({
 });
 
 // Event routes
-router.get("/", eventController.getAllEvents);
-router.get("/upcoming", eventController.getUpcomingEvents);
-router.get("/upcoming/club/:clubID", eventController.getUpcomingClubEvents);
-router.get("/upcoming/user/:userID", eventController.getUpcomingUserEvents);
-router.get("/club/:clubID", eventController.getEventsByClub);
-router.get("/search", validate(searchSchema), eventController.searchEvents);
-router.get("/recommended/:userID", eventController.getUserRecommendedEvents);
-router.get("/:eventID", eventController.getEventById);
-router.get("/:eventID/rsvp-count", eventController.getRSVPCount);
+router.get("/", authenticate, eventController.getAllEvents);
+router.get("/upcoming", authenticate, eventController.getUpcomingEvents);
+router.get(
+  "/upcoming/club/:clubID",
+  authenticate,
+  eventController.getUpcomingClubEvents
+);
+router.get(
+  "/upcoming/user/:userID",
+  authenticate,
+  eventController.getUpcomingUserEvents
+);
+router.get("/club/:clubID", authenticate, eventController.getEventsByClub);
+router.get(
+  "/search",
+  authenticate,
+  validate(searchSchema),
+  eventController.searchEvents
+);
+router.get(
+  "/recommended/:userID",
+  authenticate,
+  eventController.getUserRecommendedEvents
+);
+router.get("/:eventID", authenticate, eventController.getEventById);
+router.get("/:eventID/rsvp-count", authenticate, eventController.getRSVPCount);
 router.put(
   "/:eventID",
   authenticate,
