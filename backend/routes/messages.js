@@ -12,10 +12,10 @@ const messageSchema = Joi.object({
 const router = express.Router();
 
 // Message CRUD
-router.get("/", messageController.getAllMessages); // Get all messages (admin use)
-router.get("/:messageID", messageController.getMessageById); // Get message by ID
-router.post("/", messageController.createMessage); // Send message
-router.put("/:messageID", messageController.updateMessage); // Update message (e.g., mark as read)
-router.delete("/:messageID", messageController.deleteMessage); // Delete message
+// router.get("/", messageController.getAllMessages); // Get all messages (admin use)
+// router.get("/:messageID", messageController.getMessageById); // Get message by ID
+// router.post("/", messageController.createMessage); // Send message
+// router.put("/:messageID", messageController.updateMessage); // Update message (e.g., mark as read)
+// router.delete("/:messageID", messageController.deleteMessage); // Delete message
 
 export default router;

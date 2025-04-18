@@ -2,7 +2,7 @@ import express from "express";
 import Joi from "joi";
 import * as venueController from "../controllers/venueController.js";
 import { validate } from "../middleware/validate.js";
-import { authenticate, requireSUAdmin } from "../middleware/auth.js";
+import { authenticate, requireSUAdmin } from "../middleware/authenticate.js";
 
 const router = express.Router();
 

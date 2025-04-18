@@ -1,21 +1,32 @@
 import express from "express";
-import * as eventController from "../controllers/eventsController.js";
 import Joi from "joi";
-
-const eventSchema = Joi.object({
-  clubID: Joi.number().integer().required(),
-  eventName: Joi.string().required(),
-  description: Joi.string().allow(null),
-  reservationID: Joi.number().integer().required(),
-});
+import * as eventController from "../controllers/eventController.js";
+import { validate } from "../middleware/validate.js";
+import { authenticate, requireClubAdmin } from "../middleware/authenticate.js";
 
 const router = express.Router();
 
-// Event CRUD
-router.get("/", eventController.getAllEvents); // Get all events
-router.get("/:eventID", eventController.getEventById); // Get event by ID
-router.post("/", eventController.createEvent); // Create event
-router.put("/:eventID", eventController.updateEvent); // Update event
-router.delete("/:eventID", eventController.deleteEvent); // Delete event
+// Joi schema for updating events
+const updateEventSchema = Joi.object({
+  name: Joi.string(),
+  description: Joi.string(),
+}).min(1);
+
+// Event routes
+router.get("/", eventController.getAllEvents);
+router.get("/:eventID", eventController.getEventById);
+router.put(
+  "/:eventID",
+  authenticate,
+  requireClubAdmin,
+  validate(updateEventSchema),
+  eventController.updateEvent
+);
+router.delete(
+  "/:eventID",
+  authenticate,
+  requireClubAdmin,
+  eventController.deleteEvent
+);
 
 export default router;

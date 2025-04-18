@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 
 import executiveRoutes from "./routes/executives.js";
@@ -10,16 +10,22 @@ import formRoutes from "./routes/forms.js";
 import announcementRoutes from "./routes/announcements.js";
 import messageRoutes from "./routes/messages.js";
 import venueRoutes from "./routes/venues.js";
+import userRoutes from "./routes/users.js";
 // Load environment variables
-dotenv.config();
+// dotenv.config();
 
 // Initialize Express and Prisma
 const app = express();
 const prisma = new PrismaClient();
 const port = process.env.PORT || 5000;
 
+const corsOptions = {
+  origin: "http://localhost:5173", // Your frontend’s origin
+  credentials: true, // Allow cookies, tokens, etc.
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -30,6 +36,7 @@ app.use("/api/forms", formRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/venues", venueRoutes);
+app.use("/api/users", userRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {
