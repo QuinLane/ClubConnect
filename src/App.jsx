@@ -15,14 +15,14 @@ import ManageMembersPage from "./pages/manageMembersPage";
 import RequestPage from "./pages/requestPage";
 import Chat from "./pages/chatPage";
 import FundingRequestForm from "./pages/UserForms/FundingRequestForm";
-import Form from "./pages/studentFormPage"
+import Form from "./pages/StudentFormPage"
 import CompletedForm from "./pages/completedForm";
-import ApproveDeny from "./pages/ApproveOrDeny";
+import ApproveDeny from "./pages/UserForms/EventRequestForm";
 import DashboardPage from "./pages/Dashboards/dashboardPage";
 import AdminDashboardPage from "./pages/Dashboards/adminDashboardPage";
 import ExploreClubsPage from "./pages/ExploreClubs"
 import ExploreEventsPage from "./pages/ExploreEvents"
-import StudentFormPage from "./pages/studentFormPage"
+import StudentFormPage from "./pages/StudentFormPage"
 import { Forbidden } from "./pages/errors/Forbidden";
 
 // 404 Fallback Component
