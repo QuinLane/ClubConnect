@@ -1,6 +1,6 @@
 import express from "express";
 import * as suController from "../controllers/suController.js";
-import { authenticate, requireSUAdmin } from "../middleware/auth.js";
+import { authenticate, requireSUAdmin } from "../middleware/authenticate.js";
 
 const router = express.Router();
 

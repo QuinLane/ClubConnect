@@ -5,7 +5,7 @@ import {
   authenticate,
   requireSUAdmin,
   requireClubAdmin,
-} from "../middleware/auth.js";
+} from "../middleware/authenticate.js";
 import { validate } from "../middleware/validate.js";
 
 const router = express.Router();

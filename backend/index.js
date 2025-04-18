@@ -1,21 +1,19 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 import { PrismaClient } from "@prisma/client";
 
 import executiveRoutes from "./routes/executives.js";
 import eventRoutes from "./routes/events.js";
 import rsvpRoutes from "./routes/rsvps.js";
 import formRoutes from "./routes/forms.js";
-import announcementRoutes from "./routes/announcements.js";
-import messageRoutes from "./routes/messages.js";
 import venueRoutes from "./routes/venues.js";
 import userRoutes from "./routes/users.js";
 import suMessageRoutes from "./routes/suMessages.js";
 import notificationRoutes from "./routes/notifications.js";
 import suRoutes from "./routes/su.js";
-// Load environment variables
-dotenv.config();
+// // Load environment variables
+// dotenv.config();
 
 // Initialize Express and Prisma
 const app = express();
@@ -43,8 +41,6 @@ app.use("/api/executives", executiveRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/rsvps", rsvpRoutes);
 app.use("/api/forms", formRoutes);
-app.use("/api/announcements", announcementRoutes);
-app.use("/api/messages", messageRoutes);
 app.use("/api/venues", venueRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/su-messages", suMessageRoutes);
