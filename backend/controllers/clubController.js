@@ -92,11 +92,13 @@ export const deleteClub = async (req, res) => {
 
 // Note: Only club admins can update roles
 export const updateClubRoles = async (req, res) => {
-  const { clubID, executiveID } = req.params;
+  const { clubID, userID } = req.params;
   const { clubRoleID } = req.body; // Now assigns a ClubRole instead of updating position
   try {
     const executive = await prisma.executive.update({
-      where: { executiveID: parseInt(executiveID) },
+      where: {
+        clubID_userID: { clubID: parseInt(clubID), userID: parseInt(userID) },
+      },
       data: { clubRoleID: clubRoleID ? parseInt(clubRoleID) : null },
       include: { clubRole: true },
     });
