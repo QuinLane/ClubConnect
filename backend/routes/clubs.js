@@ -9,7 +9,7 @@ import {
 } from "../middleware/authenticate.js";
 
 const router = express.Router();
-
+console.log("🔌 Clubs router loaded");
 // Joi schema for creating/updating clubs
 const clubSchema = Joi.object({
   clubName: Joi.string().required(),
