@@ -6,11 +6,17 @@ import EventCompressed from '../clubEventPages/compressedElements';
 const ExploreComponent = ({ title, items = [], type = 'event' }) => {
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Filter items based on search query
-  const filteredItems = items.filter(item =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (item.date && item.date.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  // Enhanced search to include all relevant fields
+  const filteredItems = items.filter(item => {
+    const searchTerm = searchQuery.toLowerCase();
+    return (
+      item.title.toLowerCase().includes(searchTerm) ||
+      (item.date && item.date.toLowerCase().includes(searchTerm)) ||
+      (item.startTime && item.startTime.toLowerCase().includes(searchTerm)) ||
+      (item.clubName && item.clubName.toLowerCase().includes(searchTerm)) ||
+      (item.description && item.description.toLowerCase().includes(searchTerm))
+    );
+  });
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -40,7 +46,7 @@ const ExploreComponent = ({ title, items = [], type = 'event' }) => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={`Search ${type}s...`}
+              placeholder={`Search ${type}s by name, date, time, or club...`}
               style={styles.searchInput}
             />
             {searchQuery && (
@@ -61,12 +67,16 @@ const ExploreComponent = ({ title, items = [], type = 'event' }) => {
       <div style={styles.scrollableContent}>
         {filteredItems.length > 0 ? (
           <div style={styles.grid}>
-            {filteredItems.map((item, index) => (
+            {filteredItems.map((item) => (
               <EventCompressed
-                key={index}
-                imageUrl={item.imageUrl}
-                title={item.title}
-                date={item.date}
+                key={item.id} // Using item.id as key is better than index
+                id={item.id}
+                imageUrl={item.imageUrl || item.image}
+                title={item.title || item.name}
+                date={item.date || item.reservation?.date}
+                startTime={item.startTime || item.reservation?.startTime}
+                endTime={item.endTime || item.reservation?.endTime}
+                clubName={item.clubName || item.club?.name}
                 type={type}
               />
             ))}
@@ -166,9 +176,24 @@ ExploreComponent.propTypes = {
   title: PropTypes.string.isRequired,
   items: PropTypes.arrayOf(
     PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       imageUrl: PropTypes.string,
-      title: PropTypes.string.isRequired,
+      image: PropTypes.string, // For direct image data
+      title: PropTypes.string,
+      name: PropTypes.string, // Alternative title field
       date: PropTypes.string,
+      startTime: PropTypes.string,
+      endTime: PropTypes.string,
+      clubName: PropTypes.string,
+      club: PropTypes.shape({
+        name: PropTypes.string
+      }),
+      reservation: PropTypes.shape({
+        date: PropTypes.string,
+        startTime: PropTypes.string,
+        endTime: PropTypes.string
+      }),
+      description: PropTypes.string
     })
   ),
   type: PropTypes.oneOf(['event', 'club']),

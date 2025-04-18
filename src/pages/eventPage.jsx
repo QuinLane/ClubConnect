@@ -6,14 +6,13 @@ const EventPage = ({
   eventTitle = "Annual Charity Gala", 
   logoUrl = "/images/club-logo.png",
   eventPhoto = "/images/event-photo.jpg",
-  bioText = `...`,
+  bioText = `Join us for an evening of fundraising and celebration at our annual charity gala. All proceeds will benefit local education initiatives.`,
   eventDate = "Saturday, November 18, 2023",
   eventTime = "6:30 PM - 11:00 PM",
   logoSize = 80,
-  titleSize = '2rem',
-  isExec = true, // New prop to determine if the user is an exec
-  approvalStatus = "Pending", // New prop for approval status
-  onCancelEvent = () => {} // New function to handle event cancellation
+  isExec = false,
+  approvalStatus = "Pending",
+  onCancelEvent = () => {}
 }) => {
   const [isRSVPed, setIsRSVPed] = useState(false);
 
@@ -23,7 +22,7 @@ const EventPage = ({
 
   const handleCancelEvent = () => {
     if (window.confirm("Are you sure you want to cancel this event?")) {
-      onCancelEvent(); // Trigger the cancel event function passed as a prop
+      onCancelEvent();
     }
   };
 
@@ -58,7 +57,7 @@ const EventPage = ({
           gap: '20px'
         }}>
           <h1 style={{
-            fontSize: titleSize,
+            fontSize: '2rem',
             margin: 0,
             flex: 1,
             minWidth: 'min(300px, 100%)',
@@ -120,7 +119,7 @@ const EventPage = ({
           marginTop: '40px',
           flexWrap: 'wrap',
           gap: '20px',
-          marginBottom: '40px' // Added margin to separate from carousel
+          marginBottom: '40px'
         }}>
           <div style={{ flex: 1 }}>
             <div style={{

@@ -3,19 +3,44 @@ import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 
 const EventCompressed = ({
+  id,
   imageUrl = "/images/default-event.jpg",
   title = "Event Title",
   date = "",
   width = "280px",
   height = "200px",
   borderRadius = "12px",
-  type = "event" // 'event' or 'club'
+  type = "event"
 }) => {
   const navigate = useNavigate();
 
-  // Handle click event
+  // Format only the date for display
+  const formatDate = () => {
+    if (!date) return '';
+    
+    try {
+      const eventDate = new Date(date);
+      const options = { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      };
+      return eventDate.toLocaleDateString(undefined, options);
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return date; // Fallback to raw date string
+    }
+  };
+
   const handleClick = () => {
-    navigate(`/events/${encodeURIComponent(title)}`, { state: { title, imageUrl, date, type } }); //gonna have to somehow link each bubble to their associated event
+    navigate(`/app/events/${id}`, { 
+      state: { 
+        title, 
+        imageUrl, 
+        date,
+        type 
+      } 
+    });
   };
 
   return (
@@ -27,11 +52,11 @@ const EventCompressed = ({
         overflow: 'hidden',
         position: 'relative',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-        transition: 'transform 0.2s ease, filter 0.3s ease', // Add transition for filter
+        transition: 'transform 0.2s ease, filter 0.3s ease',
         cursor: 'pointer',
         backgroundColor: '#f0f0f0',
       }}
-      onClick={handleClick} // Attach click handler
+      onClick={handleClick}
     >
       <div
         style={{
@@ -42,10 +67,10 @@ const EventCompressed = ({
           backgroundPosition: 'center',
           backgroundColor: '#e0e0e0',
           position: 'relative',
-          filter: 'brightness(100%)', // Normal brightness
-          transition: 'filter 0.3s ease', // Smooth transition for filter
+          filter: 'brightness(100%)',
+          transition: 'filter 0.3s ease',
         }}
-        className="event-compressed-image" // Optional: You can add class for targeting in CSS if needed
+        className="event-compressed-image"
       >
         <div
           style={{
@@ -75,7 +100,7 @@ const EventCompressed = ({
                 marginBottom: '4px',
               }}
             >
-              {date}
+              {formatDate()}
             </div>
           )}
           <div
@@ -98,6 +123,7 @@ const EventCompressed = ({
 };
 
 EventCompressed.propTypes = {
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   imageUrl: PropTypes.string,
   title: PropTypes.string.isRequired,
   date: PropTypes.string,
