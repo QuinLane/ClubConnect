@@ -1,5 +1,5 @@
 import React from 'react';
-import CompressedEventCarousel from '../components/clubEventPages/compressedEventCarosel';
+import CompressedEventCarousel from '../../components/clubEventPages/compressedEventCarosel';
 
 
 

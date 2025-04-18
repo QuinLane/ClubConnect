@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import CreateClubForm from './CreateClubForm';
-import FundingRequestForm from './FundingRequestForm';
+import CreateClubForm from './UserForms/CreateClubForm';
+import FundingRequestForm from './UserForms/FundingRequestForm';
 import EventRequestForm from './ApproveOrDeny';
-import DeleteClubForm from './DeleteClubForm';
+import DeleteClubForm from './UserForms/DeleteClubForm';
 import FormRequestsTable from '../components/tables/statusTable';
 
 const FormsPage = () => {
