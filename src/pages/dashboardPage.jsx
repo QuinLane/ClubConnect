@@ -72,86 +72,51 @@ const DashboardPage = () => {
     }
   ];
 
-  // Styles
-  const containerStyles = {
-    backgroundColor: '#f8f9fa',
-    minHeight: '100vh',
-    fontFamily: 'Arial, sans-serif',
-    display: 'flex',
-    flexDirection: 'column',
-    margin: 0,
-    padding: 0,
-    width: '100vw',
-    overflowX: 'hidden'
-  };
-
-  const headerContainerStyles = {
-    backgroundColor: '#2c3e50',
-    color: 'white',
-    padding: '20px 0',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-    width: '100%'
-  };
-
-  const headerStyles = {
-    textAlign: 'center',
-    margin: '0 auto',
-    fontSize: '2rem',
-    maxWidth: '1200px',
-    width: '100%'
-  };
-
-  const subheaderStyles = {
-    textAlign: 'center',
-    color: '#bdc3c7',
-    margin: '10px auto 0',
-    fontSize: '1.2rem',
-    maxWidth: '1200px',
-    width: '100%'
-  };
-
-  const contentStyles = {
-    flex: 1,
-    padding: '20px',
-    width: '100%',
-    maxWidth: '1200px',
-    margin: '0 auto',
-    boxSizing: 'border-box'
-  };
-
   return (
-    <div style={containerStyles}>
-      {/* Header Section */}
-      <div style={headerContainerStyles}>
-        <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
-          <h1 style={headerStyles}>Student Dashboard</h1>
-          <h2 style={subheaderStyles}>Your Clubs and Events</h2>
-        </div>
+    <div style={{
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '20px',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      {/* Header with gray bar */}
+      <div style={{
+        backgroundColor: '#f5f5f5', // Light gray background
+        padding: '20px',
+        borderRadius: '8px',
+        marginBottom: '40px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      }}>
+        <h1 style={{ 
+          color: '#005587',
+          margin: 0,
+          textAlign: 'center',
+          fontSize: '2rem'
+        }}>
+          My Dashboard
+        </h1>
       </div>
-      
-      {/* Main Content */}
-      <div style={contentStyles}>
-        {/* Clubs I Manage (Executive) */}
-        <CompressedEventCarousel
-          events={managedClubs}
-          title="Clubs I Manage"
-          showTitle={true}
-        />
 
-        {/* Clubs I'm a Member Of */}
-        <CompressedEventCarousel
-          events={memberClubs}
-          title="Clubs I'm a Member Of"
-          showTitle={true}
-        />
+      {/* Clubs I Manage (Executive) */}
+      <CompressedEventCarousel
+        events={managedClubs}
+        title="Clubs I Manage"
+        showTitle={true}
+      />
 
-        {/* My Events (RSVP'd) */}
-        <CompressedEventCarousel
-          events={myEvents}
-          title="My Events"
-          showTitle={true}
-        />
-      </div>
+      {/* Clubs I'm a Member Of */}
+      <CompressedEventCarousel
+        events={memberClubs}
+        title="Clubs I'm a Member Of"
+        showTitle={true}
+      />
+
+      {/* My Events (RSVP'd) */}
+      <CompressedEventCarousel
+        events={myEvents}
+        title="My Events"
+        showTitle={true}
+      />
     </div>
   );
 };
