@@ -4,19 +4,19 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./pages/Layout";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/Register";
-import ClubPage from "./pages/clubPage"; // Renamed from ClubDetailsPage for clarity
+import ClubPage from "./pages/clubPage";
 import EventPage from "./pages/eventPage";
 import ChatBoardPage from "./pages/chatBoardPage";
 import ChatPage from "./pages/chatPage";
 import CreateClubForm from "./pages/CreateClubForm";
 import DeleteClubForm from "./pages/DeleteClubForm";
-import FundingRequestForm from "./pages/FundingRequestForm";
 import ManageMembersPage from "./pages/manageMembersPage";
 import RequestPage from "./pages/requestPage";
 import Chat from "./pages/chatPage";
+import FundingRequestForm from "./pages/FundingRequestForm";
 import Form from "./pages/studentFormPage"
 import CompletedForm from "./pages/completedForm";
-import EventRequest from "./pages/eventRequestPage";
+import ApproveDeny from "./pages/ApproveOrDeny";
 import DashboardPage from "./pages/dashboardPage";
 import AdminDashboardPage from "./pages/adminDashboardPage";
 import ExploreClubsPage from "./pages/ExploreClubs"
@@ -74,15 +74,17 @@ const App = () => {
           <Route path="events" element={<EventPage />} />
           <Route path="chatboard" element={<ChatBoardPage />} />
           <Route path="chat" element={<ChatPage />} />
-          <Route path="create-club" element={<CreateClubForm />} />
-          <Route path="delete-club" element={<DeleteClubForm />} />
-          <Route path="funding-request" element={<FundingRequestForm />} />
           <Route path="manage-members" element={<ManageMembersPage />} />
           <Route path="requests" element={<RequestPage />} />
           <Route path="chat" element={<Chat />} />
           <Route path="form" element={<Form />} />
           <Route path="completedForm" element={<CompletedForm />} />
-          <Route path="eventRequest" element={<EventRequest />} />
+          <Route path="ApproveDeny" element={<ApproveDeny />} />
+          
+          <Route path="funding-request" element={<FundingRequestForm />} />
+          <Route path="create-club" element={<CreateClubForm />} />
+          <Route path="delete-club" element={<DeleteClubForm />} />
+
           <Route path="student-forms" element={<StudentFormPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="admin-dashboard" element={<AdminDashboardPage />} />

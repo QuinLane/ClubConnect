@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CreateClubForm from './CreateClubForm';
 import FundingRequestForm from './FundingRequestForm';
-import EventRequestForm from '../pages/eventRequestPage';
+import EventRequestForm from './ApproveOrDeny';
 import DeleteClubForm from './DeleteClubForm';
 import FormRequestsTable from '../components/tables/statusTable';
 
