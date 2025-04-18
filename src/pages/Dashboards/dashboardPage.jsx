@@ -1,5 +1,7 @@
 import React from 'react';
-import CompressedEventCarousel from '../components/clubEventPages/compressedEventCarosel';
+import CompressedEventCarousel from '../../components/clubEventPages/compressedEventCarosel';
+
+
 
 const DashboardPage = () => {
   // Sample data - replace with your actual data
