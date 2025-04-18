@@ -23,10 +23,10 @@ import AdminDashboardPage from "./pages/Dashboards/adminDashboardPage";
 import ExploreClubsPage from "./pages/ExploreClubs"
 import ExploreEventsPage from "./pages/ExploreEvents"
 import StudentFormPage from "./pages/studentFormPage"
-import { Forbidden } from "./pages/Forbidden";
+import { Forbidden } from "./pages/errors/Forbidden";
 
 // 404 Fallback Component
-const NotFound = () => {
+const NotFound = () => { 
   return <div>404 - Page Not Found</div>;
 };
 
@@ -70,6 +70,7 @@ const App = () => {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forbidden" element={<Forbidden />} />
         {/* Nested Routes under /app with Layout */}
         <Route path="/app" element={<Layout />}>
           <Route path="club" element={<ClubPage />} />
@@ -84,7 +85,7 @@ const App = () => {
           <Route path="ApproveDeny" element={<ApproveDeny />} />
           
           <Route path="funding-request" element={<FundingRequestForm />} />
-          <Route path="create-club" element={<CreateClubForm />} />
+          <Route path="create-club" element={<RequireRole allowed={["Student"]}><CreateClubForm/></RequireRole>} />
           <Route path="delete-club" element={<DeleteClubForm />} />
 
           <Route path="student-forms" element={<StudentFormPage />} />
@@ -94,7 +95,6 @@ const App = () => {
           
           <Route path="explore-clubs" element={<ExploreClubsPage />} />
           <Route path="explore-events" element={<ExploreEventsPage />} />
-          <Route path="forbidden" element={<Forbidden />} />
 
         </Route>
 

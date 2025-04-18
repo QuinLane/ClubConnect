@@ -35,6 +35,8 @@ export default function Sidebar() {
     <div className="text-white w-64 h-full flex flex-col p-4 shadow-lg"
     style={{
       width: "13%",
+      borderRight: "1px solid #142075",
+      borderRightColor:'',
       backgroundColor: "white",
     }}>
       <img 
@@ -117,15 +119,13 @@ export default function Sidebar() {
           onClick={handleLogout}
           style={{
             width: '100%',
+            height: '60px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.5rem',
-            marginTop: '10px',
-            marginBottom: '5px',
-            padding: '0.5rem 1rem',
-            backgroundColor: '#ef4444',
-            borderRadius: '0.375rem',
+            backgroundColor: '#f05959',
+            borderRadius: '0',
             color: 'white',
             fontSize: '0.875rem',
             transition: 'all 0.2s ease',

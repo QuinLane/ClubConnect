@@ -12,7 +12,9 @@ const Layout = () => {
       {showSidebar && <Sidebar />}
 
       {/* Main Content */}
-      <main className={`flex-1 overflow-y-auto ${showSidebar ? 'ml-[20px]' : ''} p-4`}>
+      <main className={`flex-1 overflow-y-auto  p-4`}
+      style={{ backgroundColor: 'white' }}>
+        
         <Outlet />
       </main>
     </div>

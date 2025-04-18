@@ -40,11 +40,6 @@ app.use(
 
 app.use(express.json());
 
-app.use((req, res, next) => {
-  console.log(`[REQUEST] ${req.method} ${req.path}`);
-  next();
-});
-
 // Routes
 app.use("/api/executives", executiveRoutes);
 app.use("/api/events", eventRoutes);
