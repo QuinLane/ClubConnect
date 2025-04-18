@@ -21,7 +21,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     console.log('Logging out...');
-    navigate('/');
+    navigate('/login');
   };
 
   const iconStyle = (name) => 
@@ -71,7 +71,7 @@ export default function Sidebar() {
         <SidebarButton
           icon={Home}
           label="Home"
-          navigateTo="/app"
+          navigateTo="/app/dashboard"
           activeIcon={activeIcon}
           iconName="home"
           setActiveIcon={setActiveIcon}
@@ -79,7 +79,7 @@ export default function Sidebar() {
         <SidebarButton
           icon={ShieldHalf}
           label="Explore Clubs"
-          navigateTo="/app/clubs"
+          navigateTo="/app/explore-clubs"
           activeIcon={activeIcon}
           iconName="clubs"
           setActiveIcon={setActiveIcon}
@@ -87,7 +87,7 @@ export default function Sidebar() {
         <SidebarButton
           icon={Calendar}
           label="Explore Events"
-          navigateTo="/app/explore"
+          navigateTo="/app/explore-events"
           activeIcon={activeIcon}
           iconName="explore"
           setActiveIcon={setActiveIcon}

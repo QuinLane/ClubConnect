@@ -22,18 +22,18 @@ const port = process.env.PORT || 5050;
 const corsOptions = {
   origin: "http://localhost:5173", // Your frontend’s origin
   credentials: true, // Allow cookies, tokens, etc.
-
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
+
 app.use(express.json());
 
 app.use((req, res, next) => {
   console.log(`[REQUEST] ${req.method} ${req.path}`);
   next();
 });
-
 
 // Routes
 app.use("/api/executives", executiveRoutes);

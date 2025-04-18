@@ -51,3 +51,27 @@ export const getRSVPsForEvent = async (req, res) => {
     res.status(500).json({ error: `Failed to fetch RSVPs: ${error.message}` });
   }
 };
+
+// Note: Available to authenticated users
+export const getUserRSVPs = async (req, res) => {
+  const { userID } = req.params;
+  try {
+    const rsvps = await prisma.rsvp.findMany({
+      where: { userID: parseInt(userID) },
+      include: {
+        event: {
+          include: {
+            club: true,
+            reservation: true,
+          },
+        },
+        user: true,
+      },
+    });
+    res.status(200).json(rsvps);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch user RSVPs: ${error.message}` });
+  }
+};

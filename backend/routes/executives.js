@@ -1,20 +1,54 @@
 import express from "express";
-import * as executiveController from "../controllers/executiveController.js";
 import Joi from "joi";
-
-const executiveSchema = Joi.object({
-  userID: Joi.number().integer().required(),
-  clubID: Joi.number().integer().required(),
-  position: Joi.string().required(),
-});
+import * as executiveController from "../controllers/executiveController.js";
+import { validate } from "../middleware/validate.js";
+import { authenticate, requireSUAdmin } from "../middleware/authenticate.js";
 
 const router = express.Router();
 
-// Executive CRUD
-// router.get("/", executiveController.getAllExecutives); // Get all executives
-// router.get("/:executiveID", executiveController.getExecutiveById); // Get executive by ID
-// router.post("/", executiveController.createExecutive); // Create executive
-// router.put("/:executiveID", executiveController.updateExecutive); // Update executive
-// router.delete("/:executiveID", executiveController.deleteExecutive); // Delete executive
+// Joi schema for creating/updating executives
+const executiveSchema = Joi.object({
+  userID: Joi.number().integer().required(),
+  clubID: Joi.number().integer().required(),
+  clubRoleID: Joi.number().integer().allow(null),
+});
+
+// Joi schema for assigning role
+const roleSchema = Joi.object({
+  clubRoleID: Joi.number().integer().allow(null).required(),
+});
+
+// Executive routes
+router.get("/", executiveController.getAllExecutives);
+router.get("/:executiveID", executiveController.getExecutiveById);
+router.get("/club/:clubID", executiveController.getExecutivesByClub);
+router.get("/user/:userID", executiveController.getExecutivesByUser);
+router.post(
+  "/",
+  authenticate,
+  requireSUAdmin,
+  validate(executiveSchema),
+  executiveController.createExecutive
+);
+router.put(
+  "/:executiveID",
+  authenticate,
+  requireSUAdmin,
+  validate(executiveSchema),
+  executiveController.updateExecutive
+);
+router.delete(
+  "/:executiveID",
+  authenticate,
+  requireSUAdmin,
+  executiveController.deleteExecutive
+);
+router.put(
+  "/:executiveID/role",
+  authenticate,
+  requireSUAdmin,
+  validate(roleSchema),
+  executiveController.assignRoleToExecutive
+);
 
 export default router;

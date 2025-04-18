@@ -100,3 +100,178 @@ export const createEvent = async (req, res) => {
     res.status(500).json({ error: `Failed to create event: ${error.message}` });
   }
 };
+
+// Note: Available to all
+export const getUpcomingEvents = async (req, res) => {
+  try {
+    const events = await prisma.event.findMany({
+      where: {
+        reservation: {
+          date: { gte: new Date() },
+        },
+      },
+      include: {
+        club: true,
+        rsvps: { include: { user: true } },
+        reservation: true,
+      },
+    });
+    res.status(200).json(events);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch upcoming events: ${error.message}` });
+  }
+};
+
+// Note: Available to all
+export const getUpcomingClubEvents = async (req, res) => {
+  const { clubID } = req.params;
+  try {
+    const events = await prisma.event.findMany({
+      where: {
+        clubID: parseInt(clubID),
+        reservation: {
+          date: { gte: new Date() },
+        },
+      },
+      include: {
+        club: true,
+        rsvps: { include: { user: true } },
+        reservation: true,
+      },
+    });
+    res.status(200).json(events);
+  } catch (error) {
+    res.status(500).json({
+      error: `Failed to fetch upcoming club events: ${error.message}`,
+    });
+  }
+};
+
+// Note: Available to all
+export const getUpcomingUserEvents = async (req, res) => {
+  const { userID } = req.params;
+  try {
+    const events = await prisma.event.findMany({
+      where: {
+        rsvps: {
+          some: {
+            userID: parseInt(userID),
+          },
+        },
+        reservation: {
+          date: { gte: new Date() },
+        },
+      },
+      include: {
+        club: true,
+        rsvps: { include: { user: true } },
+        reservation: true,
+      },
+    });
+    res.status(200).json(events);
+  } catch (error) {
+    res.status(500).json({
+      error: `Failed to fetch upcoming user events: ${error.message}`,
+    });
+  }
+};
+
+// Note: Available to all
+export const getRSVPCount = async (req, res) => {
+  const { eventID } = req.params;
+  try {
+    const count = await prisma.rsvp.count({
+      where: { eventID: parseInt(eventID) },
+    });
+    res.status(200).json({ count });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch RSVP count: ${error.message}` });
+  }
+};
+
+// Note: Available to all
+export const getEventsByClub = async (req, res) => {
+  const { clubID } = req.params;
+  try {
+    const events = await prisma.event.findMany({
+      where: { clubID: parseInt(clubID) },
+      include: {
+        club: true,
+        rsvps: { include: { user: true } },
+        reservation: true,
+      },
+    });
+    res.status(200).json(events);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch club events: ${error.message}` });
+  }
+};
+
+// Note: Available to all
+export const searchEvents = async (req, res) => {
+  const { query } = req.query;
+  try {
+    const events = await prisma.event.findMany({
+      where: {
+        OR: [
+          { name: { contains: query, mode: "insensitive" } },
+          { description: { contains: query, mode: "insensitive" } },
+        ],
+      },
+      include: {
+        club: true,
+        rsvps: { include: { user: true } },
+        reservation: true,
+      },
+    });
+    res.status(200).json(events);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to search events: ${error.message}` });
+  }
+};
+
+// Note: Available to all
+export const getUserRecommendedEvents = async (req, res) => {
+  const { userID } = req.params;
+  try {
+    const events = await prisma.event.findMany({
+      where: {
+        OR: [
+          {
+            club: {
+              executives: {
+                some: { userID: parseInt(userID) },
+              },
+            },
+          },
+          {
+            rsvps: {
+              some: { userID: parseInt(userID) },
+            },
+          },
+        ],
+        reservation: {
+          date: { gte: new Date() },
+        },
+      },
+      include: {
+        club: true,
+        rsvps: { include: { user: true } },
+        reservation: true,
+      },
+    });
+    res.status(200).json(events);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch recommended events: ${error.message}` });
+  }
+};

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Layout from "./pages/Layout";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/Register";
 import ClubPage from "./pages/clubPage"; // Renamed from ClubDetailsPage for clarity
 import EventPage from "./pages/eventPage";
 import ChatBoardPage from "./pages/chatBoardPage";
@@ -16,6 +17,10 @@ import Chat from "./pages/chatPage";
 import Form from "./pages/studentFormPage"
 import CompletedForm from "./pages/completedForm";
 import EventRequest from "./pages/eventRequestPage";
+import DashboardPage from "./pages/dashboardPage";
+import AdminDashboardPage from "./pages/adminDashboardPage";
+import ExploreClubsPage from "./pages/exploreClubsPage"
+import ExploreEventsPage from "./pages/eventsExplorePage"
 
 // 404 Fallback Component
 const NotFound = () => {
@@ -61,11 +66,11 @@ const App = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
-
+        <Route path="/register" element={<RegisterPage />} />
         {/* Nested Routes under /app with Layout */}
         <Route path="/app" element={<Layout />}>
           <Route path="club" element={<ClubPage />} />
-          <Route path="event" element={<EventPage />} />
+          <Route path="events" element={<EventPage />} />
           <Route path="chatboard" element={<ChatBoardPage />} />
           <Route path="chat" element={<ChatPage />} />
           <Route path="create-club" element={<CreateClubForm />} />
@@ -80,6 +85,10 @@ const App = () => {
           
 
 
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="admin-dashboard" element={<AdminDashboardPage />} />
+          <Route path="explore-clubs" element={<ExploreClubsPage />} />
+          <Route path="explore-events" element={<ExploreEventsPage />} />
         </Route>
 
         {/* 404 Fallback */}

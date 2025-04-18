@@ -77,11 +77,14 @@ const DashboardPage = () => {
       maxWidth: '1200px',
       margin: '0 auto',
       padding: '20px',
-      fontFamily: 'Arial, sans-serif'
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: '#ffffff',       // Force white background
+      color: '#1f2937',                 // Dark text
+      minHeight: '100vh'                // Full viewport height to avoid dark spill
     }}>
       {/* Header with gray bar */}
       <div style={{
-        backgroundColor: '#f5f5f5', // Light gray background
+        backgroundColor: '#f5f5f5',     // Light gray
         padding: '20px',
         borderRadius: '8px',
         marginBottom: '40px',
