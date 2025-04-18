@@ -9,7 +9,7 @@ const EventsExplorePage = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await fetch('http://localhost:5050/api/events/upcoming');
+        const response = await fetch('http://localhost:5050/api/events/');
         const payload = await response.text();
         let data;
         try {
