@@ -36,9 +36,9 @@ export default function LoginPage() {
 
       // Redirect based on user type
       if (user.userType === "SUAdmin") {
-        navigate("/admin/dashboard");
+        navigate("/app/admin-dashboard");
       } else {
-        navigate("/dashboard");
+        navigate("/app/dashboard");
       }
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
