@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
+const ExecutiveTable = ({ executives, onRemoveExecutive, onUpdateRole }) => {
+  const [editingId, setEditingId] = useState(null);
+  const [editedRole, setEditedRole] = useState('');
+
   // Simple sort by email
   const sortedExecutives = [...executives].sort((a, b) => 
     a.email.localeCompare(b.email)
@@ -12,9 +15,23 @@ const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
     return '#666';
   };
 
+  const handleDoubleClick = (executive) => {
+    setEditingId(executive.id);
+    setEditedRole(executive.role);
+  };
+
+  const handleKeyDown = async (e, executive) => {
+    if (e.key === 'Enter') {
+      await onUpdateRole(executive.id, editedRole);
+      setEditingId(null);
+    } else if (e.key === 'Escape') {
+      setEditingId(null);
+    }
+  };
+
   // Calculate height based on number of entries
   const rowHeight = 48;
-  const headerHeight = 56; // This is for column headers only now
+  const headerHeight = 56;
   const maxVisibleRows = 9;
   
   const tableHeight = Math.min(
@@ -34,8 +51,6 @@ const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Removed the "Executives" header div completely */}
-      
       {/* Scrollable table body */}
       <div style={{ 
         overflowY: sortedExecutives.length > maxVisibleRows ? 'auto' : 'visible',
@@ -92,12 +107,32 @@ const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
                 }}>
                   {executive.email}
                 </td>
-                <td style={{
-                  padding: '12px 16px',
-                  color: getRoleColor(executive.role),
-                  fontWeight: '500'
-                }}>
-                  {executive.role}
+                <td 
+                  style={{
+                    padding: '12px 16px',
+                    color: getRoleColor(executive.role),
+                    fontWeight: '500'
+                  }}
+                  onDoubleClick={() => handleDoubleClick(executive)}
+                >
+                  {editingId === executive.id ? (
+                    <input
+                      type="text"
+                      value={editedRole}
+                      onChange={(e) => setEditedRole(e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, executive)}
+                      onBlur={() => setEditingId(null)}
+                      autoFocus
+                      style={{
+                        width: '100%',
+                        padding: '4px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px'
+                      }}
+                    />
+                  ) : (
+                    executive.role
+                  )}
                 </td>
                 <td style={{
                   padding: '12px 16px',
