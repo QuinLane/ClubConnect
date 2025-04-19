@@ -195,6 +195,13 @@ export const getExecutivesByClub = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
+
 // Note: Available to all
 export const getExecutivesByUser = async (req, res) => {
   const { userID } = req.params;
@@ -214,23 +221,37 @@ export const getExecutivesByUser = async (req, res) => {
   }
 };
 
-// Note: Only SU admins
 export const assignRoleToExecutive = async (req, res) => {
   const { clubID, userID } = req.params;
-  const { role } = req.body;
+  const { role } = req.body; // Changed from clubRoleID
+  const requestingUserID = req.user.userID;
+
   try {
+    // Verify requesting user has permission for this club
+    const isAdmin = await prisma.executive.findFirst({
+      where: {
+        userID: requestingUserID,
+        clubID: parseInt(clubID),
+        role: { in: ['President', 'Vice President', 'Admin'] }
+      }
+    });
+
+    if (!isAdmin && !req.user.isSUAdmin) {
+      return res.status(403).json({ error: "Unauthorized: You don't have permission for this club" });
+    }
+
     const executive = await prisma.executive.update({
       where: {
         clubID_userID: { clubID: parseInt(clubID), userID: parseInt(userID) },
       },
       data: {
-        role: role || null,
+        role: role || null, // Changed from clubRoleID
       },
       include: {
         user: true,
-        club: true,
       },
     });
+    
     res.status(200).json(executive);
   } catch (error) {
     res.status(500).json({ error: `Failed to assign role: ${error.message}` });

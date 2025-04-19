@@ -80,6 +80,45 @@ const ManageMembers = () => {
     fetchData();
   }, [clubID, token, navigate]);
 
+
+
+
+  const handleUpdateRole = async (executiveId, newRole) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5050/api/executives/${clubID}/${executiveId}/role`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ role: newRole }) // Changed from clubRoleID to role
+        }
+      );
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update role');
+      }
+  
+      setExecutives(prevExecs =>
+        prevExecs.map(exec =>
+          exec.id === executiveId ? { ...exec, role: newRole } : exec
+        )
+      );
+      
+    } catch (err) {
+      console.error("Error updating role:", err);
+      setError(err.message);
+    }
+  };
+  
+  // And update the ExecutiveTable component usage:
+ 
+
+
+
   const handleRemoveMember = async (userID) => {
     try {
       // Confirm before deleting
@@ -285,9 +324,11 @@ const ManageMembers = () => {
           <div style={columnStyles}>
             <h2 style={{ marginTop: 0 }}>Executives ({executives.length})</h2>
             <ExecutiveTable 
-  executives={executives} 
-  onRemoveExecutive={handleRemoveExecutive} 
-/>            
+  executives={executives}
+  onRemoveExecutive={handleRemoveExecutive}
+  onUpdateRole={handleUpdateRole}
+/>
+
             <div style={{ 
               border: '1px solid #ddd',
               padding: '15px',
