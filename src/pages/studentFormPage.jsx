@@ -138,7 +138,6 @@ const FormsPage = () => {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          width: '100%',
           height: '100vh',
           overflow: 'hidden',
           backgroundColor: '#f3f4f6',
@@ -148,7 +147,7 @@ const FormsPage = () => {
         {/* TOP: submitted forms / status */}
         <section
           style={{
-            flex: '0 0 55%',
+            flex: '0 0 50%',
             padding: '1rem',
             overflowY: 'auto',
             backgroundColor: '#ffffff',
@@ -168,7 +167,7 @@ const FormsPage = () => {
           <FormRequestsTable requests={formRequests} onRowClick={viewRequest} />
         </section>
 
-        {/* BOTTOM: available forms */}
+        {/* ----- BOTTOM: available forms ----- */}
         <section
           style={{
             width: '100%',
@@ -177,21 +176,14 @@ const FormsPage = () => {
             padding: '1rem',
           }}
         >
-          <h2
-            style={{
-              fontSize: '1.25rem',
-              color: '#1f2937',
-              fontWeight: 600,
-              marginBottom: '1rem',
-            }}
-          >
-            Available Forms
-          </h2>
+          <h2 style={{fontSize: '1.25rem',fontWeight: 600,marginBottom: '1rem'}}>Available Forms</h2>
+          
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gridTemplateColumns: 'repeat(4, 1fr)',   // ← fixed 4‑column grid
               gap: '0.75rem',
+             // maxWidth: '150vh'
             }}
           >
             {formOptions.map((opt) => (
@@ -202,6 +194,7 @@ const FormsPage = () => {
                   backgroundColor:
                     selectedFormKey === opt.key ? '#e0e7ff' : '#ffffff',
                   padding: '0.75rem',
+                  maxWidth: '100%',
                   borderRadius: '0.5rem',
                   cursor: 'pointer',
                   border: '1px solid #e5e7eb',

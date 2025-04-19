@@ -9,15 +9,10 @@ import ClubPage from "./pages/clubPage";
 import EventPage from "./pages/eventPage";
 import ChatBoardPage from "./pages/chatBoardPage";
 import ChatPage from "./pages/chatPage";
-import CreateClubForm from "./pages/UserForms/CreateClubForm";
-import DeleteClubForm from "./pages/UserForms/DeleteClubForm";
 import ManageMembersPage from "./pages/manageMembersPage";
 import RequestPage from "./pages/requestPage";
 import Chat from "./pages/chatPage";
-import FundingRequestForm from "./pages/UserForms/FundingRequestForm";
-import Form from "./pages/StudentFormPage"
 import CompletedForm from "./pages/completedForm";
-import ApproveDeny from "./pages/UserForms/EventRequestForm";
 import DashboardPage from "./pages/Dashboards/dashboardPage";
 import AdminDashboardPage from "./pages/Dashboards/adminDashboardPage";
 import ExploreClubsPage from "./pages/ExploreClubs"
@@ -81,15 +76,9 @@ const App = () => {
           <Route path="manage-members" element={<ManageMembersPage />} />
           <Route path="requests" element={<RequestPage />} />
           <Route path="chat" element={<Chat />} />
-          <Route path="form" element={<Form />} />
           <Route path="completedForm" element={<CompletedForm />} />
-          <Route path="ApproveDeny" element={<ApproveDeny />} />
-          
-          <Route path="funding-request" element={<FundingRequestForm />} />
-          <Route path="create-club" element={<RequireRole allowed={["Student"]}><CreateClubForm/></RequireRole>} />
-          <Route path="delete-club" element={<DeleteClubForm />} />
 
-          <Route path="student-forms" element={<StudentFormPage />} />
+          <Route path="student-forms" element={<RequireRole allowed={["Student"]}><StudentFormPage/></RequireRole>}/>
 
           <Route path="dashboard" element={<RequireRole allowed={["Student"]}><DashboardPage/></RequireRole>}/>
           <Route path="admin-dashboard" element={<RequireRole allowed={["SUAdmin"]}><AdminDashboardPage /></RequireRole>}/>

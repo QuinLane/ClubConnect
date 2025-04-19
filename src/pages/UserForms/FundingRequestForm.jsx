@@ -1,261 +1,170 @@
 import { useState } from 'react';
+const token = localStorage.getItem('token');
 
-export default function FundingRequestForm({ isReadOnly = false }) {
+export default function FundingRequestForm({ onSubmit }) {
+  const dummyClubs = [
+    'Chess Club',
+    'Debate Team',
+    'Photography Society',
+    'Robotics Club',
+    'Drama Club',
+  ];
+
   const [clubName, setClubName] = useState('');
   const [requestAmount, setRequestAmount] = useState('');
   const [purpose, setPurpose] = useState('');
   const [budgetBreakdown, setBudgetBreakdown] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [requestStatus, setRequestStatus] = useState('');
 
+  /* ---------- submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
+    const payload = {
+      formType: 'Funding',
+      details: {
+        clubName,
+        requestAmount,
+        purpose,
+        budgetBreakdown,
+      },
+    };
+
     try {
-      // In a real app, this would be an API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const res = await fetch('http://localhost:5050/api/forms/1', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload),
+      });
       
-      // Mock success response
-      setRequestStatus('Under Review');
-      
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to submit funding request');
+      }
+
+      if (onSubmit) {
+        onSubmit(payload.details);           // parent closes modal
+      } else {
+        alert('Funding request submitted!');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to submit funding request');
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (requestStatus) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f8f9fa',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '1rem'
-      }}>
-        <div style={{
-          width: '100%',
-          maxWidth: '500px',
-          backgroundColor: 'white',
-          borderRadius: '0.5rem',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          padding: '2rem',
-          textAlign: 'center'
-        }}>
-          <h2 style={{
-            fontSize: '1.5rem',
-            fontWeight: '600',
-            color: '#1a1a1a',
-            marginBottom: '1rem'
-          }}>
-            Funding Request Status
-          </h2>
-          <div style={{
-            padding: '1rem',
-            backgroundColor: '#f0fdf4',
-            color: '#166534',
-            borderRadius: '0.375rem',
-            marginBottom: '1.5rem',
-            fontWeight: '500'
-          }}>
-            Status: {requestStatus}
-          </div>
-          <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
-            Your funding request has been submitted successfully. The finance committee will review it.
-          </p>
-          <button
-            onClick={() => setRequestStatus('')}
-            style={{
-              width: '100%',
-              padding: '0.75rem',
-              borderRadius: '0.375rem',
-              backgroundColor: '#10b981',
-              color: 'white',
-              fontWeight: '500',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            Submit Another Request
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  /* ---------- form ---------- */
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f8f9fa',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '1rem'
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '500px',
-        backgroundColor: 'white',
-        borderRadius: '0.5rem',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        padding: '2rem'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{
-            fontSize: '1.5rem',
-            fontWeight: '600',
-            color: '#1a1a1a',
-            marginBottom: '0.5rem'
-          }}>
-            {isReadOnly ? 'Funding Request Review' : 'Submit Funding Request'}
-          </h2>
-          <p style={{ color: '#6b7280' }}>
-            {isReadOnly ? 'Review the funding request details' : 'Request financial support for your club'}
-          </p>
-        </div>
+    <div>
+      <p>‎ </p>
+      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1a1a1a', marginBottom: '0.5rem' }}>
+          Submit Funding Request
+        </h2>
+        <p style={{ color: '#6b7280' }}>Request financial support for your club.</p>
+      </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <Field 
-            label="Club Name" 
-            value={clubName} 
-            onChange={setClubName} 
-            readOnly={isReadOnly} 
-            placeholder="Enter your club name"
-          />
-          
-          <Field 
-            label="Request Amount ($)" 
-            value={requestAmount} 
-            onChange={setRequestAmount} 
-            readOnly={isReadOnly} 
-            type="number"
-            placeholder="Enter amount in USD"
-            min="0"
-            step="0.01"
-          />
-          
-          <Field 
-            label="Purpose of Funding" 
-            value={purpose} 
-            onChange={setPurpose} 
-            readOnly={isReadOnly} 
-            isTextarea
-            placeholder="Describe what the funding will be used for"
-          />
-          
-          <Field 
-            label="Budget Breakdown" 
-            value={budgetBreakdown} 
-            onChange={setBudgetBreakdown} 
-            readOnly={isReadOnly} 
-            isTextarea
-            placeholder="Provide detailed budget allocation"
-            rows={5}
-          />
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <Field
+          label="Club Name"
+          value={clubName}
+          onChange={setClubName}
+          isSelect
+          options={dummyClubs}
+        />
 
-          {error && (
-            <div style={{
+        <Field
+          label="Request Amount ($)"
+          value={requestAmount}
+          onChange={setRequestAmount}
+          type="number"
+          placeholder="Enter amount in USD"
+          min="0"
+          step="0.01"
+        />
+
+        <Field
+          label="Purpose of Funding"
+          value={purpose}
+          onChange={setPurpose}
+          isTextarea
+          placeholder="Describe what the funding will be used for"
+        />
+
+        <Field
+          label="Budget Breakdown"
+          value={budgetBreakdown}
+          onChange={setBudgetBreakdown}
+          isTextarea
+          placeholder="Provide detailed budget allocation"
+          rows={5}
+        />
+
+        {error && (
+          <div
+            style={{
               padding: '0.75rem',
               backgroundColor: '#fef2f2',
               color: '#dc2626',
               fontSize: '0.875rem',
               borderRadius: '0.375rem',
-              border: '1px solid #fecaca'
-            }}>
-              {error}
-            </div>
-          )}
+              border: '1px solid #fecaca',
+            }}
+          >
+            {error}
+          </div>
+        )}
 
-          {isReadOnly ? (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginTop: '1.5rem'
-            }}>
-              <button
-                type="button"
-                onClick={() => alert('Approved!')}
-                style={{
-                  flex: 1,
-                  marginRight: '0.5rem',
-                  padding: '0.75rem',
-                  borderRadius: '0.375rem',
-                  backgroundColor: '#10b981',
-                  color: 'white',
-                  fontWeight: '500',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                Approve
-              </button>
-              <button
-                type="button"
-                onClick={() => alert('Denied!')}
-                style={{
-                  flex: 1,
-                  marginLeft: '0.5rem',
-                  padding: '0.75rem',
-                  borderRadius: '0.375rem',
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  fontWeight: '500',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                Deny
-              </button>
-            </div>
-          ) : (
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                borderRadius: '0.375rem',
-                backgroundColor: isLoading ? '#9ca3af' : '#10b981',
-                color: 'white',
-                fontWeight: '500',
-                border: 'none',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s',
-                marginTop: '0.5rem'
-              }}
-            >
-              {isLoading ? 'Submitting...' : 'Submit Request'}
-            </button>
-          )}
-        </form>
-      </div>
+        <button
+          type="submit"
+          disabled={isLoading}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            borderRadius: '0.375rem',
+            backgroundColor: isLoading ? '#9ca3af' : '#10b981',
+            color: 'white',
+            fontWeight: 500,
+            border: 'none',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s',
+            marginTop: '0.5rem',
+          }}
+        >
+          {isLoading ? 'Submitting...' : 'Submit Request'}
+        </button>
+      </form>
     </div>
   );
 }
 
-function Field({ 
-  label, 
-  value, 
-  onChange, 
-  readOnly, 
-  isTextarea, 
+/* ---------- field component ---------- */
+function Field({
+  label,
+  value,
+  onChange,
+  isTextarea = false,
+  isSelect = false,
+  options = [],
   type = 'text',
   placeholder = '',
   min,
   step,
-  rows = 4
+  rows = 4,
 }) {
   const commonStyle = {
     width: '100%',
     padding: '0.75rem',
     borderRadius: '0.375rem',
     border: '1px solid #d1d5db',
-    backgroundColor: readOnly ? '#f3f4f6' : 'white',
+    backgroundColor: 'white',
     outline: 'none',
     boxSizing: 'border-box',
     resize: isTextarea ? 'vertical' : 'none',
@@ -263,19 +172,32 @@ function Field({
 
   return (
     <div>
-      <label style={{
-        display: 'block',
-        fontSize: '0.875rem',
-        fontWeight: '500',
-        color: '#374151',
-        marginBottom: '0.25rem'
-      }}>
+      <label
+        style={{
+          display: 'block',
+          fontSize: '0.875rem',
+          fontWeight: 500,
+          color: '#374151',
+          marginBottom: '0.25rem',
+        }}
+      >
         {label}
       </label>
-      {readOnly ? (
-        <div style={commonStyle}>
-          {value || <span style={{ color: '#9ca3af' }}>Not provided</span>}
-        </div>
+
+      {isSelect ? (
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required
+          style={{ ...commonStyle, cursor: 'pointer' }}
+        >
+          <option value="">Select your club</option>
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
       ) : isTextarea ? (
         <textarea
           value={value}
