@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import fs from "fs/promises"; // For reading default image file
-
 const prisma = new PrismaClient();
 
 // Helper to convert image buffer to base64 or load default image

@@ -93,56 +93,58 @@ const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
             </tr>
           </thead>
           <tbody>
-            {sortedExecutives.map((executive) => (
-              <tr 
-                key={`${executive.role}-${executive.email}`} 
-                style={{
-                  height: `${rowHeight}px`,
-                  borderBottom: '1px solid #f0f0f0',
-                  ':hover': { backgroundColor: '#fafafa' }
-                }}
-              >
-                <td style={{
-                  padding: '12px 16px',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis'
-                }}>{executive.email}</td>
-                <td style={{
-                  padding: '12px 16px',
-                  color: getRoleColor(executive.role),
-                  fontWeight: '500'
-                }}>
-                  {executive.role}
-                </td>
-                <td style={{
-                  padding: '12px 16px',
-                  textAlign: 'right'
-                }}>
-                  <button 
-                    onClick={() => onRemoveExecutive(executive.email)}
-                    style={{
-                      background: '#000000',
-                      border: '1px solid #000000',
-                      color: '#ffffff',
-                      cursor: 'pointer',
-                      padding: '4px 12px',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      transition: 'all 0.2s ease',
-                      ':hover': {
-                        backgroundColor: '#333333',
-                        borderColor: '#333333'
-                      }
-                    }}
-                  >
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
+  {sortedExecutives.map((executive) => (
+    <tr 
+      key={executive.id} // Use id as the key for better performance
+      style={{
+        height: `${rowHeight}px`,
+        borderBottom: '1px solid #f0f0f0',
+        ':hover': { backgroundColor: '#fafafa' }
+      }}
+    >
+      <td style={{
+        padding: '12px 16px',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }}>
+        {executive.email}
+      </td>
+      <td style={{
+        padding: '12px 16px',
+        color: getRoleColor(executive.role),
+        fontWeight: '500'
+      }}>
+        {executive.role}
+      </td>
+      <td style={{
+        padding: '12px 16px',
+        textAlign: 'right'
+      }}>
+        <button 
+          onClick={() => onRemoveExecutive && onRemoveExecutive(executive.id)}
+          style={{
+            background: '#ff4444',
+            border: '1px solid #ff4444',
+            color: '#ffffff',
+            cursor: 'pointer',
+            padding: '4px 12px',
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontWeight: '500',
+            transition: 'all 0.2s ease',
+            ':hover': {
+              backgroundColor: '#cc0000',
+              borderColor: '#cc0000'
+            }
+          }}
+        >
+          Remove
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
         </table>
       </div>
     </div>
