@@ -1,187 +1,124 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import Announcement from '../components/messages/announcment';
 import CreateAnnouncement from '../components/messages/createAnnouncement';
 
 const NotificationsPage = () => {
-  const { clubID } = useParams();
-  const [notifications, setNotifications] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+
+  // Get current user from localStorage
+  const user = JSON.parse(localStorage.getItem('user') || {});
+  const currentUserID = user.userID;
   const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  // Fetch notifications from backend
-// In NotificationsPage.js
-useEffect(() => {
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      
-      let endpoint;
-      if (clubID) {
-        // For club-specific notifications
-        endpoint = `http://localhost:5050/api/notifications/club/${clubID}`;
-      } else if (user.userType === 'SUAdmin') {
-        // SUAdmins can see all notifications they sent plus received
-        endpoint = `http://localhost:5050/api/notifications/sender/${user.userID}`;
-      } else {
-        // Regular users see notifications they sent plus received
-        endpoint = `http://localhost:5050/api/notifications/user/${user.userID}`;
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch both notifications sent to user and sent by user
+        const [recipientResponse, senderResponse] = await Promise.all([
+          fetch(`http://localhost:5050/api/notifications/user/${currentUserID}`, {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }),
+          fetch(`http://localhost:5050/api/notifications/sender/${currentUserID}`, {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          })
+        ]);
+        
+        if (!recipientResponse.ok || !senderResponse.ok) {
+          throw new Error('Failed to fetch announcements');
+        }
+        
+        const recipientData = await recipientResponse.json();
+        const senderData = await senderResponse.json();
+        
+        // Combine and deduplicate the notifications
+        const combinedNotifications = [...recipientData, ...senderData];
+        const uniqueNotifications = combinedNotifications.filter(
+          (notification, index, self) =>
+            index === self.findIndex(n => n.notificationID === notification.notificationID)
+        );
+        
+        // Transform the API data to match your component's expected format
+        const transformedAnnouncements = uniqueNotifications.map(notification => ({
+          id: notification.notificationID,
+          message: notification.content,
+          author: notification.sender 
+            ? `${notification.sender.firstName} ${notification.sender.lastName}` + 
+              (notification.club ? ` (${notification.club.clubName})` : '')
+            : 'System',
+          timestamp: notification.postedAt,
+          isSender: notification.senderID === parseInt(currentUserID)
+        }));
+        
+        setAnnouncements(transformedAnnouncements);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-      
-      const response = await fetch(endpoint, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch notifications');
-      
-      const data = await response.json();
-      
-      const formattedNotifications = data.map(notification => ({
-        id: notification.notificationID,
-        message: notification.content,
-        title: notification.title,
-        author: notification.sender 
-          ? `${notification.sender.firstName} ${notification.sender.lastName}${notification.club ? ` (${notification.club.clubName})` : ''}`
-          : 'System Notification',
-        timestamp: notification.postedAt,
-        isClubNotification: !!notification.clubID,
-        isRead: notification.recipients?.find(r => r.userID === user.userID)?.isRead || 
-               (notification.senderID === user.userID) // Sender automatically "read" their own notifications
-      }));
-      
-      setNotifications(formattedNotifications);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    };
+    
+    if (currentUserID) {
+      fetchAnnouncements();
     }
-  };
-  
-  fetchNotifications();
-}, [clubID, token, user.userID, user.userType]);
+  }, [currentUserID, token]);
 
-  const handleNewAnnouncement = async (newAnnouncement) => {
-    try {
-      // Determine the appropriate endpoint based on context
-      let endpoint = 'http://localhost:5050/api/notifications';
-      let body = {
-        title: newAnnouncement.title,
-        content: newAnnouncement.message,
-        senderID: user.userID
-      };
-
-      if (clubID) {
-        endpoint += '/club';
-        body.clubID = clubID;
-      } else {
-        endpoint += '/all';
-      }
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (!response.ok) throw new Error('Failed to create notification');
-
-      // Refresh notifications after creation
-      const updatedResponse = await fetch(
-        clubID 
-          ? `http://localhost:5050/api/notifications/club/${clubID}`
-          : `http://localhost:5050/api/notifications/user/${user.userID}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      const updatedData = await updatedResponse.json();
-      const formattedNotifications = updatedData.map(notification => ({
-        id: notification.notificationID,
-        message: notification.content,
-        title: notification.title,
-        author: notification.sender 
-          ? `${notification.sender.firstName} ${notification.sender.lastName}${notification.club ? ` (${notification.club.clubName})` : ''}`
-          : 'System Notification',
-        timestamp: notification.postedAt,
-        isRead: notification.recipients?.find(r => r.userID === user.userID)?.isRead || false
-      }));
-      
-      setNotifications(formattedNotifications);
-      setShowCreateForm(false);
-    } catch (err) {
-      setError(err.message);
-    }
+  const handleNewAnnouncement = (newAnnouncement) => {
+    setAnnouncements(prev => [{
+      ...newAnnouncement,
+      isSender: true,
+      timestamp: new Date().toISOString()
+    }, ...prev]);
+    setShowCreateForm(false);
   };
 
-  const handleMarkAsRead = async (notificationID) => {
-    try {
-      await fetch(`http://localhost:5050/api/notifications/read/${notificationID}/${user.userID}`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Update local state to reflect read status
-      setNotifications(prev => prev.map(n => 
-        n.id === notificationID ? { ...n, isRead: true } : n
-      ));
-    } catch (err) {
-      console.error("Error marking notification as read:", err);
-    }
-  };
-
-  const sortedNotifications = [...notifications].sort((a, b) =>
+  const sortedAnnouncements = [...announcements].sort((a, b) =>
     new Date(b.timestamp) - new Date(a.timestamp)
   );
 
-  if (loading) return <div style={styles.loading}>Loading notifications...</div>;
-  if (error) return <div style={styles.error}>Error: {error}</div>;
-
   return (
     <div style={styles.pageContainer}>
-      <h1 style={styles.header}>
-        {clubID ? 'Club Announcements' : 'My Notifications'}
-      </h1>
+      <h1 style={styles.header}>Announcements</h1>
 
-      {(user.userType === 'SUAdmin' || (clubID && user.isClubAdmin)) && (
-        <button 
-          onClick={() => setShowCreateForm(prev => !prev)} 
-          style={styles.button}
-        >
-          {showCreateForm ? 'Cancel' : 'Create Announcement'}
-        </button>
-      )}
+      <button 
+        onClick={() => setShowCreateForm(prev => !prev)} 
+        style={styles.button}
+      >
+        {showCreateForm ? 'Cancel' : 'Create Announcement'}
+      </button>
 
       {showCreateForm && (
-        <CreateAnnouncement 
-          onAnnouncementCreate={handleNewAnnouncement} 
-          isClubNotification={!!clubID}
-        />
+        <CreateAnnouncement onAnnouncementCreate={handleNewAnnouncement} />
       )}
 
       <div style={styles.announcementsContainer}>
-        {sortedNotifications.map(notification => (
-          <div 
-            key={notification.id} 
-            onClick={() => handleMarkAsRead(notification.id)}
-            style={{
-              ...styles.notificationWrapper,
-              opacity: notification.isRead ? 0.8 : 1,
-              backgroundColor: notification.isRead ? '#f9f9f9' : '#ffffff'
-            }}
-          >
+        {loading ? (
+          <div style={styles.loading}>Loading announcements...</div>
+        ) : error ? (
+          <div style={styles.error}>Error: {error}</div>
+        ) : sortedAnnouncements.length === 0 ? (
+          <div style={styles.empty}>No announcements to display</div>
+        ) : (
+          sortedAnnouncements.map(announcement => (
             <Announcement
-              message={notification.message}
-              author={notification.author}
-              title={notification.title}
-              timestamp={notification.timestamp}
+              key={announcement.id}
+              message={announcement.message}
+              author={announcement.author}
+              timestamp={announcement.timestamp}
+              isSender={announcement.isSender}
             />
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -216,25 +153,21 @@ const styles = {
     flexDirection: 'column',
     gap: '20px'
   },
-  notificationWrapper: {
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    borderRadius: '8px',
-    padding: '8px',
-    ':hover': {
-      backgroundColor: '#f0f8ff'
-    }
-  },
   loading: {
     textAlign: 'center',
-    padding: '40px',
-    fontSize: '18px'
+    padding: '20px',
+    color: '#666'
   },
   error: {
     textAlign: 'center',
-    padding: '40px',
-    color: 'red',
-    fontSize: '18px'
+    padding: '20px',
+    color: 'red'
+  },
+  empty: {
+    textAlign: 'center',
+    padding: '20px',
+    color: '#666',
+    fontStyle: 'italic'
   }
 };
 
