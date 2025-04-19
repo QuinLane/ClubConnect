@@ -68,7 +68,6 @@ const App = () => {
             />
             <Route path="requests" element={<RequestPage />} />
             <Route path="chat" element={<Chat />} />
-            <Route path="completedForm" element={<CompletedForm />} />
             <Route path="student-forms" element={<StudentFormPage />} />
             <Route path="explore-clubs" element={<ExploreClubsPage />} />
             <Route path="explore-events" element={<ExploreEventsPage />} />
