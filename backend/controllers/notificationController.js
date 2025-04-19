@@ -188,3 +188,126 @@ export const markNotificationRead = async (req, res) => {
       .json({ error: `Failed to mark notification as read: ${error.message}` });
   }
 };
+
+// In notificationController.js
+export const getClubNotifications = async (req, res) => {
+  const { clubID } = req.params;
+  try {
+    const notifications = await prisma.notification.findMany({
+      where: {
+        clubID: parseInt(clubID)
+      },
+      include: {
+        sender: true,
+        club: true
+      },
+      orderBy: { postedAt: "desc" }
+    });
+    res.status(200).json(notifications);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to fetch club notifications: ${error.message}` });
+  }
+};
+
+export const getExecutiveNotifications = async (req, res) => {
+  const { userID } = req.params;
+  try {
+    // Get all clubs where user is an executive
+    const executiveClubs = await prisma.executive.findMany({
+      where: { userID: parseInt(userID) },
+      select: { clubID: true }
+    });
+
+    // Get notifications for these clubs
+    const notifications = await prisma.notification.findMany({
+      where: {
+        OR: [
+          // Notifications sent directly to user
+          { recipients: { some: { userID: parseInt(userID) } } },
+          // Notifications sent to clubs where user is executive
+          { clubID: { in: executiveClubs.map(ec => ec.clubID) } }
+        ]
+      },
+      include: {
+        sender: true,
+        club: true
+      },
+      orderBy: { postedAt: "desc" }
+    });
+
+    res.status(200).json(notifications);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to fetch executive notifications: ${error.message}` });
+  }
+};
+
+// In notificationController.js
+export const getNotificationsForUser = async (req, res) => {
+  const { userID } = req.params;
+  try {
+    const notifications = await prisma.notification.findMany({
+      where: {
+        OR: [
+          // Notifications sent to this user
+          { recipients: { some: { userID: parseInt(userID) } } },
+          // Notifications sent by this user
+          { senderID: parseInt(userID) }
+        ]
+      },
+      include: {
+        sender: true,
+        club: true,
+        recipients: true
+      },
+      orderBy: { postedAt: "desc" }
+    });
+    res.status(200).json(notifications);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to fetch user notifications: ${error.message}` });
+  }
+};
+
+export const getNotificationsForSender = async (req, res) => {
+  const { userID } = req.params;
+  try {
+    const notifications = await prisma.notification.findMany({
+      where: {
+        OR: [
+          // Notifications sent by this user
+          { senderID: parseInt(userID) },
+          // Notifications where this user is a recipient
+          { recipients: { some: { userID: parseInt(userID) } } },
+          // Notifications sent to all users (if user is SUAdmin)
+          {
+            AND: [
+              { recipients: { some: { user: { userType: "SUAdmin" } } } },
+              { sender: { userType: "SUAdmin" } }
+            ]
+          }
+        ]
+      },
+      include: {
+        sender: true,
+        club: true,
+        recipients: {
+          include: {
+            user: true
+          }
+        }
+      },
+      orderBy: { postedAt: "desc" }
+    });
+
+    // Filter out duplicates and format the response
+    const uniqueNotifications = notifications.filter(
+      (notification, index, self) =>
+        index === self.findIndex(n => n.notificationID === notification.notificationID)
+    );
+
+    res.status(200).json(uniqueNotifications);
+  } catch (error) {
+    res.status(500).json({ 
+      error: `Failed to fetch sender notifications: ${error.message}` 
+    });
+  }
+};
