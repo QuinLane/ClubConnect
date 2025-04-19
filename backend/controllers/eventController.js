@@ -118,10 +118,10 @@ export const deleteEvent = async (req, res) => {
   }
 };
 
-
 // Note: Only called internally by formController after approval
 export const createEvent = async (req, res) => {
-  const { name, description, clubID, date, startTime, endTime, venueID } = req.body;
+  const { name, description, clubID, date, startTime, endTime, venueID } =
+    req.body;
 
   try {
     // Check for uploaded image
@@ -133,11 +133,11 @@ export const createEvent = async (req, res) => {
       }
       image = file.data;
     }
-  
+
     // Parse date and times into DateTime format
     const startDateTime = new Date(`${date}T${startTime}`);
     const endDateTime = new Date(`${date}T${endTime}`);
-  
+
     // Create event and reservation in a single transaction
     const event = await prisma.$transaction(async (prisma) => {
       // Create the event
@@ -152,34 +152,34 @@ export const createEvent = async (req, res) => {
               start: startDateTime,
               endTime: endDateTime,
               venueID: parseInt(venueID),
-            }
-          }
+            },
+          },
         },
         include: {
           club: true,
           rsvps: { include: { user: true } },
           reservation: {
             include: {
-              venue: true
-            }
+              venue: true,
+            },
           },
         },
       });
-  
+
       return createdEvent;
     });
-  
+
     // Convert image to base64 if it exists
     const eventWithImage = {
       ...event,
       image: event.image ? await getImageAsBase64(event.image) : null,
     };
-  
+
     res.status(201).json(eventWithImage);
   } catch (error) {
     res.status(500).json({ error: `Failed to create event: ${error.message}` });
   }
-}
+};
 
 // Note: Available to all
 export const getUpcomingEvents = async (req, res) => {
@@ -369,7 +369,7 @@ export const getUserRecommendedEvents = async (req, res) => {
           },
         ],
         reservation: {
-          date: { gte: new Date() },
+          start: { gte: new Date() },
         },
       },
       include: {

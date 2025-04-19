@@ -80,7 +80,6 @@ export const createReservation = async (req, res) => {
       data: {
         venueID: parseInt(venueID),
         eventID: parseInt(eventID),
-        date: new Date(date),
         startTime: parseInt(startTime),
         endTime: parseInt(endTime),
       },
