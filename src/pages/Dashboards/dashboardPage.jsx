@@ -1,78 +1,137 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import CompressedEventCarousel from '../../components/clubEventPages/compressedEventCarosel';
 
-
-
 const DashboardPage = () => {
-  // Sample data - replace with your actual data
-  const managedClubs = [
-    {
-      imageUrl: 'https://example.com/club1.jpg',
-      title: 'Computer Science Club',
-      date: 'Managed since Jan 2023'
-    },
-    {
-      imageUrl: 'https://example.com/club2.jpg',
-      title: 'Debate Society',
-      date: 'Managed since Mar 2023'
-    },
-    {
-      imageUrl: 'https://example.com/club3.jpg',
-      title: 'Photography Club',
-      date: 'Managed since Sep 2022'
-    },
-    {
-      imageUrl: 'https://example.com/club4.jpg',
-      title: 'Entrepreneurship Club',
-      date: 'Managed since Nov 2023'
-    }
-  ];
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentUserID = user.userID;
 
-  const memberClubs = [
-    {
-      imageUrl: 'https://example.com/club5.jpg',
-      title: 'Chess Club',
-      date: 'Member since Feb 2023'
-    },
-    {
-      imageUrl: 'https://example.com/club6.jpg',
-      title: 'Music Society',
-      date: 'Member since Aug 2022'
-    },
-    {
-      imageUrl: 'https://example.com/club7.jpg',
-      title: 'Robotics Club',
-      date: 'Member since Oct 2023'
-    }
-  ];
+  // State for RSVP'd events
+  const [myEvents, setMyEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [errorEvents, setErrorEvents] = useState(null);
 
-  const myEvents = [
-    {
-      imageUrl: 'https://example.com/event1.jpg',
-      title: 'Tech Conference 2023',
-      date: 'Dec 15, 2023'
-    },
-    {
-      imageUrl: 'https://example.com/event2.jpg',
-      title: 'Hackathon Finals',
-      date: 'Jan 20, 2024'
-    },
-    {
-      imageUrl: 'https://example.com/event3.jpg',
-      title: 'Alumni Networking',
-      date: 'Feb 5, 2024'
-    },
-    {
-      imageUrl: 'https://example.com/event4.jpg',
-      title: 'Career Fair',
-      date: 'Mar 10, 2024'
-    },
-    {
-      imageUrl: 'https://example.com/event5.jpg',
-      title: 'Workshop: Public Speaking',
-      date: 'Apr 2, 2024'
-    }
-  ];
+  // State for member clubs
+  const [memberClubs, setMemberClubs] = useState([]);
+  const [loadingMemberClubs, setLoadingMemberClubs] = useState(false);
+  const [errorMemberClubs, setErrorMemberClubs] = useState(null);
+
+  // State for managed clubs
+  const [managedClubs, setManagedClubs] = useState([]);
+  const [loadingManagedClubs, setLoadingManagedClubs] = useState(false);
+  const [errorManagedClubs, setErrorManagedClubs] = useState(null);
+
+  // Helper function to create event elements
+  const createEventElements = (events) => {
+    return events.map(event => ({
+      id: event.eventID,
+      imageUrl: event.image || '/images/default-event.jpg',
+      title: event.name,
+      date: event.reservation?.date || 'Date TBD',
+      type: 'event'
+    }));
+  };
+
+// In DashboardPage.js
+const createClubElements = (clubs) => {
+  return clubs.map(club => ({
+    id: club.clubID,
+    imageUrl: club.image || '/images/default-club.png',
+    title: club.clubName,
+    date: '', // Clubs don't need dates
+    type: 'club'
+  }));
+};
+
+// Update the carousel rendering to include type prop
+<CompressedEventCarousel
+  items={managedClubs}
+  title="Clubs I Manage"
+  showTitle={true}
+  itemType="club" // Explicitly tell carousel these are clubs
+/>
+  // Fetch user's RSVP'd events
+  useEffect(() => {
+    const fetchUserRSVPs = async () => {
+      try {
+        setLoadingEvents(true);
+        const response = await fetch(`http://localhost:5050/api/rsvps/user/${currentUserID}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch RSVPs');
+        
+        const rsvps = await response.json();
+        const events = rsvps.map(rsvp => rsvp.event);
+        const eventElements = createEventElements(events);
+        
+        // Sort events by date (newest first)
+        const sortedEvents = eventElements.sort((a, b) => {
+          if (a.date === 'Date TBD' && b.date === 'Date TBD') return 0;
+          if (a.date === 'Date TBD') return 1;
+          if (b.date === 'Date TBD') return -1;
+          return new Date(b.date) - new Date(a.date);
+        });
+        
+        setMyEvents(sortedEvents);
+      } catch (err) {
+        setErrorEvents(err.message);
+      } finally {
+        setLoadingEvents(false);
+      }
+    };
+    
+    if (currentUserID) fetchUserRSVPs();
+  }, [currentUserID, token]);
+
+  // Fetch member clubs
+  useEffect(() => {
+    const fetchMemberClubs = async () => {
+      try {
+        setLoadingMemberClubs(true);
+        const response = await fetch(`http://localhost:5050/api/clubs/user/${currentUserID}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch member clubs');
+        
+        const clubs = await response.json();
+        const clubElements = createClubElements(clubs);
+        setMemberClubs(clubElements);
+      } catch (err) {
+        setErrorMemberClubs(err.message);
+      } finally {
+        setLoadingMemberClubs(false);
+      }
+    };
+    
+    if (currentUserID) fetchMemberClubs();
+  }, [currentUserID, token]);
+
+  // Fetch managed clubs
+  useEffect(() => {
+    const fetchManagedClubs = async () => {
+      try {
+        setLoadingManagedClubs(true);
+        const response = await fetch(`http://localhost:5050/api/executives/user/${currentUserID}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch managed clubs');
+        
+        const executives = await response.json();
+        const clubs = executives.map(exec => exec.club);
+        const clubElements = createClubElements(clubs);
+        setManagedClubs(clubElements);
+      } catch (err) {
+        setErrorManagedClubs(err.message);
+      } finally {
+        setLoadingManagedClubs(false);
+      }
+    };
+    
+    if (currentUserID) fetchManagedClubs();
+  }, [currentUserID, token]);
 
   return (
     <div style={{
@@ -80,13 +139,13 @@ const DashboardPage = () => {
       margin: '0 auto',
       padding: '20px',
       fontFamily: 'Arial, sans-serif',
-      backgroundColor: '#ffffff',       // Force white background
-      color: '#1f2937',                 // Dark text
-      minHeight: '100vh'                // Full viewport height to avoid dark spill
+      backgroundColor: '#ffffff',
+      color: '#1f2937',
+      minHeight: '100vh'
     }}>
       {/* Header with gray bar */}
       <div style={{
-        backgroundColor: '#f5f5f5',     // Light gray
+        backgroundColor: '#f5f5f5',
         padding: '20px',
         borderRadius: '8px',
         marginBottom: '40px',
@@ -103,25 +162,51 @@ const DashboardPage = () => {
       </div>
 
       {/* Clubs I Manage (Executive) */}
-      <CompressedEventCarousel
-        events={managedClubs}
-        title="Clubs I Manage"
-        showTitle={true}
-      />
+      {loadingManagedClubs ? (
+        <div style={{ textAlign: 'center', padding: '20px' }}>Loading your managed clubs...</div>
+      ) : errorManagedClubs ? (
+        <div style={{ color: 'red', textAlign: 'center', padding: '20px' }}>
+          Error loading managed clubs: {errorManagedClubs}
+        </div>
+      ) : (
+<CompressedEventCarousel
+  items={managedClubs}
+  title="Clubs I Manage"
+  showTitle={true}
+  type="club"
+/>
+      )}
 
       {/* Clubs I'm a Member Of */}
-      <CompressedEventCarousel
-        events={memberClubs}
-        title="Clubs I'm a Member Of"
-        showTitle={true}
-      />
+      {loadingMemberClubs ? (
+        <div style={{ textAlign: 'center', padding: '20px' }}>Loading your clubs...</div>
+      ) : errorMemberClubs ? (
+        <div style={{ color: 'red', textAlign: 'center', padding: '20px' }}>
+          Error loading clubs: {errorMemberClubs}
+        </div>
+      ) : (
+        <CompressedEventCarousel
+          items={memberClubs}
+          title="Clubs I'm a Member Of"
+          showTitle={true}
+          type="club"
+        />
+      )}
 
       {/* My Events (RSVP'd) */}
-      <CompressedEventCarousel
-        events={myEvents}
-        title="My Events"
-        showTitle={true}
-      />
+      {loadingEvents ? (
+        <div style={{ textAlign: 'center', padding: '20px' }}>Loading your events...</div>
+      ) : errorEvents ? (
+        <div style={{ color: 'red', textAlign: 'center', padding: '20px' }}>
+          Error loading events: {errorEvents}
+        </div>
+      ) : (
+        <CompressedEventCarousel
+          items={myEvents}
+          title="My Events"
+          showTitle={true}
+        />
+      )}
     </div>
   );
 };
