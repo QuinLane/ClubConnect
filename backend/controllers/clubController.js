@@ -90,7 +90,7 @@ export const createClub = async (req, res) => {
         description,
         createdAt: new Date(),
         president: parseInt(president),
-        socialMediaLinks: socialMediaLinks ? JSON.parse(socialMediaLinks) : [],
+        socialMediaLinks,
         website,
         clubEmail,
         image, // Save image as binary data
@@ -180,11 +180,14 @@ export const updateClub = async (req, res) => {
 
 // Note: Only SU admins should be able to do this
 export const deleteClub = async (req, res) => {
-  const { clubID } = req.params;
+  const id = parseInt(req.params.clubID, 10);
   try {
-    await prisma.club.delete({
-      where: { clubID: parseInt(clubID) },
-    });
+    await prisma.memberOf.deleteMany({   where: { clubID: id } });
+    await prisma.executive.deleteMany({  where: { clubID: id } });
+    await prisma.event.deleteMany({      where: { clubID: id } });
+    await prisma.notification.deleteMany({ where: { clubID: id } });
+    
+    await prisma.club.delete({where: { clubID: parseInt(clubID) },});
     res.status(204).json(); // No content on successful deletion
   } catch (error) {
     res.status(500).json({ error: `Failed to delete club: ${error.message}` });

@@ -4,25 +4,32 @@ const token      = localStorage.getItem('token');
 const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
 const userID     = storedUser.userID ?? null;
 
-export default function ClubForm({
+export default function CreateClubForm({
   onSubmit,
   isReadOnly    = false,
   initialData   = {}
 }) {
-  const [clubName,    setClubName]    = useState(initialData.clubName    || '');
-  const [description, setDescription] = useState(initialData.description || '');
-  const [category,    setCategory]    = useState(initialData.category    || '');
-  const [meetingTime, setMeetingTime] = useState(initialData.meetingTime || '');
-  const [error,       setError]       = useState('');
-  const [isLoading,   setIsLoading]   = useState(false);
+  const [clubName,         setClubName]         = useState(initialData.clubName        || '');
+  const [description,      setDescription]      = useState(initialData.description     || '');
+  const [category,         setCategory]         = useState(initialData.category        || '');
+  const [meetingTime,      setMeetingTime]      = useState(initialData.meetingTime     || '');
+  const [website,          setWebsite]          = useState(initialData.website         || '');
+  const [clubEmail,        setClubEmail]        = useState(initialData.clubEmail       || '');
+  const [socialLinksText,  setSocialLinksText]  = useState(
+    initialData.socialMediaLinks);
+  const [error,            setError]            = useState('');
+  const [isLoading,        setIsLoading]        = useState(false);
 
   // preload when viewing existing
   useEffect(() => {
     if (isReadOnly) {
-      setClubName(initialData.clubName    || '');
-      setDescription(initialData.description || '');
-      setCategory(initialData.category    || '');
-      setMeetingTime(initialData.meetingTime || '');
+      setClubName(initialData.clubName        || '');
+      setDescription(initialData.description  || '');
+      setCategory(initialData.category        || '');
+      setMeetingTime(initialData.meetingTime  || '');
+      setWebsite(initialData.website          || '');
+      setClubEmail(initialData.clubEmail      || '');
+      setSocialLinksText(initialData.socialMediaLinks);
     }
   }, [initialData, isReadOnly]);
 
@@ -31,9 +38,19 @@ export default function ClubForm({
     setIsLoading(true);
     setError('');
 
+    // send raw string for socialMediaLinks, backend will parse JSON
     const payload = {
       formType: 'ClubCreation',
-      details: { clubName, description, category, meetingTime },
+      details: {
+        clubName,
+        description,
+        category,
+        meetingTime,
+        website,
+        clubEmail,
+        socialMediaLinks: socialLinksText,
+        president: userID
+      },
     };
 
     try {
@@ -77,7 +94,7 @@ export default function ClubForm({
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:'1rem' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <Field
           label="Club Name"
           value={clubName}
@@ -106,6 +123,33 @@ export default function ClubForm({
           label="Meeting Time"
           value={meetingTime}
           onChange={setMeetingTime}
+          readOnly={isReadOnly}
+        />
+
+        <Field
+          label="Website"
+          value={website}
+          onChange={setWebsite}
+          placeholder="https://example.com"
+          readOnly={isReadOnly}
+        />
+
+        <Field
+          label="Club Email"
+          value={clubEmail}
+          onChange={setClubEmail}
+          type="email"
+          placeholder="you@club.com"
+          readOnly={isReadOnly}
+        />
+
+        <Field
+          label="Social Media Links (comma-separated)"
+          value={socialLinksText}
+          onChange={setSocialLinksText}
+          isTextarea
+          rows={2}
+          placeholder="https://twitter.com/... , https://facebook.com/..."
           readOnly={isReadOnly}
         />
 
