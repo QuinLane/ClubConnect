@@ -2,7 +2,7 @@ import { useState } from 'react';
 const token = localStorage.getItem('token');
 
 const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-const userID = storedUser.userID ?? null;   // ← e.g. 42
+const userID = storedUser.userID;   
 
 export default function FundingRequestForm({ onSubmit }) {
   const dummyClubs = [

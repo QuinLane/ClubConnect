@@ -1,6 +1,9 @@
 import { useState } from 'react';
 const token = localStorage.getItem('token');
 
+const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+const userID = storedUser.userID;   
+
 export default function EventRequestForm({ onSubmit }) {
   const [clubName, setClubName] = useState('');
   const [eventName, setEventName] = useState('');
@@ -30,7 +33,7 @@ export default function EventRequestForm({ onSubmit }) {
     };
 
     try {
-      const res = await fetch('http://localhost:5050/api/forms/1', {
+      const res = await fetch(`http://localhost:5050/api/forms/${userID}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

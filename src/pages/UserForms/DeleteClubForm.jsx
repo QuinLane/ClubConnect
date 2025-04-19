@@ -1,6 +1,9 @@
 import { useState } from 'react';
 const token = localStorage.getItem('token');
 
+const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+const userID = storedUser.userID;   
+
 export default function DeleteClubForm({ onSubmit, clubID = '' }) {
   const [clubId, setClubId] = useState(clubID);
   const [confirmation, setConfirmation] = useState('');
@@ -24,7 +27,7 @@ export default function DeleteClubForm({ onSubmit, clubID = '' }) {
     };
 
     try {
-      const res = await fetch('http://localhost:5050/api/forms/1', {
+      const res = await fetch(`http://localhost:5050/api/forms/${userID}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
