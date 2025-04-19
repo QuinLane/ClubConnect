@@ -14,46 +14,48 @@ const sendMessageSchema = Joi.object({
 
 // Joi schema for replying to SU message
 const replyMessageSchema = Joi.object({
-  threadID: Joi.number().integer().required(),
+  userID: Joi.number().integer().required(),
   content: Joi.string().required(),
-  suAdminID: Joi.number().integer().required(),
-});
-
-// Joi schema for resolving SU thread
-const resolveThreadSchema = Joi.object({
-  threadID: Joi.number().integer().required(),
   suAdminID: Joi.number().integer().required(),
 });
 
 // SU Message routes
 router.post(
-  "/",
+  "/messageStudent",
   authenticate,
   validate(sendMessageSchema),
-  suMessageController.sendSUMessage
+  suMessageController.sendMessageStudent
 );
+
 router.post(
-  "/reply",
+  "/messageSU",
   authenticate,
   validate(replyMessageSchema),
-  suMessageController.replyToSUMessage
+  suMessageController.sendMessageSU
 );
+
 router.get(
-  "/thread/:threadID/:userID",
+  "/conversation/:userID",
   authenticate,
-  suMessageController.getSUThread
+  suMessageController.getConversation
 );
-router.get("/threads/:userID", authenticate, suMessageController.getSUThreads);
+
+router.get(
+  "/threads",
+  authenticate,
+  suMessageController.getSUThreads
+);
+
 router.put(
   "/read/:messageID/:userID",
   authenticate,
   suMessageController.markSUMessageRead
 );
-router.post(
-  "/resolve",
+
+router.get(
+  '/exec-ids',
   authenticate,
-  validate(resolveThreadSchema),
-  suMessageController.resolveSUThread
+  suMessageController.getDistinctExecIDs
 );
 
 export default router;

@@ -1,3 +1,4 @@
+// src/components/messages/Message.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -12,7 +13,7 @@ const Message = ({
       margin: '8px 0',
       width: '100%',
       padding: '0 12px',
-      overflow: 'hidden' // Add this to prevent horizontal overflow
+      overflow: 'hidden'
     }}>
       <div style={{
         maxWidth: '80%',
@@ -26,8 +27,8 @@ const Message = ({
         color: isSender ? 'white' : 'black',
         fontSize: '0.95rem',
         lineHeight: '1.4',
-        wordBreak: 'break-word', // This handles word breaking
-        overflowWrap: 'break-word', // Add this for better text breaking
+        wordBreak: 'break-word',
+        overflowWrap: 'break-word',
         boxShadow: '0 1px 1px rgba(0,0,0,0.1)'
       }}>
         {text}
