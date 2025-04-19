@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Message from '../components/messages/message';
 import MessageInput from '../components/messages/messageInput';
-import MessagingBoard from '../components/messages/messagingBoard';
 
 const ChatPage = () => {
   const location = useLocation();
@@ -10,16 +9,7 @@ const ChatPage = () => {
     { text: "Hello! How can we help you with the club?", isSender: false },
   ]);
 
-  const [contacts, setContacts] = useState([
-    {
-      email: 'clubs@su.edu',
-      name: 'SU Clubs Admin',
-      lastMessage: "Welcome to SU Clubs messaging",
-      lastMessageTime: new Date()
-    }
-  ]);
-
-  const [currentChat, setCurrentChat] = useState(contacts[0].email);
+  const [currentChat, setCurrentChat] = useState('clubs@su.edu');
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [newChatEmail, setNewChatEmail] = useState('');
   const [autoOpenChat, setAutoOpenChat] = useState(false);
@@ -28,42 +18,14 @@ const ChatPage = () => {
   useEffect(() => {
     if (location.state?.presetEmail) {
       const presetEmail = location.state.presetEmail;
-      
-      // Check if we should auto-open this chat
-      if (location.state.autoOpen) {
-        setCurrentChat(presetEmail);
-        setAutoOpenChat(true);
-      } else {
-        // Otherwise just pre-fill the new chat modal
-        setShowNewChatModal(true);
-        setNewChatEmail(presetEmail);
-      }
-      
-      // Check if this contact already exists
-      if (!contacts.some(c => c.email === presetEmail)) {
-        // Add club as a new contact
-        const clubName = presetEmail.split('@')[0].replace('.', ' ');
-        const newContact = {
-          email: presetEmail,
-          name: clubName,
-          lastMessage: "New conversation started",
-          lastMessageTime: new Date()
-        };
-        setContacts([...contacts, newContact]);
-      }
+      setCurrentChat(presetEmail);
+      setAutoOpenChat(location.state.autoOpen || false);
     }
   }, [location.state]);
 
   const handleSend = (newMessage) => {
     // Add user's message
     setMessages([...messages, { text: newMessage, isSender: true }]);
-    
-    // Update last message in contacts
-    setContacts(contacts.map(contact => 
-      contact.email === currentChat 
-        ? { ...contact, lastMessage: newMessage, lastMessageTime: new Date() }
-        : contact
-    ));
     
     // Simulate reply after 1 second
     setTimeout(() => {
@@ -75,50 +37,14 @@ const ChatPage = () => {
         text: replyText, 
         isSender: false 
       }]);
-      
-      // Update last message in contacts for the reply
-      setContacts(contacts.map(contact => 
-        contact.email === currentChat 
-          ? { ...contact, lastMessage: replyText, lastMessageTime: new Date() }
-          : contact
-      ));
     }, 1000);
-  };
-
-  const handleSelectContact = (email) => {
-    setCurrentChat(email);
-    setMessages([
-      { text: `Conversation with ${contacts.find(c => c.email === email).name}`, isSender: false }
-    ]);
-    setAutoOpenChat(false);
   };
 
   const handleNewChat = () => {
     if (!newChatEmail) return;
-    
-    // Check if contact already exists
-    const existingContact = contacts.find(c => c.email === newChatEmail);
-    if (existingContact) {
-      setCurrentChat(newChatEmail);
-      setMessages([
-        { text: `Continued conversation with ${existingContact.name}`, isSender: false }
-      ]);
-      setShowNewChatModal(false);
-      return;
-    }
-
-    // Create new contact
-    const newContact = {
-      email: newChatEmail,
-      name: newChatEmail.split('@')[0].replace('.', ' '),
-      lastMessage: "New conversation started",
-      lastMessageTime: new Date()
-    };
-
-    setContacts([...contacts, newContact]);
     setCurrentChat(newChatEmail);
     setMessages([
-      { text: `Started new conversation with ${newContact.name}`, isSender: false }
+      { text: `Started new conversation with ${newChatEmail.split('@')[0].replace('.', ' ')}`, isSender: false }
     ]);
     setNewChatEmail('');
     setShowNewChatModal(false);
@@ -127,54 +53,20 @@ const ChatPage = () => {
   return (
     <div style={{
       width: '95%',
-      maxWidth: '1200px',
+      maxWidth: '800px', // Narrower for better centering
       margin: '20px auto',
       backgroundColor: '#f5f5f5',
       borderRadius: '12px',
       fontFamily: 'Arial, sans-serif',
       overflowX: 'hidden',
       height: '90vh',
-      display: 'flex',
       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
     }}>
-      {/* Messaging Board Sidebar */}
-      <div style={{ 
-        width: '300px',
-        borderRight: '1px solid #e0e0e0',
-        position: 'relative',
-        backgroundColor: 'white'
-      }}>
-        <MessagingBoard 
-          contacts={contacts} 
-          onSelectContact={handleSelectContact}
-          currentChat={currentChat}
-        />
-        <button
-          onClick={() => setShowNewChatModal(true)}
-          style={{
-            position: 'absolute',
-            bottom: '20px',
-            left: '20px',
-            right: '20px',
-            padding: '12px',
-            backgroundColor: '#005587',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '1rem'
-          }}
-        >
-          + New Chat
-        </button>
-      </div>
-
-      {/* Main Chat Area */}
+      {/* Main Chat Area - now centered */}
       <div style={{
-        flex: 1,
         display: 'flex',
         flexDirection: 'column',
+        height: '100%',
         backgroundColor: 'white'
       }}>
         <div style={{ 
@@ -184,9 +76,11 @@ const ChatPage = () => {
           backgroundColor: '#005587',
           color: 'white',
           fontSize: '1.2rem',
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          borderTopLeftRadius: '12px',
+          borderTopRightRadius: '12px'
         }}>
-          {contacts.find(c => c.email === currentChat)?.name || 'SU Clubs Chat'}
+          {currentChat.split('@')[0].replace('.', ' ')}
         </div>
 
         {/* Chat messages container */}
@@ -211,11 +105,37 @@ const ChatPage = () => {
         <div style={{
           padding: '15px',
           backgroundColor: '#f5f5f5',
-          borderTop: '1px solid #e0e0e0'
+          borderTop: '1px solid #e0e0e0',
+          borderBottomLeftRadius: '12px',
+          borderBottomRightRadius: '12px'
         }}>
           <MessageInput onSend={handleSend} />
         </div>
       </div>
+
+      {/* New Chat Button - now floating */}
+      <button
+        onClick={() => setShowNewChatModal(true)}
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          padding: '15px',
+          backgroundColor: '#005587',
+          color: 'white',
+          border: 'none',
+          borderRadius: '50%',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          fontSize: '1.5rem',
+          width: '60px',
+          height: '60px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+          zIndex: 100
+        }}
+      >
+        +
+      </button>
 
       {/* New Chat Modal */}
       {showNewChatModal && (

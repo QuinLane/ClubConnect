@@ -6,7 +6,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import ProtectedRoute from "./auth/ProtectedRoute"; // Import ProtectedRoute
+import ProtectedRoute from "./auth/ProtectedRoute";
 
 import Layout from "./pages/Layout";
 import SuLayout from "./pages/SuLayout";
@@ -25,24 +25,20 @@ import ExploreEventsPage from "./pages/ExploreEvents";
 import StudentFormPage from "./pages/FormsStudent";
 import { Forbidden } from "./pages/errors/Forbidden";
 
-// 404 Fallback Component
 const NotFound = () => {
   return <div>404 - Page Not Found</div>;
 };
 
-// Root Redirect Component
 const RootRedirect = () => {
   const token = localStorage.getItem("token");
   const user = localStorage.getItem("user")
     ? JSON.parse(localStorage.getItem("user"))
     : null;
 
-  // If not logged in, redirect to login
   if (!token || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Redirect based on user type
   if (user.userType === "SUAdmin") {
     return <Navigate to="/app/admin-dashboard" replace />;
   } else {
@@ -78,28 +74,30 @@ const App = () => {
             </Route>
           </Route>
 
-          {/* Student-only routes */}
-          <Route
-            element={
-              <ProtectedRoute
-                allowedUserType="Student"
-                redirectPath="/forbidden"
-              />
-            }
-          >
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="club/:clubID" element={<ClubPage />} />
-            <Route path="events/:eventID" element={<EventPage />} />
-            <Route path="chat" element={<ChatStudent />} />
-            <Route path="chatSU" element={<ChatSU />} />
+          {/* Student-only routes with Layout */}
+          <Route element={<Layout />}> {/* Add Layout wrapper here */}
             <Route
-              path="manage-members/:clubID"
-              element={<ManageMembersPage />}
-            />
-            <Route path="requests" element={<RequestPage />} />
-            <Route path="student-forms" element={<StudentFormPage />} />
-            <Route path="explore-clubs" element={<ExploreClubsPage />} />
-            <Route path="explore-events" element={<ExploreEventsPage />} />
+              element={
+                <ProtectedRoute
+                  allowedUserType="Student"
+                  redirectPath="/forbidden"
+                />
+              }
+            >
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="club/:clubID" element={<ClubPage />} />
+              <Route path="events/:eventID" element={<EventPage />} />
+              <Route path="chat" element={<ChatStudent />} />
+              <Route path="chatSU" element={<ChatSU />} />
+              <Route
+                path="manage-members/:clubID"
+                element={<ManageMembersPage />}
+              />
+              <Route path="requests" element={<RequestPage />} />
+              <Route path="student-forms" element={<StudentFormPage />} />
+              <Route path="explore-clubs" element={<ExploreClubsPage />} />
+              <Route path="explore-events" element={<ExploreEventsPage />} />
+            </Route>
           </Route>
         </Route>
 
