@@ -207,7 +207,9 @@ export const deleteClub = async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json({ error: `Failed to delete club and related data: ${error.message}` });
+      .json({
+        error: `Failed to delete club and related data: ${error.message}`,
+      });
   }
 };
 
@@ -439,7 +441,7 @@ export const getClubStats = async (req, res) => {
       where: {
         clubID: parseInt(clubID),
         reservation: {
-          date: { gte: new Date() },
+          start: { gte: new Date() },
         },
       },
     });
@@ -472,7 +474,6 @@ export const getClubExecutives = async (clubID) => {
   return execs;
 };
 
-
 // Note: Available to authenticated users to join clubs
 export const joinClub = async (req, res) => {
   const { clubID } = req.params;
@@ -490,7 +491,9 @@ export const joinClub = async (req, res) => {
     });
 
     if (existingMember) {
-      return res.status(400).json({ error: "User is already a member of this club" });
+      return res
+        .status(400)
+        .json({ error: "User is already a member of this club" });
     }
 
     // Add user as member
@@ -524,7 +527,9 @@ export const leaveClub = async (req, res) => {
     });
 
     if (!existingMember) {
-      return res.status(400).json({ error: "User is not a member of this club" });
+      return res
+        .status(400)
+        .json({ error: "User is not a member of this club" });
     }
 
     // Remove user as member and from executives if they were one
@@ -534,7 +539,7 @@ export const leaveClub = async (req, res) => {
         userID: userID,
       },
     });
-    
+
     await prisma.memberOf.delete({
       where: {
         userID_clubID: {
