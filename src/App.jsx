@@ -6,7 +6,7 @@ import Layout from "./pages/Layout";
 import LoginPage from "./pages/LoginRegister/LoginPage";
 import RegisterPage from "./pages/LoginRegister/Register";
 import ClubPage from "./pages/clubPage";
-import EventPage from "./pages/eventPage";
+import EventPage from "./pages/EventPage";
 import ChatBoardPage from "./pages/chatBoardPage";
 import ChatPage from "./pages/chatPage";
 import ManageMembersPage from "./pages/manageMembersPage";

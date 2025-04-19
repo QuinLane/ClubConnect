@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ExploreComponent from '../components/clubEventPages/explore';
-import EventPage from './eventPage';
+import EventPage from './EventPage';
 
 const ExploreEvents = () => {
   const { eventId } = useParams();
