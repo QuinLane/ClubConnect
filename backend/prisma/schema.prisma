@@ -77,7 +77,7 @@ model Form {
   formType    FormType
   status      FormStatus @default(Pending)
   submittedAt DateTime   @default(now())
-  details     String?
+  details     String     @db.Text
   user        User       @relation(fields: [userID], references: [userID])
 }
 

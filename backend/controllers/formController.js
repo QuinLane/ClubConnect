@@ -100,6 +100,9 @@ export const handleFormApproval = async (req, res) => {
       case "Funding":
         result = res.status(200).json({ message: "Funding request approved" });
         break;
+      case "DeleteClub":
+        result = await clubController.deleteClub({ params: { clubID: details.clubID } },res);
+        break;
       default:
         return res.status(400).json({ error: "Invalid form type" });
     }
