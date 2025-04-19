@@ -1,28 +1,29 @@
 import { useState } from 'react';
-const token = localStorage.getItem('token');
 
+const token = localStorage.getItem('token');
 const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-const userID = storedUser.userID;   
+const userID = storedUser.userID ?? null;   // e.g. 42
 
 export default function DeleteClubForm({ onSubmit, clubID = '' }) {
-  const [clubId, setClubId] = useState(clubID);
+  const [clubId, setClubId]   = useState(clubID);
   const [confirmation, setConfirmation] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   /* ---------- submit as DeleteClub form ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
+    if (!userID) return setError('User ID not found; please log in again.');
 
     if (confirmation.toLowerCase() !== 'delete') {
-      setIsLoading(false);
       return setError('Please type "delete" to confirm.');
     }
 
+    setIsLoading(true);
+    setError('');
+
     const payload = {
-      formType: 'DeleteClub',                 // make sure your formSchema allows this
+      formType: 'DeleteClub',
       details: { clubId },
     };
 
@@ -41,11 +42,8 @@ export default function DeleteClubForm({ onSubmit, clubID = '' }) {
         throw new Error(err.error || 'Failed to submit delete request');
       }
 
-      if (onSubmit) {
-        onSubmit(payload.details);            // parent closes modal
-      } else {
-        alert('Club deletion request submitted!');
-      }
+      onSubmit ? onSubmit(payload.details)
+               : alert('Club deletion request submitted!');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -53,7 +51,7 @@ export default function DeleteClubForm({ onSubmit, clubID = '' }) {
     }
   };
 
-  /* ---------- UI ---------- */
+  /* ---------- UI (unchanged style) ---------- */
   return (
     <div>
       <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
@@ -67,7 +65,6 @@ export default function DeleteClubForm({ onSubmit, clubID = '' }) {
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {/* club ID */}
         <Field
           label="Club ID *"
           value={clubId}
@@ -75,7 +72,6 @@ export default function DeleteClubForm({ onSubmit, clubID = '' }) {
           placeholder="Enter club ID to delete"
         />
 
-        {/* confirmation word */}
         <Field
           label='Type "delete" to confirm *'
           value={confirmation}
@@ -83,7 +79,6 @@ export default function DeleteClubForm({ onSubmit, clubID = '' }) {
           placeholder='Type "delete" to confirm'
         />
 
-        {/* error message */}
         {error && (
           <div style={{
             padding: '0.75rem',

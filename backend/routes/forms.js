@@ -12,7 +12,7 @@ const router = express.Router();
 // Joi schema for form submission
 const formSchema = Joi.object({
   formType: Joi.string()
-    .valid("ClubCreation", "EventApproval", "Funding", "DeleteClib")
+    .valid("ClubCreation", "EventApproval", "Funding", "DeleteClub")
     .required(),
   details: Joi.object().required(),
 });
