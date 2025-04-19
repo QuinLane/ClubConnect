@@ -1,41 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import Logo from '../components/clubEventPages/logo';
 import Bio from '../components/clubEventPages/bio';
-import CompressedEventCarousel from '../components/clubEventPages/compressedEventCarosel'; // Check spelling if needed
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import Contact from '../components/clubEventPages/contactBox'; // Import the Contact component
+import CompressedEventCarousel from '../components/clubEventPages/compressedEventCarosel';
+import Contact from '../components/clubEventPages/contactBox';
 
-const ClubPage = ({
-  clubName = "Kya Slay Club",
-  logoUrl = "/images/club-logo.png",
-  bioText = `This club is super fun fun fun sdncskjdnkjsnkdsncs
-  skjdcnksdckjsndkcnsdcksjnckjsdn
-  ksjdcnskncksnckjsnkjsns
-  skdjcnksnksjnksdnckjsjcnksdcjsk
-  hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-  hhhhhh
-  hhhhhhhhhhhhhhhhhhhhh`,
-  memberCount = 42,
-  logoSize = 80,
-  titleSize = '2rem',
-  isExec = true, // Add the isExec prop to check if the user is an exec
-}) => {
-  const [isRSVPed, setIsRSVPed] = useState(false);
+const ClubPage = () => {
+  const { clubID } = useParams();
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentUserID = storedUser.userID;
 
-  const handleRSVPClick = () => {
-    setIsRSVPed(!isRSVPed);
-  };
+  const [club, setClub] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isExec, setIsExec] = useState(false);
 
-  const upcomingEvents = [
-    { imageUrl: "/images/event1.jpg", title: "Monthly Meetup", date: "June 15, 2023", titleOnImage: true },
-    { imageUrl: "/images/event2.jpg", title: "Workshop Series", date: "June 22, 2023", titleOnImage: true },
-    { imageUrl: "/images/event3.jpg", title: "Annual Gala", date: "July 5, 2023", titleOnImage: false },
-    { imageUrl: "/images/event4.jpg", title: "Member Social", date: "July 15, 2023", titleOnImage: true },
-    { imageUrl: "/images/event5.jpg", title: "Fundraiser", date: "August 2, 2023", titleOnImage: false },
-    { imageUrl: "/images/event1.jpg", title: "Monthly Meetup4", date: "June 15, 2023", titleOnImage: true },
-    { imageUrl: "/images/event1.jpg", title: "Monthly Meetup3", date: "June 15, 2023", titleOnImage: true },
-    { type: "club", imageUrl: "/images/club-logo.png", title: "Chess Enthusiasts" }, // 👈 Club example
-  ];
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    const fetchClub = async () => {
+      try {
+        const res = await fetch(`http://localhost:5050/api/clubs/${clubID}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+        // determine exec status
+        const execList = data.executives || [];
+        setIsExec(execList.some(e => e.userID === currentUserID));
+
+        // shape upcoming events
+        const upcomingEvents = (data.events || []).map(evt => ({
+          imageUrl: evt.image || '/images/event-default.png',
+          title: evt.name,
+          date: evt.reservation?.date
+            ? new Date(evt.reservation.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+            : 'Date TBD',
+          titleOnImage: true
+        }));
+
+        setClub({
+          clubName: data.clubName,
+          logoUrl: data.image || '/images/default-club.png',
+          bioText: data.description || 'No description available.',
+          memberCount: (data.members || []).length,
+          upcomingEvents,
+          contact: {
+            email: data.clubEmail,
+            instagram: data.socialMediaLinks?.instagram,
+            website: data.website
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchClub();
+  }, [clubID, token, navigate, currentUserID]);
+
+  if (loading) return <div>Loading club...</div>;
+  if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
+  if (!club) return <div>Club not found</div>;
+
+  const { clubName, logoUrl, bioText, memberCount, upcomingEvents, contact } = club;
 
   return (
     <div style={{
@@ -44,189 +81,74 @@ const ClubPage = ({
       minHeight: '100vh',
       width: '100vw',
       padding: '20px',
-      boxSizing: 'border-box',
-      margin: 0,
       backgroundColor: '#f5f5f5'
     }}>
       <div style={{
         maxWidth: '900px',
         width: '100%',
         padding: '40px',
-        fontFamily: 'Arial, sans-serif',
         backgroundColor: '#ffffff',
         borderRadius: '12px',
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         border: '1px solid #e0e0e0'
       }}>
-        {/* Title and Logo Row */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '30px',
-          flexWrap: 'wrap',
-          gap: '20px'
-        }}>
-          <h1 style={{
-            fontSize: titleSize,
-            margin: 0,
-            flex: 1,
-            minWidth: 'min(300px, 100%)',
-            color: '#2c3e50',
-            lineHeight: '1.2'
-          }}>
-            {clubName}
-          </h1>
-          <div style={{ marginLeft: '20px', flexShrink: 0 }}>
-            <Logo imageUrl={logoUrl} size={logoSize} />
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '30px' }}>
+          <h1 style={{ fontSize: '2rem', margin: 0, flex: 1, color: '#2c3e50', lineHeight: '1.2' }}>{clubName}</h1>
+          <Logo imageUrl={logoUrl} size={80} />
+        </div>
+
+        {/* Bio & Contact */}
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '30px' }}>
+          <div style={{ flex: 2, minWidth: '300px', height: '200px' }}>
+            <Bio text={bioText} width="100%" height="100%" />
+          </div>
+          <div style={{ flex: 1, minWidth: '200px', height: '200px' }}>
+            <Contact email={contact.email} instagram={contact.instagram} website={contact.website} />
           </div>
         </div>
 
-        {/* Bio and Contact Section */}
-        <div style={{
-          display: 'flex',
-          gap: '20px',
-          marginBottom: '30px',
-          flexWrap: 'wrap'
-        }}>
-          {/* Bio - 2/3 Width */}
-          <div style={{
-            flex: 2,
-            minWidth: 'min(300px, 100%)',
-            height: '200px'
-          }}>
-            <Bio 
-              text={bioText} 
-              width="100%"
-              height="100%"
-            />
-          </div>
-
-          {/* Contact Section - 1/3 Width */}
-          <div style={{
-            flex: 1,
-            minWidth: 'min(200px, 100%)',
-            height: '200px'
-          }}>
-            <Contact 
-              email="example@club.com" 
-              instagram="@clubhandle"
-              website="https://www.clubwebsite.com"
-            />
-          </div>
-        </div>
-
-        {/* Member Count and Join Button */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '40px',
-          flexWrap: 'wrap',
-          gap: '20px',
-          marginBottom: '40px'
-        }}>
+        {/* Members & Actions */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '40px' }}>
           <div style={{ flex: 1 }}>
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: '700',
-              color: '#2c3e50',
-              marginBottom: '8px'
-            }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2c3e50' }}>
               Number of members: {memberCount}
             </div>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {/* Conditionally render buttons based on whether the user is an exec */}
             {isExec ? (
-              <>
-                <button
-                  onClick={() => alert("Create event functionality")}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#388e3c',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
-                  }}
-                >
-                  Create Event
-                </button>
-                <button
-                  onClick={() => alert("Manage members functionality")}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#f57c00',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
-                  }}
-                >
-                  Manage Members
-                </button>
+              <>  
+                <button onClick={() => navigate(`/app/events/create?club=${clubID}`)} style={buttonStyle('#388e3c')}>Create Event</button>
+                <button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>Manage Members</button>
               </>
             ) : (
-              <>
-                <button
-                  onClick={handleRSVPClick}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: isRSVPed ? '#388e3c' : '#005587',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
-                  }}
-                >
-                  {isRSVPed ? 'Joined!' : 'Join Club'}
-                </button>
-                <button
-                  onClick={() => alert("Redirect to application form")}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#f57c00',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
-                  }}
-                >
-                  Apply for Position
-                </button>
+              <>  
+                <button onClick={() => alert('Join Club')} style={buttonStyle('#005587')}>Join Club</button>
+                <button onClick={() => alert('Apply for Position')} style={buttonStyle('#f57c00')}>Apply for Position</button>
               </>
             )}
           </div>
         </div>
 
         {/* Events Carousel */}
-        <div style={{
-          marginTop: '60px',
-          borderTop: '1px solid #e0e0e0',
-          paddingTop: '40px'
-        }}>
-          <CompressedEventCarousel
-            events={upcomingEvents}
-            title="Upcoming Events"
-            carouselHeight="240px"
-          />
+        <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: '40px' }}>
+          <CompressedEventCarousel events={upcomingEvents} title="Upcoming Events" carouselHeight="240px" />
         </div>
       </div>
     </div>
   );
 };
+
+const buttonStyle = (bg) => ({
+  padding: '12px 24px',
+  backgroundColor: bg,
+  color: 'white',
+  border: 'none',
+  borderRadius: '6px',
+  fontSize: '1rem',
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'background-color 0.2s'
+});
 
 export default ClubPage;

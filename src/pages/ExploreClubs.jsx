@@ -98,7 +98,6 @@ const ExploreClubs = () => {
         title="Explore Clubs"
         items={clubsList}
         type="club"
-        onItemClick={id => navigate(`/app/clubs/${id}`)}
       />
     </div>
   );

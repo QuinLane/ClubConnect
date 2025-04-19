@@ -4,43 +4,39 @@ import { useNavigate } from 'react-router-dom';
 
 const EventCompressed = ({
   id,
-  imageUrl = "/images/default-event.jpg",
-  title = "Event Title",
-  date = "",
-  width = "280px",
-  height = "200px",
-  borderRadius = "12px",
-  type = "event"
+  imageUrl = '/images/default-event.jpg',
+  title = 'Event Title',
+  date = '',
+  width = '280px',
+  height = '200px',
+  borderRadius = '12px',
+  type = 'event',
 }) => {
   const navigate = useNavigate();
 
   // Format only the date for display
   const formatDate = () => {
     if (!date) return '';
-    
     try {
       const eventDate = new Date(date);
-      const options = { 
-        weekday: 'short', 
-        month: 'short', 
-        day: 'numeric' 
-      };
+      const options = { weekday: 'short', month: 'short', day: 'numeric' };
       return eventDate.toLocaleDateString(undefined, options);
     } catch (e) {
       console.error('Error formatting date:', e);
-      return date; // Fallback to raw date string
+      return date;
     }
   };
 
   const handleClick = () => {
-    navigate(`/app/events/${id}`, { 
-      state: { 
-        title, 
-        imageUrl, 
-        date,
-        type 
-      } 
-    });
+    if (type === 'event') {
+      navigate(`/app/events/${id}`, {
+        state: { title, imageUrl, date, type },
+      });
+    } else if (type === 'club') {
+      navigate(`/app/club/${id}`, {
+        state: { title, imageUrl, type },
+      });
+    }
   };
 
   return (
@@ -65,12 +61,8 @@ const EventCompressed = ({
           backgroundImage: `url(${imageUrl})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundColor: '#e0e0e0',
           position: 'relative',
-          filter: 'brightness(100%)',
-          transition: 'filter 0.3s ease',
         }}
-        className="event-compressed-image"
       >
         <div
           style={{
@@ -78,7 +70,7 @@ const EventCompressed = ({
             bottom: 0,
             left: 0,
             right: 0,
-            height: '40%',
+            height: type === 'event' ? '40%' : '30%',
             background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
           }}
         />

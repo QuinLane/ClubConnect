@@ -68,8 +68,8 @@ const App = () => {
         <Route path="/forbidden" element={<Forbidden />} />
         {/* Nested Routes under /app with Layout */}
         <Route path="/app" element={<Layout />}>
-          <Route path="club" element={<ClubPage />} />
-          <Route path="events" element={<EventPage />} />
+          <Route path="club/:clubID" element={<ClubPage />} />
+          <Route path="events/:eventID" element={<EventPage />} />
           <Route path="chatboard" element={<ChatBoardPage />} />
           <Route path="chat" element={<ChatPage />} />
           <Route path="manage-members" element={<ManageMembersPage />} />
