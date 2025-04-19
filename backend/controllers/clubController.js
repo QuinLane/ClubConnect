@@ -455,3 +455,81 @@ export const getClubExecutives = async (clubID) => {
   });
   return execs;
 };
+
+
+// Note: Available to authenticated users to join clubs
+export const joinClub = async (req, res) => {
+  const { clubID } = req.params;
+  const { userID } = req.user; // Assuming user is authenticated
+
+  try {
+    // Check if user is already a member
+    const existingMember = await prisma.memberOf.findUnique({
+      where: {
+        userID_clubID: {
+          clubID: parseInt(clubID),
+          userID: userID,
+        },
+      },
+    });
+
+    if (existingMember) {
+      return res.status(400).json({ error: "User is already a member of this club" });
+    }
+
+    // Add user as member
+    const member = await prisma.memberOf.create({
+      data: {
+        userID: userID,
+        clubID: parseInt(clubID),
+      },
+    });
+
+    res.status(201).json(member);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to join club: ${error.message}` });
+  }
+};
+
+// Note: Available to authenticated members to leave clubs
+export const leaveClub = async (req, res) => {
+  const { clubID } = req.params;
+  const { userID } = req.user; // Assuming user is authenticated
+
+  try {
+    // Check if user is a member
+    const existingMember = await prisma.memberOf.findUnique({
+      where: {
+        userID_clubID: {
+          clubID: parseInt(clubID),
+          userID: userID,
+        },
+      },
+    });
+
+    if (!existingMember) {
+      return res.status(400).json({ error: "User is not a member of this club" });
+    }
+
+    // Remove user as member and from executives if they were one
+    await prisma.executive.deleteMany({
+      where: {
+        clubID: parseInt(clubID),
+        userID: userID,
+      },
+    });
+    
+    await prisma.memberOf.delete({
+      where: {
+        userID_clubID: {
+          clubID: parseInt(clubID),
+          userID: userID,
+        },
+      },
+    });
+
+    res.status(204).json(); // No content on successful deletion
+  } catch (error) {
+    res.status(500).json({ error: `Failed to leave club: ${error.message}` });
+  }
+};
