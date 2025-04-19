@@ -34,61 +34,44 @@ const ManageMembers = () => {
         
         // Fetch members
         const membersRes = await fetch(`http://localhost:5050/api/clubs/members/${clubID}`, {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
-
-        if (!membersRes.ok) {
-          const errorData = await membersRes.json();
-          throw new Error(errorData.error || 'Failed to fetch members');
-        }
-
+        
+        if (!membersRes.ok) throw new Error('Failed to fetch members');
         const membersData = await membersRes.json();
         
-        // Transform data for MemberTable
-        const formattedMembers = membersData.map(member => ({
-          id: member.user.userID,
-          email: member.user.email,
-          name: `${member.user.firstName} ${member.user.lastName}`,
-          status: member.status || 'Active'
-        }));
-
-        setMembers(formattedMembers);
-
-        // Fetch executives
-        const execsRes = await fetch(`http://localhost:5050/api/clubs/${clubID || 1}/executives`, {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        // Fetch executives - using corrected endpoint
+        const execsRes = await fetch(`http://localhost:5050/api/executives/club/${clubID}`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-
-        if (execsRes.ok) {
-          const execsData = await execsRes.json();
-          setExecutives(execsData.map(exec => ({
-            id: exec.user.userID,
-            email: exec.user.email,
-            name: `${exec.user.firstName} ${exec.user.lastName}`,
-            role: exec.role
-          })));
+    
+        if (!execsRes.ok) {
+          const errorText = await execsRes.text();
+          throw new Error(errorText.includes('<!DOCTYPE') ? 
+            'Server returned HTML error page' : 
+            errorText);
         }
-
-      } catch (err) {
-        console.error("Error:", err);
-        setError(err.message);
+    
+        const execsData = await execsRes.json();
         
-        // Fallback test data for development
-        if (process.env.NODE_ENV === 'development') {
-          setMembers([
-            { id: 1, email: 'test1@ucalgary.ca', name: 'Test User 1', status: 'Active' },
-            { id: 2, email: 'test2@ucalgary.ca', name: 'Test User 2', status: 'Pending' }
-          ]);
-          setExecutives([
-            { id: 3, email: 'admin@ucalgary.ca', name: 'Club Admin', role: 'President' }
-          ]);
-        }
+        // Transform data
+        setMembers(membersData.map(m => ({
+          id: m.user.userID,
+          email: m.user.email,
+          name: `${m.user.firstName} ${m.user.lastName}`,
+          status: m.status || 'Active'
+        })));
+    
+        setExecutives(execsData.map(e => ({
+          id: e.user.userID,
+          email: e.user.email,
+          name: `${e.user.firstName} ${e.user.lastName}`,
+          role: e.role || 'Executive'
+        })));
+    
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -129,10 +112,12 @@ const ManageMembers = () => {
   };
   
   
-
   const handleAddExecutive = async () => {
-    if (!newExecutive.email || !newExecutive.role) return;
-
+    if (!newExecutive.email || !newExecutive.role) {
+      setError('Email and role are required');
+      return;
+    }
+  
     try {
       const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/executives`, {
         method: 'POST',
@@ -145,21 +130,28 @@ const ManageMembers = () => {
           role: newExecutive.role
         })
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to add executive');
       }
-
+  
       const newExec = await response.json();
-      setExecutives([...executives, {
-        id: newExec.userID,
-        email: newExecutive.email,
-        name: newExec.name || 'New Executive',
-        role: newExecutive.role
-      }]);
+      
+      // Add the new executive to the state
+      setExecutives(prevExecs => [
+        ...prevExecs,
+        {
+          id: newExec.user.userID,
+          email: newExec.user.email,
+          name: `${newExec.user.firstName} ${newExec.user.lastName}`,
+          role: newExec.role
+        }
+      ]);
+      
       setNewExecutive({ email: '', role: '' });
-
+      setError(null);
+  
     } catch (err) {
       console.error("Error adding executive:", err);
       setError(err.message);
