@@ -19,7 +19,7 @@ const TestPage = () => {
   const fetchThreads = async () => {
     try {
       const res = await fetch(
-        `${API_URL}/api/su-messages/threads/${adminID}`,
+        `${API_URL}/api/su-messages/threads`,
         { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) throw new Error(`Error ${res.status}`);
