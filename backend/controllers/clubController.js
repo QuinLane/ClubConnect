@@ -180,14 +180,14 @@ export const updateClub = async (req, res) => {
 
 // Note: Only SU admins should be able to do this
 export const deleteClub = async (req, res) => {
-  const id = parseInt(req.params.clubID, 10);
+  const { clubID } = req.params; 
   try {
-    await prisma.memberOf.deleteMany({   where: { clubID: id } });
-    await prisma.executive.deleteMany({  where: { clubID: id } });
-    await prisma.event.deleteMany({      where: { clubID: id } });
-    await prisma.notification.deleteMany({ where: { clubID: id } });
-    
-    await prisma.club.delete({where: { clubID: parseInt(clubID) },});
+    await prisma.memberOf.deleteMany({   where: { clubID } });
+    await prisma.executive.deleteMany({  where: { clubID} });
+    await prisma.event.deleteMany({ where: { clubID} });
+    await prisma.notification.deleteMany({ where: { clubID} });
+
+    await prisma.club.delete({ where: { clubID  } });
     res.status(204).json(); // No content on successful deletion
   } catch (error) {
     res.status(500).json({ error: `Failed to delete club: ${error.message}` });
