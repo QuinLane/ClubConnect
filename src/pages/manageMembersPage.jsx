@@ -131,17 +131,25 @@ const ManageMembers = () => {
         body: JSON.stringify({ role: newRole })
       }
     );
-
+  
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to update role');
     }
-
+  
     setExecutives(prevExecs =>
       prevExecs.map(exec =>
         exec.id === executiveId ? { ...exec, role: newRole } : exec
       )
     );
+  
+    // Check if current user is changing from president to non-president
+    if (executiveId === user.userID && newRole.toLowerCase() !== 'president') {
+      const wasPresident = executives.find(e => e.id === executiveId)?.role === 'President';
+      if (wasPresident) {
+        navigate(`/app/club/${clubID}`);
+      }
+    }
   };
 
   const handleRemoveExecutive = async (executiveId) => {
@@ -200,7 +208,6 @@ const ManageMembers = () => {
           return;
         }
         
-        // Check if they're trying to set their new role as President
         if (newPresidentEmail.trim().toLowerCase() === 'president') {
           setPresidentError('Your new role cannot be "President"');
           return;
@@ -211,8 +218,34 @@ const ManageMembers = () => {
         
         // Then update current user's role
         await performRoleUpdate(user.userID, newPresidentEmail.trim());
+        
+        // Redirect after successful role change
+        navigate(`/app/club/${clubID}`);
       } else {
-        // ... existing other case
+        const newPresident = executives.find(
+          exec => exec.email === newPresidentEmail
+        );
+    
+        if (!newPresident) {
+          setPresidentError('Not a member of the club');
+          return;
+        }
+    
+        await performRoleUpdate(newPresident.id, 'President');
+    
+        if (actionType === 'remove') {
+          await performExecutiveRemoval(executiveToModify.id);
+          
+          // If we're removing ourselves as president (by assigning someone else)
+          if (executiveToModify.id === user.userID) {
+            navigate(`/app/club/${clubID}`);
+          }
+        }
+        
+        // If we're assigning someone else as president (but not removing ourselves)
+        if (actionType === 'update' && executiveToModify.id === user.userID) {
+          navigate(`/app/club/${clubID}`);
+        }
       }
     
       setShowPresidentPrompt(false);
@@ -225,7 +258,6 @@ const ManageMembers = () => {
       setPresidentError('Failed to complete the role change');
     }
   };
-
   const handleRemoveMember = async (userID) => {
     try {
       if (!window.confirm('Are you sure you want to remove this member?')) {
