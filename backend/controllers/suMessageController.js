@@ -9,7 +9,6 @@ const rows = await prisma.sUMessage.findMany({
   distinct: ['userID']
 });
 rows.forEach(r => threads.add(r.userID));
-console.log('💬 Loaded threads from DB:', threads);
 
 
 // Student → SUAdmin
@@ -89,26 +88,31 @@ export const getConversation = async (req, res) => {
 
 // List all threads for SUAdmins only, returning the latest message per exec in a key-value format
 export const getSUThreads = async (req, res) => {
-  const callerId = parseInt(req.params.userID, 10);
-  const caller = await prisma.user.findUnique({ where: { userID: callerId } });
+  try {
+    // 1️⃣ Fetch every distinct exec userID that has at least one message
+    const distinctRows = await prisma.sUMessage.findMany({ select: { userID: true }, distinct: ['userID'], });
+    const execIDs = distinctRows.map(r => r.userID);
 
-  // Only SUAdmin can view thread list
-  if (!caller || caller.userType !== "SUAdmin") {
-    return res.status(200).json({ threads: {} });
+    // 2️⃣ For each execID, load their latest message
+    const latestMap = {};
+    await Promise.all(
+      execIDs.map(async (uid) => {
+        const latestMessage = await prisma.sUMessage.findFirst({
+          where: { userID: uid },
+          orderBy: { sentAt: 'desc' },
+        });
+        latestMap[uid] = latestMessage || null;
+      })
+    );
+
+    // 3️⃣ Return as a key → value map
+    return res.status(200).json({ threads: latestMap });
+  } catch (error) {
+    console.error("Failed to fetch SU threads:", error);
+    return res
+      .status(500)
+      .json({ error: `Failed to fetch SU threads: ${error.message}` });
   }
-
-  // Build an object mapping exec userID -> latest message
-  const threadIds = Array.from(threads);
-  const latestMap = {};
-
-  for (const uid of threadIds) {
-    const latestMessage = await prisma.sUMessage.findFirst({
-      where: { userID: uid },
-      orderBy: { sentAt: "desc" }
-    });
-    latestMap[uid] = latestMessage || null;
-  }
-  res.status(200).json({ threads: latestMap });
 };
 
 

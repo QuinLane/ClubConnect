@@ -1,6 +1,6 @@
 // src/pages/ChatStudent.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import Message from '../components/messages/Message';
+import Message from '../components/messages/message';
 import MessageInput from '../components/messages/messageInput';
 
 

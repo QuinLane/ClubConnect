@@ -65,27 +65,10 @@ router.put(
   notificationController.markNotificationRead
 );
 
-export default router;
-
-// In notificationRoutes.js
-router.get(
-  "/club/:clubID",
-  authenticate,
-  notificationController.getClubNotifications
-);
-router.get(
-  "/executive/:userID",
-  authenticate,
-  notificationController.getExecutiveNotifications
-);
-
-router.get(
-  "/user/:userID",
-  authenticate,
-  notificationController.getNotificationsForUser
-);
 router.get(
   "/sender/:userID",
   authenticate,
   notificationController.getNotificationsForSender
 );
+
+export default router;
