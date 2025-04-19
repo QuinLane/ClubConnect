@@ -83,13 +83,22 @@ const ManageMembers = () => {
 
     fetchData();
   }, [clubID, token, navigate]);
-
   const handleUpdateRole = async (executiveId, newRole) => {
     try {
       const executive = executives.find(e => e.id === executiveId);
       const wasPresident = executive?.role === 'President';
       const willBePresident = newRole === 'President';
-      
+      const isCurrentUser = executiveId === user.userID;
+  
+      // If current user is trying to make someone else president
+      if (!isCurrentUser && willBePresident) {
+        setExecutiveToModify(executive);
+        setActionType('presidentChange');
+        setShowPresidentPrompt(true);
+        return;
+      }
+  
+      // If changing from president to non-president, check if there are other presidents
       if (wasPresident && !willBePresident) {
         const hasOtherPresident = executives.some(
           e => e.id !== executiveId && e.role === 'President'
@@ -102,7 +111,7 @@ const ManageMembers = () => {
           return;
         }
       }
-
+  
       await performRoleUpdate(executiveId, newRole);
     } catch (err) {
       console.error("Error updating role:", err);
@@ -185,21 +194,27 @@ const ManageMembers = () => {
 
   const handlePresidentSubmit = async () => {
     try {
-      const newPresident = executives.find(
-        exec => exec.email === newPresidentEmail
-      );
+      if (actionType === 'presidentChange') {
+        if (!newPresidentEmail.trim()) {
+          setPresidentError('Please enter a new role');
+          return;
+        }
+        
+        // Check if they're trying to set their new role as President
+        if (newPresidentEmail.trim().toLowerCase() === 'president') {
+          setPresidentError('Your new role cannot be "President"');
+          return;
+        }
   
-      if (!newPresident) {
-        setPresidentError('Not a member of the club');
-        return;
+        // First update the new president's role
+        await performRoleUpdate(executiveToModify.id, 'President');
+        
+        // Then update current user's role
+        await performRoleUpdate(user.userID, newPresidentEmail.trim());
+      } else {
+        // ... existing other case
       }
-  
-      await performRoleUpdate(newPresident.id, 'President');
-  
-      if (actionType === 'remove') {
-        await performExecutiveRemoval(executiveToModify.id);
-      }
-  
+    
       setShowPresidentPrompt(false);
       setNewPresidentEmail('');
       setExecutiveToModify(null);
@@ -207,7 +222,7 @@ const ManageMembers = () => {
       setPresidentError('');
     } catch (err) {
       console.error("Error handling president change:", err);
-      setPresidentError('Failed to assign new president');
+      setPresidentError('Failed to complete the role change');
     }
   };
 
@@ -440,47 +455,111 @@ const ManageMembers = () => {
         </div>
       </div>
 
-      {/* President Prompt Modal */}
       {showPresidentPrompt && (
   <div style={{
     position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    backgroundColor: '#fff',
-    padding: '20px',
-    borderRadius: '10px',
-    boxShadow: '0 0 10px rgba(0,0,0,0.2)',
-    zIndex: 1000,
-    width: '400px',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000
   }}>
-    <h3>Assign New President</h3>
+    <div style={{
+      backgroundColor: 'white',
+      padding: '30px',
+      borderRadius: '10px',
+      boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
+      width: '400px',
+      maxWidth: '90%'
+    }}>
+{actionType === 'presidentChange' ? (
+  <>
+    <h2 style={{ marginTop: 0 }}>Change Your Role</h2>
+    <p>Since you're making {executiveToModify?.email} the new president, please enter a new role for yourself (cannot be "President"):</p>
     <input
-      type="email"
-      placeholder="Enter executive email"
-      value={newPresidentEmail}
+      type="text"
+      placeholder="Enter your new role"
+      value={newPresidentEmail} // Still reusing this state variable
       onChange={(e) => {
         setNewPresidentEmail(e.target.value);
         setPresidentError('');
       }}
-      style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
+      style={{
+        width: '100%',
+        padding: '10px',
+        margin: '10px 0',
+        border: presidentError ? '1px solid red' : '1px solid #ddd',
+        borderRadius: '4px'
+      }}
     />
-    {presidentError && (
-      <div style={{ color: 'red', marginBottom: '10px' }}>
-        {presidentError}
+  </>
+) : (
+        <>
+          <h2 style={{ marginTop: 0 }}>Assign New President</h2>
+          <p>You must assign a new president before changing the current president's role.</p>
+          <input
+            type="email"
+            placeholder="Enter new president's email"
+            value={newPresidentEmail}
+            onChange={(e) => {
+              setNewPresidentEmail(e.target.value);
+              setPresidentError('');
+            }}
+            style={{
+              width: '100%',
+              padding: '10px',
+              margin: '10px 0',
+              border: presidentError ? '1px solid red' : '1px solid #ddd',
+              borderRadius: '4px'
+            }}
+          />
+        </>
+      )}
+      
+      {presidentError && (
+        <div style={{ color: 'red', marginBottom: '10px' }}>
+          {presidentError}
+        </div>
+      )}
+      
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+        <button 
+          onClick={() => {
+            setShowPresidentPrompt(false);
+            setNewPresidentEmail('');
+            setPresidentError('');
+          }}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#f0f0f0',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Cancel
+        </button>
+        <button 
+          onClick={handlePresidentSubmit}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#005587',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Confirm
+        </button>
       </div>
-    )}
-    <button onClick={handlePresidentSubmit}>Submit</button>
-    <button onClick={() => {
-      setShowPresidentPrompt(false);
-      setNewPresidentEmail('');
-      setPresidentError('');
-    }}>
-      Cancel
-    </button>
+    </div>
   </div>
 )}
-
     </div>
   );
 };
