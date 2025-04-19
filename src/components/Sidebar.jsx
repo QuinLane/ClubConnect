@@ -112,7 +112,7 @@ export default function Sidebar() {
         {/* 👉 Messages button added here */}
         <SidebarButton
           icon={MessageSquareText}
-          label="Messages"
+          label="Message the SU"
           navigateTo="/app/chat"
           activeIcon={activeIcon}
           iconName="messages"

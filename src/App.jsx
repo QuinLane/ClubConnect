@@ -8,11 +8,10 @@ import LoginPage from "./pages/LoginRegister/LoginPage";
 import RegisterPage from "./pages/LoginRegister/Register";
 import ClubPage from "./pages/ClubPage";
 import EventPage from "./pages/EventPage";
-import ChatBoardPage from "./pages/chatBoardPage";
-import ChatPage from "./pages/chatPage";
+import ChatStudent from "./pages/ChatStudent";
+import ChatSU from "./pages/ChatSU";
 import ManageMembersPage from "./pages/manageMembersPage";
 import RequestPage from "./pages/FormsSU";
-import Chat from "./pages/chatPage";
 import DashboardPage from "./pages/Dashboards/dashboardPage";
 import AdminDashboardPage from "./pages/Dashboards/adminDashboardPage";
 import ExploreClubsPage from "./pages/ExploreClubs";
@@ -60,14 +59,13 @@ const App = () => {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="club/:clubID" element={<ClubPage />} />
             <Route path="events/:eventID" element={<EventPage />} />
-            <Route path="chatboard" element={<ChatBoardPage />} />
-            <Route path="chat" element={<ChatPage />} />
+            <Route path="chat" element={<ChatStudent />} />
+            <Route path="chatSU" element={<ChatSU />} />
             <Route
               path="manage-members/:clubID"
               element={<ManageMembersPage />}
             />
             <Route path="requests" element={<RequestPage />} />
-            <Route path="chat" element={<Chat />} />
             <Route path="student-forms" element={<StudentFormPage />} />
             <Route path="explore-clubs" element={<ExploreClubsPage />} />
             <Route path="explore-events" element={<ExploreEventsPage />} />
