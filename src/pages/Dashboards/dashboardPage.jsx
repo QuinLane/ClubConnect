@@ -16,30 +16,40 @@ const DashboardPage = () => {
   const [loadingMemberClubs, setLoadingMemberClubs] = useState(false);
   const [errorMemberClubs, setErrorMemberClubs] = useState(null);
 
-  // Static data for managed clubs (keeping as per your request)
-  const managedClubs = [
-    {
-      imageUrl: 'https://example.com/club1.jpg',
-      title: 'Computer Science Club',
-      date: 'Managed since Jan 2023'
-    },
-    {
-      imageUrl: 'https://example.com/club2.jpg',
-      title: 'Debate Society',
-      date: 'Managed since Mar 2023'
-    },
-    {
-      imageUrl: 'https://example.com/club3.jpg',
-      title: 'Photography Club',
-      date: 'Managed since Sep 2022'
-    },
-    {
-      imageUrl: 'https://example.com/club4.jpg',
-      title: 'Entrepreneurship Club',
-      date: 'Managed since Nov 2023'
-    }
-  ];
+  // State for managed clubs
+  const [managedClubs, setManagedClubs] = useState([]);
+  const [loadingManagedClubs, setLoadingManagedClubs] = useState(false);
+  const [errorManagedClubs, setErrorManagedClubs] = useState(null);
 
+  // Helper function to create event elements
+  const createEventElements = (events) => {
+    return events.map(event => ({
+      id: event.eventID,
+      imageUrl: event.image || '/images/default-event.jpg',
+      title: event.name,
+      date: event.reservation?.date || 'Date TBD',
+      type: 'event'
+    }));
+  };
+
+// In DashboardPage.js
+const createClubElements = (clubs) => {
+  return clubs.map(club => ({
+    id: club.clubID,
+    imageUrl: club.image || '/images/default-club.png',
+    title: club.clubName,
+    date: '', // Clubs don't need dates
+    type: 'club'
+  }));
+};
+
+// Update the carousel rendering to include type prop
+<CompressedEventCarousel
+  items={managedClubs}
+  title="Clubs I Manage"
+  showTitle={true}
+  itemType="club" // Explicitly tell carousel these are clubs
+/>
   // Fetch user's RSVP'd events
   useEffect(() => {
     const fetchUserRSVPs = async () => {
@@ -49,54 +59,29 @@ const DashboardPage = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch RSVPs');
-        }
+        if (!response.ok) throw new Error('Failed to fetch RSVPs');
         
         const rsvps = await response.json();
-        
-        // Transform RSVPs into event format for the carousel
-        const events = rsvps.map(rsvp => {
-          const eventDate = rsvp.event.reservation?.date 
-            ? new Date(rsvp.event.reservation.date) 
-            : null;
-          
-          return {
-            id: rsvp.event.eventID,
-            imageUrl: rsvp.event.image || '/images/default-event.jpg',
-            title: rsvp.event.name,
-            date: eventDate ? eventDate.toISOString() : 'Date TBD',
-            formattedDate: eventDate 
-              ? eventDate.toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })
-              : 'Date TBD',
-            clubName: rsvp.event.club?.clubName || 'Unknown Club'
-          };
-        });
+        const events = rsvps.map(rsvp => rsvp.event);
+        const eventElements = createEventElements(events);
         
         // Sort events by date (newest first)
-        const sortedEvents = events.sort((a, b) => {
+        const sortedEvents = eventElements.sort((a, b) => {
           if (a.date === 'Date TBD' && b.date === 'Date TBD') return 0;
-          if (a.date === 'Date TBD') return 1; // Put TBD dates at the end
+          if (a.date === 'Date TBD') return 1;
           if (b.date === 'Date TBD') return -1;
           return new Date(b.date) - new Date(a.date);
         });
         
         setMyEvents(sortedEvents);
       } catch (err) {
-        console.error('Error fetching RSVPs:', err);
         setErrorEvents(err.message);
       } finally {
         setLoadingEvents(false);
       }
     };
     
-    if (currentUserID) {
-      fetchUserRSVPs();
-    }
+    if (currentUserID) fetchUserRSVPs();
   }, [currentUserID, token]);
 
   // Fetch member clubs
@@ -108,43 +93,44 @@ const DashboardPage = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch member clubs');
-        }
+        if (!response.ok) throw new Error('Failed to fetch member clubs');
         
         const clubs = await response.json();
-        
-        // Transform clubs into format for the carousel
-        const formattedClubs = clubs.map(club => {
-          const joinDate = club.members?.find(m => m.userID === currentUserID)?.createdAt;
-          const formattedDate = joinDate 
-            ? new Date(joinDate).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short' 
-              })
-            : 'Member since unknown date';
-          
-          return {
-            id: club.clubID,
-            imageUrl: club.image || '/images/default-club.png',
-            title: club.clubName,
-            date: `Member since ${formattedDate}`,
-            type: 'club'
-          };
-        });
-        
-        setMemberClubs(formattedClubs);
+        const clubElements = createClubElements(clubs);
+        setMemberClubs(clubElements);
       } catch (err) {
-        console.error('Error fetching member clubs:', err);
         setErrorMemberClubs(err.message);
       } finally {
         setLoadingMemberClubs(false);
       }
     };
     
-    if (currentUserID) {
-      fetchMemberClubs();
-    }
+    if (currentUserID) fetchMemberClubs();
+  }, [currentUserID, token]);
+
+  // Fetch managed clubs
+  useEffect(() => {
+    const fetchManagedClubs = async () => {
+      try {
+        setLoadingManagedClubs(true);
+        const response = await fetch(`http://localhost:5050/api/executives/user/${currentUserID}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch managed clubs');
+        
+        const executives = await response.json();
+        const clubs = executives.map(exec => exec.club);
+        const clubElements = createClubElements(clubs);
+        setManagedClubs(clubElements);
+      } catch (err) {
+        setErrorManagedClubs(err.message);
+      } finally {
+        setLoadingManagedClubs(false);
+      }
+    };
+    
+    if (currentUserID) fetchManagedClubs();
   }, [currentUserID, token]);
 
   return (
@@ -175,14 +161,23 @@ const DashboardPage = () => {
         </h1>
       </div>
 
-      {/* Clubs I Manage (Executive) - kept static as requested */}
-      <CompressedEventCarousel
-        events={managedClubs}
-        title="Clubs I Manage"
-        showTitle={true}
-      />
+      {/* Clubs I Manage (Executive) */}
+      {loadingManagedClubs ? (
+        <div style={{ textAlign: 'center', padding: '20px' }}>Loading your managed clubs...</div>
+      ) : errorManagedClubs ? (
+        <div style={{ color: 'red', textAlign: 'center', padding: '20px' }}>
+          Error loading managed clubs: {errorManagedClubs}
+        </div>
+      ) : (
+<CompressedEventCarousel
+  items={managedClubs}
+  title="Clubs I Manage"
+  showTitle={true}
+  type="club"
+/>
+      )}
 
-      {/* Clubs I'm a Member Of - now dynamic */}
+      {/* Clubs I'm a Member Of */}
       {loadingMemberClubs ? (
         <div style={{ textAlign: 'center', padding: '20px' }}>Loading your clubs...</div>
       ) : errorMemberClubs ? (
@@ -191,9 +186,10 @@ const DashboardPage = () => {
         </div>
       ) : (
         <CompressedEventCarousel
-          events={memberClubs}
+          items={memberClubs}
           title="Clubs I'm a Member Of"
           showTitle={true}
+          type="club"
         />
       )}
 
@@ -206,7 +202,7 @@ const DashboardPage = () => {
         </div>
       ) : (
         <CompressedEventCarousel
-          events={myEvents}
+          items={myEvents}
           title="My Events"
           showTitle={true}
         />

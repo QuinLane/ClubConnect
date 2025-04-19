@@ -4,12 +4,13 @@ import EventCompressed from '../clubEventPages/compressedElements';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const CompressedEventCarousel = ({
-  events = [],
+  items = [],
   title = "Upcoming Events",
-  showTitle = true
+  showTitle = true,
+  type = "event" // 'event' or 'club'
 }) => {
-  const visibleCount = Math.min(3, events.length);
-  const totalPages = Math.ceil(events.length / visibleCount);
+  const visibleCount = Math.min(3, items.length);
+  const totalPages = Math.ceil(items.length / visibleCount);
   const [currentPage, setCurrentPage] = useState(0);
 
   const nextSlide = () => {
@@ -20,14 +21,14 @@ const CompressedEventCarousel = ({
     setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
   };
 
-  const getVisibleEvents = () => {
+  const getVisibleItems = () => {
     const start = currentPage * visibleCount;
-    return events.slice(start, start + visibleCount);
+    return items.slice(start, start + visibleCount);
   };
 
   const cardWidth = `calc((100% - ${(visibleCount - 1) * 20}px) / ${visibleCount})`;
   const isLastPage = currentPage === totalPages - 1;
-  const remainingItems = events.length - currentPage * visibleCount;
+  const remainingItems = items.length - currentPage * visibleCount;
   const hasPartialGroup = isLastPage && remainingItems < visibleCount && remainingItems > 0;
 
   return (
@@ -60,12 +61,12 @@ const CompressedEventCarousel = ({
         <button
           onClick={prevSlide}
           style={arrowStyle}
-          aria-label="Previous events"
+          aria-label={`Previous ${type}s`}
         >
           <FaChevronLeft />
         </button>
 
-        {/* Events Container */}
+        {/* Items Container */}
         <div style={{
           display: 'flex',
           gap: '20px',
@@ -74,7 +75,7 @@ const CompressedEventCarousel = ({
           justifyContent: hasPartialGroup ? 'flex-start' : 'center',
           paddingLeft: hasPartialGroup ? 'calc((100% - (280px * 3 + 40px)) / 2)' : '0'
         }}>
-          {getVisibleEvents().map((event, index) => (
+          {getVisibleItems().map((item, index) => (
             <div key={`${currentPage}-${index}`} style={{
               flex: `0 0 ${cardWidth}`,
               maxWidth: '280px',
@@ -84,11 +85,13 @@ const CompressedEventCarousel = ({
               marginLeft: hasPartialGroup && index === 0 ? 'calc((100% - (280px * remainingItems + 20px * (remainingItems - 1))) / 2)' : '0'
             }}>
               <EventCompressed
-                imageUrl={event.imageUrl}
-                title={event.title}
-                date={event.date}
+                id={item.id}
+                imageUrl={item.imageUrl}
+                title={item.title}
+                date={type === 'event' ? item.date : ''}
                 width="100%"
                 height="100%"
+                type={type}
               />
             </div>
           ))}
@@ -98,7 +101,7 @@ const CompressedEventCarousel = ({
         <button
           onClick={nextSlide}
           style={arrowStyle}
-          aria-label="Next events"
+          aria-label={`Next ${type}s`}
         >
           <FaChevronRight />
         </button>
@@ -125,7 +128,7 @@ const CompressedEventCarousel = ({
                 cursor: 'pointer',
                 transition: 'all 0.3s'
               }}
-              aria-label={`View events ${i * visibleCount + 1}-${(i + 1) * visibleCount}`}
+              aria-label={`View ${type}s ${i * visibleCount + 1}-${(i + 1) * visibleCount}`}
             />
           ))}
         </div>
@@ -153,15 +156,22 @@ const arrowStyle = {
 };
 
 CompressedEventCarousel.propTypes = {
-  events: PropTypes.arrayOf(
+  items: PropTypes.arrayOf(
     PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       imageUrl: PropTypes.string,
       title: PropTypes.string.isRequired,
-      date: PropTypes.string.isRequired
+      date: PropTypes.string,
     })
   ).isRequired,
   title: PropTypes.string,
-  showTitle: PropTypes.bool
+  showTitle: PropTypes.bool,
+  type: PropTypes.oneOf(['event', 'club'])
+};
+
+CompressedEventCarousel.defaultProps = {
+  items: [],
+  type: 'event'
 };
 
 export default CompressedEventCarousel;
