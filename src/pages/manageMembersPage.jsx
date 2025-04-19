@@ -119,7 +119,7 @@ const ManageMembers = () => {
     }
   
     try {
-      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/executives`, {
+      const response = await fetch(`http://localhost:5050/api/executives`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,6 +127,7 @@ const ManageMembers = () => {
         },
         body: JSON.stringify({
           email: newExecutive.email,
+          clubID: parseInt(clubID),
           role: newExecutive.role
         })
       });
