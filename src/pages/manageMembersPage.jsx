@@ -111,6 +111,38 @@ const ManageMembers = () => {
     }
   };
   
+  const handleRemoveExecutive = async (executiveId) => {
+    try {
+      if (!window.confirm('Are you sure you want to remove this executive?')) {
+        return;
+      }
+  
+      const response = await fetch(`http://localhost:5050/api/executives/${clubID}/${executiveId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to remove executive');
+      }
+  
+      // Update the executives list
+      setExecutives(prevExecs => prevExecs.filter(e => e.id !== executiveId));
+      setError(null);
+  
+    } catch (err) {
+      console.error("Error removing executive:", err);
+      setError(err.message);
+    }
+  };
+
+
+
+
   
   const handleAddExecutive = async () => {
     if (!newExecutive.email || !newExecutive.role) {
@@ -119,7 +151,7 @@ const ManageMembers = () => {
     }
   
     try {
-      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/executives`, {
+      const response = await fetch(`http://localhost:5050/api/executives`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,6 +159,7 @@ const ManageMembers = () => {
         },
         body: JSON.stringify({
           email: newExecutive.email,
+          clubID: parseInt(clubID),
           role: newExecutive.role
         })
       });
@@ -251,8 +284,10 @@ const ManageMembers = () => {
           
           <div style={columnStyles}>
             <h2 style={{ marginTop: 0 }}>Executives ({executives.length})</h2>
-            <ExecutiveTable executives={executives} />
-            
+            <ExecutiveTable 
+  executives={executives} 
+  onRemoveExecutive={handleRemoveExecutive} 
+/>            
             <div style={{ 
               border: '1px solid #ddd',
               padding: '15px',

@@ -122,8 +122,8 @@ const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
         textAlign: 'right'
       }}>
         <button 
-          onClick={() => onRemoveExecutive && onRemoveExecutive(executive.id)}
-          style={{
+    onClick={() => onRemoveExecutive(executive.id)}
+    style={{
             background: '#ff4444',
             border: '1px solid #ff4444',
             color: '#ffffff',
