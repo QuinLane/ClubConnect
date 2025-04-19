@@ -18,7 +18,7 @@ const ClubPage = () => {
   const [isExec, setIsExec] = useState(false);
   const [isMember, setIsMember] = useState(false);
   const [joinLoading, setJoinLoading] = useState(false);
-  const [joinError, setJoinError] = useState(null);
+  const [leaveLoading, setLeaveLoading] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -41,27 +41,25 @@ const ClubPage = () => {
         setIsExec(execList.some(e => e.userID === currentUserID));
         setIsMember(memberList.some(m => m.userID === currentUserID));
 
-        // shape upcoming events
-        const upcomingEvents = (data.events || []).map(evt => ({
-          imageUrl: evt.image || '/images/event-default.png',
-          title: evt.name,
-          date: evt.reservation?.date
-            ? new Date(evt.reservation.date).toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })
-            : 'Date TBD',
-          titleOnImage: true
-        }));
-
+        // Format club data
         setClub({
           clubName: data.clubName,
           logoUrl: data.image || '/images/default-club.png',
           bioText: data.description || 'No description available.',
           memberCount: memberList.length,
-          upcomingEvents,
+          upcomingEvents: (data.events || []).map(evt => ({
+            imageUrl: evt.image || '/images/event-default.png',
+            title: evt.name,
+            date: evt.reservation?.date
+              ? new Date(evt.reservation.date).toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })
+              : 'Date TBD',
+            titleOnImage: true
+          })),
           contact: {
             email: data.clubEmail,
             instagram: data.socialMediaLinks?.instagram,
@@ -84,7 +82,6 @@ const ClubPage = () => {
     
     try {
       setJoinLoading(true);
-      setJoinError(null);
       
       const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/join`, {
         method: 'POST',
@@ -93,25 +90,64 @@ const ClubPage = () => {
           'Content-Type': 'application/json'
         }
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to join club');
       }
-  
+
       // Update member status
       setIsMember(true);
       setClub(prev => ({
         ...prev,
         memberCount: prev.memberCount + 1
       }));
-  
+
     } catch (err) {
       console.error("Error joining club:", err);
-      setJoinError(err.message);
+      alert(`Error: ${err.message}`);
     } finally {
       setJoinLoading(false);
     }
+  };
+
+  const handleLeaveClub = async () => {
+    if (!token || !clubID) return;
+    
+    try {
+      setLeaveLoading(true);
+      
+      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/leave`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to leave club');
+      }
+  
+      // Update member status
+      setIsMember(false);
+      setClub(prev => ({
+        ...prev,
+        memberCount: prev.memberCount - 1
+      }));
+  
+    } catch (err) {
+      console.error("Error leaving club:", err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setLeaveLoading(false);
+    }
+  };
+
+  const handleApplyForPosition = () => {
+    // You can implement actual application logic here
+    alert('Application for position submitted!');
   };
 
   if (loading) return <div>Loading club...</div>;
@@ -160,11 +196,6 @@ const ClubPage = () => {
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2c3e50' }}>
               Number of members: {memberCount}
             </div>
-            {joinError && (
-              <div style={{ color: 'red', marginTop: '10px' }}>
-                {joinError}
-              </div>
-            )}
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             {isExec ? (
@@ -172,18 +203,31 @@ const ClubPage = () => {
                 <button onClick={() => navigate(`/app/events/create?club=${clubID}`)} style={buttonStyle('#388e3c')}>Create Event</button>
                 <button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>Manage Members</button>
               </>
-            ) : isMember ? (
-              <button disabled style={buttonStyle('#cccccc')}>Already a Member</button>
             ) : (
-              <>  
+              <>
+                {isMember ? (
+                  <button 
+                    onClick={handleLeaveClub}
+                    disabled={leaveLoading}
+                    style={buttonStyle('#4CAF50', leaveLoading)}
+                  >
+                    {leaveLoading ? 'Leaving...' : 'Joined Club'}
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleJoinClub} 
+                    disabled={joinLoading}
+                    style={buttonStyle('#005587', joinLoading)}
+                  >
+                    {joinLoading ? 'Joining...' : 'Join Club'}
+                  </button>
+                )}
                 <button 
-                  onClick={handleJoinClub} 
-                  disabled={joinLoading}
-                  style={buttonStyle('#005587', joinLoading)}
+                  onClick={handleApplyForPosition} 
+                  style={buttonStyle('#f57c00')}
                 >
-                  {joinLoading ? 'Joining...' : 'Join Club'}
+                  Apply for Position
                 </button>
-                <button onClick={() => alert('Apply for Position')} style={buttonStyle('#f57c00')}>Apply for Position</button>
               </>
             )}
           </div>

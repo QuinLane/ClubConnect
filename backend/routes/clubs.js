@@ -101,4 +101,10 @@ router.post(
   clubController.joinClub
 );
 
+router.delete(
+  "/:clubID/leave",
+  authenticate,
+  clubController.leaveClub
+);
+
 export default router;
