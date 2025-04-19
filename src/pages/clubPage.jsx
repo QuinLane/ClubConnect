@@ -16,6 +16,9 @@ const ClubPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isExec, setIsExec] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinError, setJoinError] = useState(null);
 
   useEffect(() => {
     if (!token) {
@@ -25,22 +28,30 @@ const ClubPage = () => {
 
     const fetchClub = async () => {
       try {
+        setLoading(true);
         const res = await fetch(`http://localhost:5050/api/clubs/${clubID}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
-        // determine exec status
+        // Check if current user is an executive or member
         const execList = data.executives || [];
+        const memberList = data.members || [];
         setIsExec(execList.some(e => e.userID === currentUserID));
+        setIsMember(memberList.some(m => m.userID === currentUserID));
 
         // shape upcoming events
         const upcomingEvents = (data.events || []).map(evt => ({
           imageUrl: evt.image || '/images/event-default.png',
           title: evt.name,
           date: evt.reservation?.date
-            ? new Date(evt.reservation.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+            ? new Date(evt.reservation.date).toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })
             : 'Date TBD',
           titleOnImage: true
         }));
@@ -49,7 +60,7 @@ const ClubPage = () => {
           clubName: data.clubName,
           logoUrl: data.image || '/images/default-club.png',
           bioText: data.description || 'No description available.',
-          memberCount: (data.members || []).length,
+          memberCount: memberList.length,
           upcomingEvents,
           contact: {
             email: data.clubEmail,
@@ -67,6 +78,41 @@ const ClubPage = () => {
 
     fetchClub();
   }, [clubID, token, navigate, currentUserID]);
+
+  const handleJoinClub = async () => {
+    if (!token || !clubID) return;
+    
+    try {
+      setJoinLoading(true);
+      setJoinError(null);
+      
+      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/join`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to join club');
+      }
+  
+      // Update member status
+      setIsMember(true);
+      setClub(prev => ({
+        ...prev,
+        memberCount: prev.memberCount + 1
+      }));
+  
+    } catch (err) {
+      console.error("Error joining club:", err);
+      setJoinError(err.message);
+    } finally {
+      setJoinLoading(false);
+    }
+  };
 
   if (loading) return <div>Loading club...</div>;
   if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
@@ -114,6 +160,11 @@ const ClubPage = () => {
             <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2c3e50' }}>
               Number of members: {memberCount}
             </div>
+            {joinError && (
+              <div style={{ color: 'red', marginTop: '10px' }}>
+                {joinError}
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             {isExec ? (
@@ -121,9 +172,17 @@ const ClubPage = () => {
                 <button onClick={() => navigate(`/app/events/create?club=${clubID}`)} style={buttonStyle('#388e3c')}>Create Event</button>
                 <button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>Manage Members</button>
               </>
+            ) : isMember ? (
+              <button disabled style={buttonStyle('#cccccc')}>Already a Member</button>
             ) : (
               <>  
-                <button onClick={() => alert('Join Club')} style={buttonStyle('#005587')}>Join Club</button>
+                <button 
+                  onClick={handleJoinClub} 
+                  disabled={joinLoading}
+                  style={buttonStyle('#005587', joinLoading)}
+                >
+                  {joinLoading ? 'Joining...' : 'Join Club'}
+                </button>
                 <button onClick={() => alert('Apply for Position')} style={buttonStyle('#f57c00')}>Apply for Position</button>
               </>
             )}
@@ -139,16 +198,17 @@ const ClubPage = () => {
   );
 };
 
-const buttonStyle = (bg) => ({
+const buttonStyle = (bg, disabled = false) => ({
   padding: '12px 24px',
-  backgroundColor: bg,
+  backgroundColor: disabled ? '#cccccc' : bg,
   color: 'white',
   border: 'none',
   borderRadius: '6px',
   fontSize: '1rem',
   fontWeight: 600,
-  cursor: 'pointer',
-  transition: 'background-color 0.2s'
+  cursor: disabled ? 'not-allowed' : 'pointer',
+  transition: 'background-color 0.2s',
+  opacity: disabled ? 0.7 : 1
 });
 
 export default ClubPage;

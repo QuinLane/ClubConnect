@@ -452,3 +452,38 @@ export const getClubExecutives = async (clubID) => {
   });
   return execs;
 };
+
+
+// Note: Available to authenticated users to join clubs
+export const joinClub = async (req, res) => {
+  const { clubID } = req.params;
+  const { userID } = req.user; // Assuming user is authenticated
+
+  try {
+    // Check if user is already a member
+    const existingMember = await prisma.memberOf.findUnique({
+      where: {
+        userID_clubID: {
+          clubID: parseInt(clubID),
+          userID: userID,
+        },
+      },
+    });
+
+    if (existingMember) {
+      return res.status(400).json({ error: "User is already a member of this club" });
+    }
+
+    // Add user as member
+    const member = await prisma.memberOf.create({
+      data: {
+        userID: userID,
+        clubID: parseInt(clubID),
+      },
+    });
+
+    res.status(201).json(member);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to join club: ${error.message}` });
+  }
+};

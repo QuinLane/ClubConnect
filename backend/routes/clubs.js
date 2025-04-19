@@ -94,4 +94,11 @@ router.delete(
   clubController.removeMember
 );
 
+// Add this with your other routes
+router.post(
+  "/:clubID/join",
+  authenticate,
+  clubController.joinClub
+);
+
 export default router;
