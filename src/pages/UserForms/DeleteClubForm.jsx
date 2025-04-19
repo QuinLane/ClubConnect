@@ -9,8 +9,8 @@ export default function DeleteClubForm({
   initialData = {},
   isReadOnly  = false,
 }) {
-  const [clubs,        setClubs]        = useState([]);    // list of club names
-  const [clubName,     setClubName]     = useState('');
+  const [clubs,        setClubs]        = useState([]);    // [{ id, name }]
+  const [clubID,       setClubID]       = useState(initialData.clubID || '');
   const [confirmation, setConfirmation] = useState('');
   const [error,        setError]        = useState('');
   const [isLoading,    setIsLoading]    = useState(false);
@@ -31,12 +31,14 @@ export default function DeleteClubForm({
         return res.json();
       })
       .then(data => {
-        // `data` is an array of executive records with `club` included
-        const names = data.map(rec => rec.club.clubName);
-        setClubs(names);
-        // if reviewing, preload the one from initialData
-        if (isReadOnly && initialData.clubName) {
-          setClubName(initialData.clubName);
+        // data is an array of exec records with rec.club
+        const list = data.map(rec => ({
+          id:   rec.club.clubID,
+          name: rec.club.clubName,
+        }));
+        setClubs(list);
+        if (isReadOnly && initialData.clubID) {
+          setClubID(initialData.clubID.toString());
         }
       })
       .catch(err => setError(err.message))
@@ -57,7 +59,7 @@ export default function DeleteClubForm({
 
     const payload = {
       formType: 'DeleteClub',
-      details: { clubName },
+      details:  { clubID: parseInt(clubID, 10) },
     };
 
     try {
@@ -101,32 +103,29 @@ export default function DeleteClubForm({
         </p>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
-      >
-        {/* Club Name dropdown */}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {/* Club selector */}
         <Field
-          label="Club Name"
-          value={clubName}
-          onChange={setClubName}
-          readOnly={isReadOnly}
+          label="Club"
+          value={clubID}
+          onChange={setClubID}
           isSelect
           options={clubs}
           loading={loadingClubs}
+          readOnly={isReadOnly}
         />
 
-        {/* Only show confirmation when not read-only */}
+        {/* Confirmation input */}
         {!isReadOnly && (
           <Field
             label='Type "delete" to confirm'
             value={confirmation}
             onChange={setConfirmation}
-            placeholder='Type "delete"'
+            placeholder='delete'
           />
         )}
 
-        {/* error */}
+        {/* Error banner */}
         {error && (
           <div style={{
             padding: '0.75rem',
@@ -140,7 +139,7 @@ export default function DeleteClubForm({
           </div>
         )}
 
-        {/* submit button only when not read-only */}
+        {/* Submit */}
         {!isReadOnly && (
           <button
             type="submit"
@@ -166,7 +165,6 @@ export default function DeleteClubForm({
   );
 }
 
-// small Field helper
 function Field({
   label,
   value,
@@ -191,54 +189,68 @@ function Field({
     resize: isTextarea ? 'vertical' : 'none',
   };
 
+  if (isSelect) {
+    return (
+      <div>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>
+          {label}
+        </label>
+        {readOnly ? (
+          <div style={style}>
+            {options.find(o => o.id.toString() === value)?.name || ''}
+          </div>
+        ) : loading ? (
+          <div style={{ ...style, color: '#6b7280' }}>Loading clubs…</div>
+        ) : (
+          <select value={value} onChange={e => onChange(e.target.value)} required style={{ ...style, cursor: 'pointer' }}>
+            <option value="">Select a club</option>
+            {options.map(opt => (
+              <option key={opt.id} value={opt.id}>{opt.name}</option>
+            ))}
+          </select>
+        )}
+      </div>
+    );
+  }
+
+  if (isTextarea) {
+    return (
+      <div>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>
+          {label}
+        </label>
+        {readOnly ? (
+          <div style={style}>{value}</div>
+        ) : (
+          <textarea
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            rows={rows}
+            required
+            placeholder={placeholder}
+            style={{ ...style, minHeight: `${rows * 20}px` }}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
-      <label style={{
-        display: 'block',
-        fontSize: '0.875rem',
-        fontWeight: 500,
-        color: '#374151',
-        marginBottom: '0.25rem'
-      }}>
+      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>
         {label}
       </label>
-
-      {isSelect ? (
-        readOnly
-          ? <div style={style}>{value}</div>
-          : loading
-            ? <div style={{ ...style, color: '#6b7280' }}>Loading clubs…</div>
-            : <select
-                value={value}
-                onChange={e => onChange(e.target.value)}
-                required
-                style={{ ...style, cursor:'pointer' }}
-              >
-                <option value="">Select a club</option>
-                {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
-      ) : isTextarea ? (
-        readOnly
-          ? <div style={style}>{value}</div>
-          : <textarea
-              value={value}
-              onChange={e => onChange(e.target.value)}
-              rows={rows}
-              required
-              placeholder={placeholder}
-              style={{ ...style, minHeight:`${rows*20}px` }}
-            />
+      {readOnly ? (
+        <div style={style}>{value}</div>
       ) : (
-        readOnly
-          ? <div style={style}>{value}</div>
-          : <input
-              type={type}
-              value={value}
-              onChange={e => onChange(e.target.value)}
-              required
-              placeholder={placeholder}
-              style={style}
-            />
+        <input
+          type={type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          required
+          placeholder={placeholder}
+          style={style}
+        />
       )}
     </div>
   );

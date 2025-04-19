@@ -3,7 +3,7 @@ import CreateClubForm     from './UserForms/CreateClubForm';
 import FundingRequestForm from './UserForms/FundingRequestForm';
 import EventRequestForm   from './UserForms/EventRequestForm';
 import DeleteClubForm     from './UserForms/DeleteClubForm';
-import FormRequestsTable  from '../components/tables/StatusTable';
+import FormRequestsTable  from '../components/tables/statusTable';
 
 const token      = localStorage.getItem('token');
 const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -17,6 +17,7 @@ export default function StudentFormPage() {
   const [selectedFormKey, setSelectedFormKey] = useState(null);
   const [loading,         setLoading]         = useState(true);
   const [error,           setError]           = useState('');
+  
 
   // fetch user's submitted forms
   useEffect(() => {

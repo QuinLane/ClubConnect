@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ExploreComponent from '../components/clubEventPages/explore';
-import ClubPage from './clubPage'; // ensure this component exists or adjust path
+import ClubPage from './ClubPage'; // ensure this component exists or adjust path
 
 const ExploreClubs = () => {
   const { clubId } = useParams();

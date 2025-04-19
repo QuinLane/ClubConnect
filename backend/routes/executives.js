@@ -8,16 +8,21 @@ const router = express.Router();
 
 // Joi schema for creating/updating executives
 const executiveSchema = Joi.object({
-  userID: Joi.number().integer().required(),
+  email: Joi.string().email().required(),
   clubID: Joi.number().integer().required(),
-  clubRoleID: Joi.number().integer().allow(null),
+  role: Joi.string().allow(null),
 });
-
 // Joi schema for assigning role
 const roleSchema = Joi.object({
-  clubRoleID: Joi.number().integer().allow(null).required(),
+  role: Joi.string().allow(null).required(), // Changed from clubRoleID
 });
 
+router.put(
+  "/:clubID/:userID/role",
+  authenticate,
+  validate(roleSchema),
+  executiveController.assignRoleToExecutive
+);
 // Executive routes
 router.get("/", authenticate, executiveController.getAllExecutives);
 router.get(
@@ -37,8 +42,7 @@ router.get(
 );
 router.post(
   "/",
-  authenticate,
-  requireSUAdmin,
+  authenticate,  // Changed from requireSUAdmin
   validate(executiveSchema),
   executiveController.createExecutive
 );
@@ -51,14 +55,12 @@ router.put(
 );
 router.delete(
   "/:clubID/:userID",
-  authenticate,
-  requireSUAdmin,
+  authenticate,  // Changed from requireSUAdmin
   executiveController.deleteExecutive
 );
 router.put(
   "/:clubID/:userID/role",
   authenticate,
-  requireSUAdmin,
   validate(roleSchema),
   executiveController.assignRoleToExecutive
 );

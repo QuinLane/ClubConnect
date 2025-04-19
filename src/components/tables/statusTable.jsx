@@ -2,7 +2,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const FormRequestsTable = ({ requests, onRowClick, selectedId }) => {
+const FormRequestsTable = ({ requests, onRowClick, selectedId, maxHeight = '400px' }) => {
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case 'approved': return '#388e3c';
@@ -16,46 +16,45 @@ const FormRequestsTable = ({ requests, onRowClick, selectedId }) => {
     <div style={{
       border: '1px solid #e0e0e0',
       borderRadius: '8px',
-      overflow: 'hidden',
       boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-      width: '100%'
+      width: '100%',
+      maxHeight: maxHeight,
+      overflow: 'auto'            // both X and Y scroll when needed
     }}>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f9f9f9', borderBottom: '1px solid #e0e0e0' }}>
-              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Form Type</th>
-              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Club</th>
-              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Status</th>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f9f9f9', borderBottom: '1px solid #e0e0e0' }}>
+            <th style={{ padding: '12px 16px', textAlign: 'left' }}>Form Type</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left' }}>Club</th>
+            <th style={{ padding: '12px 16px', textAlign: 'left' }}>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {requests.map(request => (
+            <tr
+              key={request.id}
+              onClick={() => onRowClick(request)}
+              style={{
+                borderBottom: '1px solid #f0f0f0',
+                backgroundColor: request.id === selectedId ? '#1890ff' : 'transparent',
+                color:            request.id === selectedId ? '#ffffff' : 'inherit',
+                cursor: 'pointer'
+              }}
+            >
+              <td style={{ padding: '12px 16px' }}>{request.formType}</td>
+              <td style={{ padding: '12px 16px' }}>{request.clubName}</td>
+              <td style={{
+                padding: '12px 16px',
+                color: request.id === selectedId
+                  ? '#ffffff'
+                  : getStatusColor(request.status)
+              }}>
+                {request.status}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {requests.map(request => (
-              <tr
-                key={request.id}
-                onClick={() => onRowClick(request)}
-                style={{
-                  borderBottom: '1px solid #f0f0f0',
-                  backgroundColor: request.id === selectedId ? '#1890ff' : 'transparent',
-                  color:            request.id === selectedId ? '#ffffff' : 'inherit',
-                  cursor: 'pointer'
-                }}
-              >
-                <td style={{ padding: '12px 16px' }}>{request.formType}</td>
-                <td style={{ padding: '12px 16px' }}>{request.clubName}</td>
-                <td style={{
-                  padding: '12px 16px',
-                  color: request.id === selectedId
-                    ? '#ffffff'
-                    : getStatusColor(request.status)
-                }}>
-                  {request.status}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
@@ -70,7 +69,8 @@ FormRequestsTable.propTypes = {
     })
   ).isRequired,
   onRowClick: PropTypes.func.isRequired,
-  selectedId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+  selectedId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  maxHeight:  PropTypes.string
 };
 
 export default FormRequestsTable;

@@ -6,19 +6,18 @@ import ProtectedRoute from "./auth/ProtectedRoute"; // Import ProtectedRoute
 import Layout from "./pages/Layout";
 import LoginPage from "./pages/LoginRegister/LoginPage";
 import RegisterPage from "./pages/LoginRegister/Register";
-import ClubPage from "./pages/clubPage";
+import ClubPage from "./pages/ClubPage";
 import EventPage from "./pages/EventPage";
 import ChatBoardPage from "./pages/chatBoardPage";
 import ChatPage from "./pages/chatPage";
 import ManageMembersPage from "./pages/manageMembersPage";
-import RequestPage from "./pages/requestPage";
+import RequestPage from "./pages/FormsSU";
 import Chat from "./pages/chatPage";
-import CompletedForm from "./pages/completedForm";
 import DashboardPage from "./pages/Dashboards/dashboardPage";
 import AdminDashboardPage from "./pages/Dashboards/adminDashboardPage";
 import ExploreClubsPage from "./pages/ExploreClubs";
 import ExploreEventsPage from "./pages/ExploreEvents";
-import StudentFormPage from "./pages/StudentFormPage";
+import StudentFormPage from "./pages/FormsStudent";
 import { Forbidden } from "./pages/errors/Forbidden";
 
 // 404 Fallback Component

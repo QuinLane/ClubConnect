@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import fs from "fs/promises"; // For reading default image file
-
+import { deleteEventById } from "./eventController.js";
 const prisma = new PrismaClient();
 
 // Helper to convert image buffer to base64 or load default image
@@ -91,7 +91,7 @@ export const createClub = async (req, res) => {
         description,
         createdAt: new Date(),
         president: parseInt(president),
-        socialMediaLinks: socialMediaLinks ? JSON.parse(socialMediaLinks) : [],
+        socialMediaLinks,
         website,
         clubEmail,
         image, // Save image as binary data
@@ -181,14 +181,33 @@ export const updateClub = async (req, res) => {
 
 // Note: Only SU admins should be able to do this
 export const deleteClub = async (req, res) => {
-  const { clubID } = req.params;
+  const clubID = parseInt(req.params.clubID, 10);
+
   try {
-    await prisma.club.delete({
-      where: { clubID: parseInt(clubID) },
+    //  Fetch all eventIDs for this club
+    const events = await prisma.event.findMany({
+      where: { clubID },
+      select: { eventID: true },
     });
-    res.status(204).json(); // No content on successful deletion
+
+    // Delete each event (and its RSVPs + reservation) via our helper
+    for (const { eventID } of events) {
+      await deleteEventById(eventID);
+    }
+
+    //  Now tear down the rest of the club’s data
+    await prisma.memberOf.deleteMany({ where: { clubID } });
+    await prisma.executive.deleteMany({ where: { clubID } });
+    await prisma.notification.deleteMany({ where: { clubID } });
+
+    //  Finally delete the club record
+    await prisma.club.delete({ where: { clubID } });
+
+    return res.status(204).end();
   } catch (error) {
-    res.status(500).json({ error: `Failed to delete club: ${error.message}` });
+    return res
+      .status(500)
+      .json({ error: `Failed to delete club and related data: ${error.message}` });
   }
 };
 
@@ -451,4 +470,82 @@ export const getClubExecutives = async (clubID) => {
     include: { user: true },
   });
   return execs;
+};
+
+
+// Note: Available to authenticated users to join clubs
+export const joinClub = async (req, res) => {
+  const { clubID } = req.params;
+  const { userID } = req.user; // Assuming user is authenticated
+
+  try {
+    // Check if user is already a member
+    const existingMember = await prisma.memberOf.findUnique({
+      where: {
+        userID_clubID: {
+          clubID: parseInt(clubID),
+          userID: userID,
+        },
+      },
+    });
+
+    if (existingMember) {
+      return res.status(400).json({ error: "User is already a member of this club" });
+    }
+
+    // Add user as member
+    const member = await prisma.memberOf.create({
+      data: {
+        userID: userID,
+        clubID: parseInt(clubID),
+      },
+    });
+
+    res.status(201).json(member);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to join club: ${error.message}` });
+  }
+};
+
+// Note: Available to authenticated members to leave clubs
+export const leaveClub = async (req, res) => {
+  const { clubID } = req.params;
+  const { userID } = req.user; // Assuming user is authenticated
+
+  try {
+    // Check if user is a member
+    const existingMember = await prisma.memberOf.findUnique({
+      where: {
+        userID_clubID: {
+          clubID: parseInt(clubID),
+          userID: userID,
+        },
+      },
+    });
+
+    if (!existingMember) {
+      return res.status(400).json({ error: "User is not a member of this club" });
+    }
+
+    // Remove user as member and from executives if they were one
+    await prisma.executive.deleteMany({
+      where: {
+        clubID: parseInt(clubID),
+        userID: userID,
+      },
+    });
+    
+    await prisma.memberOf.delete({
+      where: {
+        userID_clubID: {
+          clubID: parseInt(clubID),
+          userID: userID,
+        },
+      },
+    });
+
+    res.status(204).json(); // No content on successful deletion
+  } catch (error) {
+    res.status(500).json({ error: `Failed to leave club: ${error.message}` });
+  }
 };

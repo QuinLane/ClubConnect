@@ -77,7 +77,7 @@ model Form {
   formType    FormType
   status      FormStatus @default(Pending)
   submittedAt DateTime   @default(now())
-  details     String?
+  details     String     @db.Text
   user        User       @relation(fields: [userID], references: [userID])
 }
 
@@ -141,15 +141,14 @@ model Event {
 
 model Reservation {
   reservationID Int      @id @default(autoincrement())
-  date          DateTime
-  startTime     Int
-  endTime       Int
+  start         DateTime
+  endTime       DateTime
   venueID       Int
   venue         Venue    @relation(fields: [venueID], references: [venueID], onDelete: Cascade)
   eventID       Int      @unique
   event         Event    @relation(fields: [eventID], references: [eventID])
 
-  @@unique([venueID, date, startTime, endTime])
+  @@unique(reservationID)
 }
 
 enum UserType {

@@ -1,28 +1,34 @@
 import React, { useState, useEffect } from 'react';
 
-const token      = localStorage.getItem('token');
+const token = localStorage.getItem('token');
 const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-const userID     = storedUser.userID ?? null;
+const userID = storedUser.userID ?? null;
 
 export default function EventRequestForm({
   onSubmit,
   initialData = {},
-  isReadOnly  = false,
+  isReadOnly = false,
 }) {
-  // dynamic clubs fetch
-  const [clubs,        setClubs]        = useState([]);
+  const [clubs, setClubs] = useState([]);
   const [loadingClubs, setLoadingClubs] = useState(true);
+  const [venues, setVenues] = useState([]);
+  const [loadingVenues, setLoadingVenues] = useState(true);
 
-  const [clubName,     setClubName]     = useState('');
-  const [eventName,    setEventName]    = useState('');
-  const [eventType,    setEventType]    = useState('');
-  const [eventDateTime,setEventDateTime]= useState('');
-  const [venue,        setVenue]        = useState('');
-  const [description,  setDescription]  = useState('');
-  const [error,        setError]        = useState('');
-  const [isLoading,    setIsLoading]    = useState(false);
+  // Event fields
+  const [clubID, setClubID] = useState(initialData.clubID || '');
+  const [name, setName] = useState(initialData.name || '');
+  const [description, setDescription] = useState(initialData.description || '');
+  
+  // Reservation fields
+  const [date, setDate] = useState(initialData.date || '');
+  const [startTime, setStartTime] = useState(initialData.startTime || '');
+  const [endTime, setEndTime] = useState(initialData.endTime || '');
+  const [venueID, setVenueID] = useState(initialData.venueID || '');
 
-  // fetch clubs the user is an exec of
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch clubs the user is an exec of
   useEffect(() => {
     if (!userID) {
       setError('User not found; please log in again.');
@@ -37,25 +43,42 @@ export default function EventRequestForm({
         return res.json();
       })
       .then(data => {
-        const names = data.map(rec => rec.club.clubName);
-        setClubs(names);
-        // preload when reviewing
-        if (isReadOnly && initialData.clubName) {
-          setClubName(initialData.clubName);
+        setClubs(data.map(rec => ({
+          clubID: rec.club.clubID,
+          clubName: rec.club.clubName
+        })));
+        if (isReadOnly && initialData.clubID) {
+          setClubID(initialData.clubID);
         }
       })
       .catch(err => setError(err.message))
       .finally(() => setLoadingClubs(false));
   }, [userID, isReadOnly, initialData]);
 
-  // preload other fields when reviewing
+  // Fetch available venues
+  useEffect(() => {
+    fetch('http://localhost:5050/api/venues', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load venues');
+        return res.json();
+      })
+      .then(data => setVenues(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoadingVenues(false));
+  }, []);
+
+  // Preload fields when reviewing
   useEffect(() => {
     if (isReadOnly && initialData) {
-      setEventName(initialData.eventName  || '');
-      setEventType(initialData.eventType  || '');
-      setEventDateTime(initialData.eventDateTime || '');
-      setVenue(initialData.venue          || '');
+      setClubID(initialData.clubID || '');
+      setName(initialData.name || '');
       setDescription(initialData.description || '');
+      setDate(initialData.date || '');
+      setStartTime(initialData.startTime || '');
+      setEndTime(initialData.endTime || '');
+      setVenueID(initialData.venueID || '');
     }
   }, [initialData, isReadOnly]);
 
@@ -66,7 +89,15 @@ export default function EventRequestForm({
 
     const payload = {
       formType: 'EventApproval',
-      details: { clubName, eventName, eventType, eventDateTime, venue, description },
+      details: {
+        name,
+        description,
+        clubID: parseInt(clubID),
+        date,
+        startTime,
+        endTime,
+        venueID: parseInt(venueID),
+      },
     };
 
     try {
@@ -111,53 +142,62 @@ export default function EventRequestForm({
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {/* Club Name dropdown */}
         <Field
-          label="Club Name"
-          value={clubName}
-          onChange={setClubName}
+          label="Club"
+          value={clubID}
+          onChange={setClubID}
           isSelect
-          options={clubs}
+          options={clubs.map(c => ({ value: c.clubID, label: c.clubName }))}
           loading={loadingClubs}
           readOnly={isReadOnly}
         />
 
         <Field
           label="Event Name"
-          value={eventName}
-          onChange={setEventName}
+          value={name}
+          onChange={setName}
           readOnly={isReadOnly}
         />
 
         <Field
-          label="Event Type"
-          value={eventType}
-          onChange={setEventType}
-          isSelect
-          options={['Social','Academic','Cultural','Sports','Fundraiser','Other']}
+          label="Description"
+          value={description}
+          onChange={setDescription}
+          isTextarea
           readOnly={isReadOnly}
         />
 
         <Field
-          label="Event Date & Time"
-          value={eventDateTime}
-          onChange={setEventDateTime}
-          type="datetime-local"
+          label="Date"
+          value={date}
+          onChange={setDate}
+          type="date"
+          readOnly={isReadOnly}
+        />
+
+        <Field
+          label="Start Time"
+          value={startTime}
+          onChange={setStartTime}
+          type="time"
+          readOnly={isReadOnly}
+        />
+
+        <Field
+          label="End Time"
+          value={endTime}
+          onChange={setEndTime}
+          type="time"
           readOnly={isReadOnly}
         />
 
         <Field
           label="Venue"
-          value={venue}
-          onChange={setVenue}
-          readOnly={isReadOnly}
-        />
-
-        <Field
-          label="Event Description"
-          value={description}
-          onChange={setDescription}
-          isTextarea
+          value={venueID}
+          onChange={setVenueID}
+          isSelect
+          options={venues.map(v => ({ value: v.venueID, label: v.name }))}
+          loading={loadingVenues}
           readOnly={isReadOnly}
         />
 
@@ -199,18 +239,19 @@ export default function EventRequestForm({
   );
 }
 
+// Field component remains exactly the same
 function Field({
   label,
   value,
   onChange,
   isTextarea = false,
-  isSelect   = false,
-  options    = [],
-  type       = 'text',
-  readOnly   = false,
-  placeholder= '',
-  rows       = 4,
-  loading    = false,
+  isSelect = false,
+  options = [],
+  type = 'text',
+  readOnly = false,
+  placeholder = '',
+  rows = 4,
+  loading = false,
 }) {
   const style = {
     width: '100%',
@@ -226,22 +267,28 @@ function Field({
   if (isSelect) {
     return (
       <div>
-        <label style={{display:'block', fontSize:'0.875rem', fontWeight:500, color:'#374151', marginBottom:'0.25rem'}}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>
           {label}
         </label>
-        {readOnly
-          ? <div style={style}>{value}</div>
-          : loading
-            ? <div style={{ ...style, color: '#6b7280' }}>Loading clubs…</div>
-            : <select
-                value={value}
-                onChange={e => onChange(e.target.value)}
-                required
-                style={{ ...style, cursor:'pointer' }}
-              >
-                <option value="">Select a club</option>
-                {options.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>}
+        {readOnly ? (
+          <div style={style}>
+            {options.find(o => o.value === value)?.label || value}
+          </div>
+        ) : loading ? (
+          <div style={{ ...style, color: '#6b7280' }}>Loading…</div>
+        ) : (
+          <select
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            required
+            style={{ ...style, cursor: 'pointer' }}
+          >
+            <option value="">Select {label.toLowerCase()}</option>
+            {options.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        )}
       </div>
     );
   }
@@ -249,38 +296,42 @@ function Field({
   if (isTextarea) {
     return (
       <div>
-        <label style={{display:'block', fontSize:'0.875rem', fontWeight:500, color:'#374151', marginBottom:'0.25rem'}}>
+        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>
           {label}
         </label>
-        {readOnly
-          ? <div style={style}>{value}</div>
-          : <textarea
-              value={value}
-              onChange={e => onChange(e.target.value)}
-              rows={rows}
-              required
-              placeholder={placeholder}
-              style={{ ...style, minHeight:`${rows*20}px` }}
-            />}
+        {readOnly ? (
+          <div style={style}>{value}</div>
+        ) : (
+          <textarea
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            rows={rows}
+            required
+            placeholder={placeholder}
+            style={{ ...style, minHeight: `${rows * 20}px` }}
+          />
+        )}
       </div>
     );
   }
 
   return (
     <div>
-      <label style={{display:'block', fontSize:'0.875rem', fontWeight:500, color:'#374151', marginBottom:'0.25rem'}}>
+      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>
         {label}
       </label>
-      {readOnly
-        ? <div style={style}>{value}</div>
-        : <input
-            type={type}
-            value={value}
-            onChange={e => onChange(e.target.value)}
-            required
-            placeholder={placeholder}
-            style={style}
-          />}
+      {readOnly ? (
+        <div style={style}>{value}</div>
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          required
+          placeholder={placeholder}
+          style={style}
+        />
+      )}
     </div>
   );
 }

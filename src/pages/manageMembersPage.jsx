@@ -11,9 +11,14 @@ const ManageMembers = () => {
 
   // State management
   const [members, setMembers] = useState([]);
+  const [presidentError, setPresidentError] = useState('');
   const [executives, setExecutives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPresidentPrompt, setShowPresidentPrompt] = useState(false);
+  const [newPresidentEmail, setNewPresidentEmail] = useState('');
+  const [executiveToModify, setExecutiveToModify] = useState(null);
+  const [actionType, setActionType] = useState('');
 
   // State for new executive form
   const [newExecutive, setNewExecutive] = useState({
@@ -33,62 +38,44 @@ const ManageMembers = () => {
         setLoading(true);
         
         // Fetch members
-        const membersRes = await fetch(`http://localhost:5050/api/clubs/members/${clubID || 1}`, {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        const membersRes = await fetch(`http://localhost:5050/api/clubs/members/${clubID}`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-
-        if (!membersRes.ok) {
-          const errorData = await membersRes.json();
-          throw new Error(errorData.error || 'Failed to fetch members');
-        }
-
+        
+        if (!membersRes.ok) throw new Error('Failed to fetch members');
         const membersData = await membersRes.json();
         
-        // Transform data for MemberTable
-        const formattedMembers = membersData.map(member => ({
-          id: member.user.userID,
-          email: member.user.email,
-          name: `${member.user.firstName} ${member.user.lastName}`,
-          status: member.status || 'Active'
-        }));
-
-        setMembers(formattedMembers);
-
         // Fetch executives
-        const execsRes = await fetch(`http://localhost:5050/api/clubs/executives/${clubID || 1}`, {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        const execsRes = await fetch(`http://localhost:5050/api/executives/club/${clubID}`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-
-        if (execsRes.ok) {
-          const execsData = await execsRes.json();
-          setExecutives(execsData.map(exec => ({
-            id: exec.user.userID,
-            email: exec.user.email,
-            name: `${exec.user.firstName} ${exec.user.lastName}`,
-            role: exec.role
-          })));
-        }
-
-      } catch (err) {
-        console.error("Error:", err);
-        setError(err.message);
         
-        // Fallback test data for development
-        if (process.env.NODE_ENV === 'development') {
-          setMembers([
-            { id: 1, email: 'test1@ucalgary.ca', name: 'Test User 1', status: 'Active' },
-            { id: 2, email: 'test2@ucalgary.ca', name: 'Test User 2', status: 'Pending' }
-          ]);
-          setExecutives([
-            { id: 3, email: 'admin@ucalgary.ca', name: 'Club Admin', role: 'President' }
-          ]);
+        if (!execsRes.ok) {
+          const errorText = await execsRes.text();
+          throw new Error(errorText.includes('<!DOCTYPE') ? 
+            'Server returned HTML error page' : 
+            errorText);
         }
+        
+        const execsData = await execsRes.json();
+        
+        setMembers(membersData.map(m => ({
+          id: m.user.userID,
+          email: m.user.email,
+          name: `${m.user.firstName} ${m.user.lastName}`,
+          status: m.status || 'Active'
+        })));
+
+        setExecutives(execsData.map(e => ({
+          id: e.user.userID,
+          email: e.user.email,
+          name: `${e.user.firstName} ${e.user.lastName}`,
+          role: e.role || 'Executive'
+        })));
+    
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -97,34 +84,170 @@ const ManageMembers = () => {
     fetchData();
   }, [clubID, token, navigate]);
 
-  const handleRemoveMember = async (email) => {
+  const handleUpdateRole = async (executiveId, newRole) => {
     try {
-      const response = await fetch(`http://localhost:5050/api/clubs/${clubID || 1}/members`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ email })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to remove member');
+      const executive = executives.find(e => e.id === executiveId);
+      const wasPresident = executive?.role === 'President';
+      const willBePresident = newRole === 'President';
+      
+      if (wasPresident && !willBePresident) {
+        const hasOtherPresident = executives.some(
+          e => e.id !== executiveId && e.role === 'President'
+        );
+        
+        if (!hasOtherPresident) {
+          setExecutiveToModify(executive);
+          setActionType('update');
+          setShowPresidentPrompt(true);
+          return;
+        }
       }
 
-      // Update local state
-      setMembers(members.filter(m => m.email !== email));
+      await performRoleUpdate(executiveId, newRole);
     } catch (err) {
-      console.error("Error removing member:", err);
+      console.error("Error updating role:", err);
       setError(err.message);
     }
   };
 
-  const handleAddExecutive = async () => {
-    if (!newExecutive.email || !newExecutive.role) return;
+  const performRoleUpdate = async (executiveId, newRole) => {
+    const response = await fetch(
+      `http://localhost:5050/api/executives/${clubID}/${executiveId}/role`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: newRole })
+      }
+    );
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update role');
+    }
+
+    setExecutives(prevExecs =>
+      prevExecs.map(exec =>
+        exec.id === executiveId ? { ...exec, role: newRole } : exec
+      )
+    );
+  };
+
+  const handleRemoveExecutive = async (executiveId) => {
     try {
-      const response = await fetch(`http://localhost:5050/api/clubs/${clubID || 1}/executives`, {
+      const executive = executives.find(e => e.id === executiveId);
+      
+      if (executive?.role === 'President') {
+        const hasOtherPresident = executives.some(
+          e => e.id !== executiveId && e.role === 'President'
+        );
+        
+        if (!hasOtherPresident) {
+          setExecutiveToModify(executive);
+          setActionType('remove');
+          setShowPresidentPrompt(true);
+          return;
+        }
+      }
+
+      if (!window.confirm('Are you sure you want to remove this executive?')) {
+        return;
+      }
+
+      await performExecutiveRemoval(executiveId);
+    } catch (err) {
+      console.error("Error removing executive:", err);
+      setError(err.message);
+    }
+  };
+
+  const performExecutiveRemoval = async (executiveId) => {
+    const response = await fetch(
+      `http://localhost:5050/api/executives/${clubID}/${executiveId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to remove executive');
+    }
+
+    setExecutives(prevExecs => prevExecs.filter(e => e.id !== executiveId));
+  };
+
+  const handlePresidentSubmit = async () => {
+    try {
+      const newPresident = executives.find(
+        exec => exec.email === newPresidentEmail
+      );
+  
+      if (!newPresident) {
+        setPresidentError('Not a member of the club');
+        return;
+      }
+  
+      await performRoleUpdate(newPresident.id, 'President');
+  
+      if (actionType === 'remove') {
+        await performExecutiveRemoval(executiveToModify.id);
+      }
+  
+      setShowPresidentPrompt(false);
+      setNewPresidentEmail('');
+      setExecutiveToModify(null);
+      setActionType('');
+      setPresidentError('');
+    } catch (err) {
+      console.error("Error handling president change:", err);
+      setPresidentError('Failed to assign new president');
+    }
+  };
+
+  const handleRemoveMember = async (userID) => {
+    try {
+      if (!window.confirm('Are you sure you want to remove this member?')) {
+        return;
+      }
+  
+      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/members/${userID}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to remove member');
+      }
+  
+      setMembers(prevMembers => prevMembers.filter(m => m.id !== userID));
+      setExecutives(prevExecs => prevExecs.filter(e => e.id !== userID));
+      
+    } catch (err) {
+      console.error("Error removing member:", err);
+      setError(err.message);
+      alert(`Error: ${err.message}`);
+    }
+  };
+  
+  const handleAddExecutive = async () => {
+    if (!newExecutive.email || !newExecutive.role) {
+      setError('Email and role are required');
+      return;
+    }
+  
+    try {
+      const response = await fetch(`http://localhost:5050/api/executives`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,24 +255,31 @@ const ManageMembers = () => {
         },
         body: JSON.stringify({
           email: newExecutive.email,
+          clubID: parseInt(clubID),
           role: newExecutive.role
         })
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to add executive');
       }
-
+  
       const newExec = await response.json();
-      setExecutives([...executives, {
-        id: newExec.userID,
-        email: newExecutive.email,
-        name: newExec.name || 'New Executive',
-        role: newExecutive.role
-      }]);
+      
+      setExecutives(prevExecs => [
+        ...prevExecs,
+        {
+          id: newExec.user.userID,
+          email: newExec.user.email,
+          name: `${newExec.user.firstName} ${newExec.user.lastName}`,
+          role: newExec.role
+        }
+      ]);
+      
       setNewExecutive({ email: '', role: '' });
-
+      setError(null);
+  
     } catch (err) {
       console.error("Error adding executive:", err);
       setError(err.message);
@@ -232,7 +362,7 @@ const ManageMembers = () => {
         <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
           <h1 style={{ margin: 0, textAlign: 'center' }}>Member Management</h1>
           <h2 style={{ margin: '10px 0 0', textAlign: 'center', color: '#bdc3c7' }}>
-            Club ID: {clubID || 1}
+            Club ID: {clubID}
           </h2>
         </div>
       </div>
@@ -249,8 +379,12 @@ const ManageMembers = () => {
           
           <div style={columnStyles}>
             <h2 style={{ marginTop: 0 }}>Executives ({executives.length})</h2>
-            <ExecutiveTable executives={executives} />
-            
+            <ExecutiveTable 
+              executives={executives}
+              onRemoveExecutive={handleRemoveExecutive}
+              onUpdateRole={handleUpdateRole}
+            />
+
             <div style={{ 
               border: '1px solid #ddd',
               padding: '15px',
@@ -305,6 +439,48 @@ const ManageMembers = () => {
           </div>
         </div>
       </div>
+
+      {/* President Prompt Modal */}
+      {showPresidentPrompt && (
+  <div style={{
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '10px',
+    boxShadow: '0 0 10px rgba(0,0,0,0.2)',
+    zIndex: 1000,
+    width: '400px',
+  }}>
+    <h3>Assign New President</h3>
+    <input
+      type="email"
+      placeholder="Enter executive email"
+      value={newPresidentEmail}
+      onChange={(e) => {
+        setNewPresidentEmail(e.target.value);
+        setPresidentError('');
+      }}
+      style={{ width: '100%', padding: '10px', marginBottom: '10px' }}
+    />
+    {presidentError && (
+      <div style={{ color: 'red', marginBottom: '10px' }}>
+        {presidentError}
+      </div>
+    )}
+    <button onClick={handlePresidentSubmit}>Submit</button>
+    <button onClick={() => {
+      setShowPresidentPrompt(false);
+      setNewPresidentEmail('');
+      setPresidentError('');
+    }}>
+      Cancel
+    </button>
+  </div>
+)}
+
     </div>
   );
 };

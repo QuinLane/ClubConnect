@@ -1,19 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
-  // Role priority for sorting
-  const rolePriority = {
-    'President': 1,
-    'Vice President': 2,
-    'VP': 2
-  };
+const ExecutiveTable = ({ executives, onRemoveExecutive, onUpdateRole }) => {
+  const [editingId, setEditingId] = useState(null);
+  const [editedRole, setEditedRole] = useState('');
 
-  const sortedExecutives = [...executives].sort((a, b) => {
-    const aPriority = rolePriority[a.role] || 99;
-    const bPriority = rolePriority[b.role] || 99;
-    if (aPriority !== bPriority) return aPriority - bPriority;
-    return a.email.localeCompare(b.email);
-  });
+  // Simple sort by email
+  const sortedExecutives = [...executives].sort((a, b) => 
+    a.email.localeCompare(b.email)
+  );
 
   const getRoleColor = (role) => {
     if (role === 'President') return '#1976d2';
@@ -21,12 +15,25 @@ const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
     return '#666';
   };
 
-  // Calculate height based on number of entries (48px per row + 56px for header)
+  const handleDoubleClick = (executive) => {
+    setEditingId(executive.id);
+    setEditedRole(executive.role);
+  };
+
+  const handleKeyDown = async (e, executive) => {
+    if (e.key === 'Enter') {
+      await onUpdateRole(executive.id, editedRole);
+      setEditingId(null);
+    } else if (e.key === 'Escape') {
+      setEditingId(null);
+    }
+  };
+
+  // Calculate height based on number of entries
   const rowHeight = 48;
   const headerHeight = 56;
   const maxVisibleRows = 9;
   
-  // Dynamic height calculation
   const tableHeight = Math.min(
     sortedExecutives.length * rowHeight + headerHeight,
     maxVisibleRows * rowHeight + headerHeight
@@ -44,16 +51,6 @@ const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Header */}
-      <div style={{
-        padding: '12px 16px',
-        backgroundColor: '#f5f5f5',
-        borderBottom: '1px solid #e0e0e0',
-        flexShrink: 0
-      }}>
-        <h3 style={{ margin: 0 }}>Executives ({executives.length})</h3>
-      </div>
-
       {/* Scrollable table body */}
       <div style={{ 
         overflowY: sortedExecutives.length > maxVisibleRows ? 'auto' : 'visible',
@@ -95,7 +92,7 @@ const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
           <tbody>
             {sortedExecutives.map((executive) => (
               <tr 
-                key={`${executive.role}-${executive.email}`} 
+                key={executive.id}
                 style={{
                   height: `${rowHeight}px`,
                   borderBottom: '1px solid #f0f0f0',
@@ -107,23 +104,45 @@ const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis'
-                }}>{executive.email}</td>
-                <td style={{
-                  padding: '12px 16px',
-                  color: getRoleColor(executive.role),
-                  fontWeight: '500'
                 }}>
-                  {executive.role}
+                  {executive.email}
+                </td>
+                <td 
+                  style={{
+                    padding: '12px 16px',
+                    color: getRoleColor(executive.role),
+                    fontWeight: '500'
+                  }}
+                  onDoubleClick={() => handleDoubleClick(executive)}
+                >
+                  {editingId === executive.id ? (
+                    <input
+                      type="text"
+                      value={editedRole}
+                      onChange={(e) => setEditedRole(e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, executive)}
+                      onBlur={() => setEditingId(null)}
+                      autoFocus
+                      style={{
+                        width: '100%',
+                        padding: '4px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px'
+                      }}
+                    />
+                  ) : (
+                    executive.role
+                  )}
                 </td>
                 <td style={{
                   padding: '12px 16px',
                   textAlign: 'right'
                 }}>
                   <button 
-                    onClick={() => onRemoveExecutive(executive.email)}
+                    onClick={() => onRemoveExecutive(executive.id)}
                     style={{
-                      background: '#000000',
-                      border: '1px solid #000000',
+                      background: '#ff4444',
+                      border: '1px solid #ff4444',
                       color: '#ffffff',
                       cursor: 'pointer',
                       padding: '4px 12px',
@@ -132,8 +151,8 @@ const ExecutiveTable = ({ executives, onRemoveExecutive }) => {
                       fontWeight: '500',
                       transition: 'all 0.2s ease',
                       ':hover': {
-                        backgroundColor: '#333333',
-                        borderColor: '#333333'
+                        backgroundColor: '#cc0000',
+                        borderColor: '#cc0000'
                       }
                     }}
                   >

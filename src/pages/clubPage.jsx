@@ -16,6 +16,9 @@ const ClubPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isExec, setIsExec] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [leaveLoading, setLeaveLoading] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -25,32 +28,38 @@ const ClubPage = () => {
 
     const fetchClub = async () => {
       try {
+        setLoading(true);
         const res = await fetch(`http://localhost:5050/api/clubs/${clubID}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
-        // determine exec status
+        // Check if current user is an executive or member
         const execList = data.executives || [];
+        const memberList = data.members || [];
         setIsExec(execList.some(e => e.userID === currentUserID));
+        setIsMember(memberList.some(m => m.userID === currentUserID));
 
-        // shape upcoming events
-        const upcomingEvents = (data.events || []).map(evt => ({
-          imageUrl: evt.image || '/images/event-default.png',
-          title: evt.name,
-          date: evt.reservation?.date
-            ? new Date(evt.reservation.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-            : 'Date TBD',
-          titleOnImage: true
-        }));
-
+        // Format club data
         setClub({
           clubName: data.clubName,
           logoUrl: data.image || '/images/default-club.png',
           bioText: data.description || 'No description available.',
-          memberCount: (data.members || []).length,
-          upcomingEvents,
+          memberCount: memberList.length,
+          upcomingEvents: (data.events || []).map(evt => ({
+            imageUrl: evt.image || '/images/event-default.png',
+            title: evt.name,
+            date: evt.reservation?.date
+              ? new Date(evt.reservation.date).toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })
+              : 'Date TBD',
+            titleOnImage: true
+          })),
           contact: {
             email: data.clubEmail,
             instagram: data.socialMediaLinks?.instagram,
@@ -67,6 +76,79 @@ const ClubPage = () => {
 
     fetchClub();
   }, [clubID, token, navigate, currentUserID]);
+
+  const handleJoinClub = async () => {
+    if (!token || !clubID) return;
+    
+    try {
+      setJoinLoading(true);
+      
+      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/join`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to join club');
+      }
+
+      // Update member status
+      setIsMember(true);
+      setClub(prev => ({
+        ...prev,
+        memberCount: prev.memberCount + 1
+      }));
+
+    } catch (err) {
+      console.error("Error joining club:", err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setJoinLoading(false);
+    }
+  };
+
+  const handleLeaveClub = async () => {
+    if (!token || !clubID) return;
+    
+    try {
+      setLeaveLoading(true);
+      
+      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/leave`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to leave club');
+      }
+  
+      // Update member status
+      setIsMember(false);
+      setClub(prev => ({
+        ...prev,
+        memberCount: prev.memberCount - 1
+      }));
+  
+    } catch (err) {
+      console.error("Error leaving club:", err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setLeaveLoading(false);
+    }
+  };
+
+  const handleApplyForPosition = () => {
+    // You can implement actual application logic here
+    alert('Application for position submitted!');
+  };
 
   if (loading) return <div>Loading club...</div>;
   if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
@@ -122,9 +204,30 @@ const ClubPage = () => {
                 <button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>Manage Members</button>
               </>
             ) : (
-              <>  
-                <button onClick={() => alert('Join Club')} style={buttonStyle('#005587')}>Join Club</button>
-                <button onClick={() => alert('Apply for Position')} style={buttonStyle('#f57c00')}>Apply for Position</button>
+              <>
+                {isMember ? (
+                  <button 
+                    onClick={handleLeaveClub}
+                    disabled={leaveLoading}
+                    style={buttonStyle('#4CAF50', leaveLoading)}
+                  >
+                    {leaveLoading ? 'Leaving...' : 'Joined Club'}
+                  </button>
+                ) : (
+                  <button 
+                    onClick={handleJoinClub} 
+                    disabled={joinLoading}
+                    style={buttonStyle('#005587', joinLoading)}
+                  >
+                    {joinLoading ? 'Joining...' : 'Join Club'}
+                  </button>
+                )}
+                <button 
+                  onClick={handleApplyForPosition} 
+                  style={buttonStyle('#f57c00')}
+                >
+                  Apply for Position
+                </button>
               </>
             )}
           </div>
@@ -139,16 +242,17 @@ const ClubPage = () => {
   );
 };
 
-const buttonStyle = (bg) => ({
+const buttonStyle = (bg, disabled = false) => ({
   padding: '12px 24px',
-  backgroundColor: bg,
+  backgroundColor: disabled ? '#cccccc' : bg,
   color: 'white',
   border: 'none',
   borderRadius: '6px',
   fontSize: '1rem',
   fontWeight: 600,
-  cursor: 'pointer',
-  transition: 'background-color 0.2s'
+  cursor: disabled ? 'not-allowed' : 'pointer',
+  transition: 'background-color 0.2s',
+  opacity: disabled ? 0.7 : 1
 });
 
 export default ClubPage;

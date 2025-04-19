@@ -9,7 +9,6 @@ import {
 } from "../middleware/authenticate.js";
 
 const router = express.Router();
-console.log("🔌 Clubs router loaded");
 // Joi schema for creating/updating clubs
 const clubSchema = Joi.object({
   clubName: Joi.string().required(),
@@ -92,6 +91,19 @@ router.delete(
   authenticate,
   requireClubAdmin,
   clubController.removeMember
+);
+
+// Add this with your other routes
+router.post(
+  "/:clubID/join",
+  authenticate,
+  clubController.joinClub
+);
+
+router.delete(
+  "/:clubID/leave",
+  authenticate,
+  clubController.leaveClub
 );
 
 export default router;
