@@ -4,14 +4,13 @@ import * as eventController from "./eventController.js";
 
 const prisma = new PrismaClient();
 
-// Note: Only club admins can submit forms
 export const submitForm = async (req, res) => {
-  const { clubID } = req.params;
+  const { userID } = req.params;
   const { formType, details } = req.body; // details is an object, will be stringified
   try {
     const form = await prisma.form.create({
       data: {
-        clubID: parseInt(clubID),
+        userID: parseInt(userID),
         formType,
         status: "Pending",
         submittedAt: new Date(),
@@ -28,7 +27,7 @@ export const submitForm = async (req, res) => {
 export const getAllForms = async (req, res) => {
   try {
     const forms = await prisma.form.findMany({
-      include: { club: true },
+      include: { user: true },
     });
     res.status(200).json(forms);
   } catch (error) {
@@ -42,7 +41,7 @@ export const getFormById = async (req, res) => {
   try {
     const form = await prisma.form.findUnique({
       where: { formID: parseInt(formID) },
-      include: { club: true },
+      include: { user: true },
     });
     if (!form) {
       return res.status(404).json({ error: "Form not found" });
@@ -58,7 +57,7 @@ export const getOpenForms = async (req, res) => {
   try {
     const forms = await prisma.form.findMany({
       where: { status: "Pending" },
-      include: { club: true },
+      include: { user: true },
     });
     res.status(200).json(forms);
   } catch (error) {

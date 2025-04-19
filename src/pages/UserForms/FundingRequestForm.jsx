@@ -1,6 +1,9 @@
 import { useState } from 'react';
 const token = localStorage.getItem('token');
 
+const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+const userID = storedUser.userID ?? null;   // ← e.g. 42
+
 export default function FundingRequestForm({ onSubmit }) {
   const dummyClubs = [
     'Chess Club',
@@ -34,7 +37,7 @@ export default function FundingRequestForm({ onSubmit }) {
     };
 
     try {
-      const res = await fetch('http://localhost:5050/api/forms/1', {
+      const res = await fetch(`http://localhost:5050/api/forms/${userID}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json', Authorization: `Bearer ${token}`
