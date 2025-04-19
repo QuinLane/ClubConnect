@@ -52,4 +52,10 @@ router.put(
   suMessageController.markSUMessageRead
 );
 
+router.get(
+  '/exec-ids',
+  authenticate,
+  suMessageController.getDistinctExecIDs
+);
+
 export default router;

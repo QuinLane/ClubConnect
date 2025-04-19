@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import Message from '../components/messages/message';
+// src/pages/ChatStudent.jsx
+import React, { useState, useEffect, useRef } from 'react';
+import Message from '../components/messages/Message';
 import MessageInput from '../components/messages/messageInput';
 
-const API_URL = 'http://localhost:5050';
 
 const ChatStudent = () => {
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-  const userID = storedUser.userID;
-  const token = localStorage.getItem('token');
+  const userID     = storedUser.userID;
+  const token      = localStorage.getItem('token');
+  const endRef     = useRef(null);
 
   const [messages, setMessages] = useState([]);
 
-  // Fetch conversation for this student
   const fetchMessages = async () => {
     try {
       const res = await fetch(
@@ -25,9 +25,8 @@ const ChatStudent = () => {
       );
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data = await res.json();
-      setMessages(
-        data.sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt))
-      );
+      setMessages(data.sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt)));
+      endRef.current?.scrollIntoView({ behavior: 'smooth' });
     } catch (err) {
       console.error('Failed to fetch messages', err);
     }
@@ -54,7 +53,6 @@ const ChatStudent = () => {
       );
       if (!res.ok) throw new Error(`Error ${res.status}`);
       await res.json();
-      // Refresh conversation after sending
       fetchMessages();
     } catch (err) {
       console.error('Failed to send message', err);
@@ -71,61 +69,62 @@ const ChatStudent = () => {
         borderRadius: '12px',
         fontFamily: 'Arial, sans-serif',
         height: '90vh',
+        display: 'flex',
+        flexDirection: 'column',
         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
       }}
     >
-      <div
+      <header
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          backgroundColor: 'white',
+          textAlign: 'center',
+          padding: '16px 0',
+          backgroundColor: '#005587',
+          color: 'white',
+          fontSize: '1.2rem',
+          fontWeight: 'bold',
+          borderTopLeftRadius: '12px',
+          borderTopRightRadius: '12px',
         }}
       >
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '16px 0',
-            backgroundColor: '#005587',
-            color: 'white',
-            fontSize: '1.2rem',
-            fontWeight: 'bold',
-            borderTopLeftRadius: '12px',
-            borderTopRightRadius: '12px',
-          }}
-        >
-          Student Union Chat
-        </div>
+        Student Union Chat
+      </header>
 
-        <div
-          style={{
-            flex: 1,
-            padding: '20px',
-            overflowY: 'auto',
-            backgroundColor: '#f9f9f9',
-            wordBreak: 'break-word',
-          }}
-        >
-          {messages.map((msg, idx) => (
-            <Message
-              key={idx}
-              text={msg.content}
-              isSender={msg.direction === 'EXEC_TO_SU'}
-            />
-          ))}
-        </div>
+      {/* Messages pane */}
+      <div
+        style={{
+          flex: 1,
+          padding: '20px',
+          backgroundColor: '#f9f9f9',
+          overflowY: 'auto',
+          scrollBehavior: 'smooth',
+        }}
+      >
+        {messages.length === 0 && (
+          <div style={{ textAlign: 'center', color: '#666', marginTop: '50%' }}>
+            No messages yet.
+          </div>
+        )}
+        {messages.map((msg) => (
+          <Message
+            key={msg.messageID}
+            text={msg.content}
+            isSender={msg.direction === 'EXEC_TO_SU'}
+          />
+        ))}
+        <div ref={endRef} />
+      </div>
 
-        <div
-          style={{
-            padding: '15px',
-            backgroundColor: '#f5f5f5',
-            borderTop: '1px solid #e0e0e0',
-            borderBottomLeftRadius: '12px',
-            borderBottomRightRadius: '12px',
-          }}
-        >
-          <MessageInput onSend={handleSend} />
-        </div>
+      {/* Input */}
+      <div
+        style={{
+          padding: '15px',
+          backgroundColor: '#f5f5f5',
+          borderTop: '1px solid #e0e0e0',
+          borderBottomLeftRadius: '12px',
+          borderBottomRightRadius: '12px',
+        }}
+      >
+        <MessageInput onSend={handleSend} />
       </div>
     </div>
   );

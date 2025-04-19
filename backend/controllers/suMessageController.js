@@ -3,7 +3,14 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 // keep track of execs who have chatted
-const threads = new Set();
+let threads = new Set();
+const rows = await prisma.sUMessage.findMany({
+  select: { userID: true },
+  distinct: ['userID']
+});
+rows.forEach(r => threads.add(r.userID));
+console.log('💬 Loaded threads from DB:', threads);
+
 
 // Student → SUAdmin
 export const sendMessageStudent = async (req, res) => {
@@ -19,8 +26,10 @@ export const sendMessageStudent = async (req, res) => {
     // create message with direction EXEC_TO_SU
     const message = await prisma.sUMessage.create({
       data: { userID: uid, content, direction: "EXEC_TO_SU", }, });
-    threads.add(uid);
-    res.status(201).json(message);
+      // console.log(threads);
+      // threads.add(uid);
+      // console.log(threads);
+      res.status(201).json(message);
   } catch (error) {
     res.status(500).json({ error: `Failed to send SU message: ${error.message}` });
   }
@@ -52,20 +61,27 @@ export const sendMessageSU = async (req, res) => {
 
 // Fetch a single conversation (all messages for one exec)
 export const getConversation = async (req, res) => {
-  const execId = parseInt(req.params.threadID, 10);
+
+  const execId = parseInt(req.params.userID, 10);
 
   // Only return messages if this exec has chatted before
   if (!threads.has(execId)) {
+    // console.log(execId);
+    // console.log(threads);
+    // console.log(".");
     return res.status(200).json([]);
   }
 
   try {
+    // console.log("butt");
     const messages = await prisma.sUMessage.findMany({
       where: { userID: execId },
       orderBy: { sentAt: "asc" }
     });
+    
     res.status(200).json(messages);
   } catch (error) {
+    //console.log("yourmom");
     res.status(500).json({ error: `Failed to fetch SU thread: ${error.message}` });
   }
 };
@@ -93,6 +109,27 @@ export const getSUThreads = async (req, res) => {
     latestMap[uid] = latestMessage || null;
   }
   res.status(200).json({ threads: latestMap });
+};
+
+
+export const getDistinctExecIDs = async (req, res) => {
+  try {
+    // Use Prisma to select distinct userID values
+    const rows = await prisma.sUMessage.findMany({
+      select: { userID: true },
+      distinct: ['userID']
+    });
+
+    // Map to a simple array of IDs
+    const execIDs = rows.map(r => r.userID);
+
+    return res.status(200).json({ execIDs });
+  } catch (error) {
+    console.error("Failed to fetch distinct execIDs:", error);
+    return res
+      .status(500)
+      .json({ error: `Failed to fetch exec IDs: ${error.message}` });
+  }
 };
 
 
