@@ -112,8 +112,8 @@ export const deleteEvent = async (req, res) => {
 
 // Note: Only called internally by formController after approval
 export const createEvent = async (req, res) => {
-  const { name, description, clubID, date, startTime, endTime, venueID } =
-    req.body;
+  const { name, description, clubID, date, startTime, endTime, venueID } = req.body;
+
   try {
     // Check for uploaded image
     let image = null;
@@ -124,49 +124,53 @@ export const createEvent = async (req, res) => {
       }
       image = file.data;
     }
-
-    const event = await prisma.event.create({
-      data: {
-        name,
-        description,
-        clubID: parseInt(clubID),
-        image,
-      },
-      include: {
-        club: true,
-        rsvps: { include: { user: true } },
-        reservation: true,
-      },
-    });
-
-    //if the start/end time isnt working and your sending strings here, then uncomment this
-    // // Convert startTime and endTime from "HH:mm" to integer (e.g., "14:00" → 1400)
-    // const startTimeInt = parseInt(startTime.replace(":", ""));
-    // const endTimeInt = parseInt(endTime.replace(":", ""));
-
-    await venueController.createReservation(
-      {
-        body: {
-          venueID: parseInt(venueID),
-          eventID: event.eventID,
-          date,
-          startTime,
-          endTime,
+  
+    // Parse date and times into DateTime format
+    const startDateTime = new Date(`${date}T${startTime}`);
+    const endDateTime = new Date(`${date}T${endTime}`);
+  
+    // Create event and reservation in a single transaction
+    const event = await prisma.$transaction(async (prisma) => {
+      // Create the event
+      const createdEvent = await prisma.event.create({
+        data: {
+          name,
+          description,
+          clubID: parseInt(clubID),
+          image,
+          reservation: {
+            create: {
+              start: startDateTime,
+              endTime: endDateTime,
+              venueID: parseInt(venueID),
+            }
+          }
         },
-      },
-      res
-    );
-
-    // Convert image to base64
+        include: {
+          club: true,
+          rsvps: { include: { user: true } },
+          reservation: {
+            include: {
+              venue: true
+            }
+          },
+        },
+      });
+  
+      return createdEvent;
+    });
+  
+    // Convert image to base64 if it exists
     const eventWithImage = {
       ...event,
-      image: await getImageAsBase64(event.image),
+      image: event.image ? await getImageAsBase64(event.image) : null,
     };
+  
     res.status(201).json(eventWithImage);
   } catch (error) {
     res.status(500).json({ error: `Failed to create event: ${error.message}` });
   }
-};
+}
 
 // Note: Available to all
 export const getUpcomingEvents = async (req, res) => {
@@ -174,7 +178,7 @@ export const getUpcomingEvents = async (req, res) => {
     const events = await prisma.event.findMany({
       where: {
         reservation: {
-          date: { gte: new Date() },
+          start: { gte: new Date() },
         },
       },
       include: {
@@ -205,7 +209,7 @@ export const getUpcomingClubEvents = async (req, res) => {
       where: {
         clubID: parseInt(clubID),
         reservation: {
-          date: { gte: new Date() },
+          start: { gte: new Date() },
         },
       },
       include: {
@@ -240,7 +244,7 @@ export const getUpcomingUserEvents = async (req, res) => {
           },
         },
         reservation: {
-          date: { gte: new Date() },
+          start: { gte: new Date() },
         },
       },
       include: {
