@@ -6,11 +6,10 @@ const prisma = new PrismaClient();
 export const submitRSVP = async (req, res) => {
   const { eventID, userID } = req.params;
   try {
-    const rsvp = await prisma.rsvp.create({
+    const rsvp = await prisma.rSVP.create({
       data: {
         userID: parseInt(userID),
         eventID: parseInt(eventID),
-        rsvpDate: new Date(),
       },
       include: { user: true },
     });
@@ -24,7 +23,7 @@ export const submitRSVP = async (req, res) => {
 export const unsubmitRSVP = async (req, res) => {
   const { eventID, userID } = req.params;
   try {
-    await prisma.rsvp.deleteMany({
+    await prisma.rSVP.deleteMany({
       where: {
         userID: parseInt(userID),
         eventID: parseInt(eventID),
@@ -42,7 +41,7 @@ export const unsubmitRSVP = async (req, res) => {
 export const getRSVPsForEvent = async (req, res) => {
   const { eventID } = req.params;
   try {
-    const rsvps = await prisma.rsvp.findMany({
+    const rsvps = await prisma.rSVP.findMany({
       where: { eventID: parseInt(eventID) },
       include: { user: true },
     });
@@ -56,7 +55,7 @@ export const getRSVPsForEvent = async (req, res) => {
 export const getUserRSVPs = async (req, res) => {
   const { userID } = req.params;
   try {
-    const rsvps = await prisma.rsvp.findMany({
+    const rsvps = await prisma.rSVP.findMany({
       where: { userID: parseInt(userID) },
       include: {
         event: {

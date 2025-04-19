@@ -15,25 +15,30 @@ const EventPage = () => {
   const [error, setError] = useState(null);
   const [isExec, setIsExec] = useState(false);
 
+  // RSVP state
+  const [hasRSVPed, setHasRSVPed] = useState(false);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
+
   useEffect(() => {
     if (!token) {
       navigate('/login');
       return;
     }
 
-    const fetchEvent = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch event details
         const res = await fetch(`http://localhost:5050/api/events/${eventID}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
-        // determine if user is club exec
+        // Set executive status
         const execs = data.club?.executives || [];
         setIsExec(execs.some(e => e.userID === currentUserID));
 
-        // shape date/time
+        // Format date/time
         const eventDate = data.reservation?.date
           ? new Date(data.reservation.date).toLocaleDateString('en-US', {
               weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -53,6 +58,20 @@ const EventPage = () => {
           approvalStatus: data.status || 'Pending',
           clubID: data.clubID
         });
+
+        // Fetch RSVPs for this event (use plural 'rsvps' to match server mount)
+        const rsvpRes = await fetch(`http://localhost:5050/api/rsvps/${eventID}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (rsvpRes.ok) {
+          const rsvpData = await rsvpRes.json();
+          setHasRSVPed(rsvpData.some(r => r.userID === currentUserID));
+        } else if (rsvpRes.status === 404) {
+          // No RSVPs yet
+          setHasRSVPed(false);
+        } else {
+          console.warn(`Unexpected RSVP fetch status: ${rsvpRes.status}`);
+        }
       } catch (err) {
         console.error(err);
         setError(err.message);
@@ -61,11 +80,45 @@ const EventPage = () => {
       }
     };
 
-    fetchEvent();
+    fetchData();
   }, [eventID, token, navigate, currentUserID]);
 
-  const handleRSVPClick = () => {
-    // implement RSVP logic here
+  const handleRSVPClick = async () => {
+    setRsvpLoading(true);
+    try {
+      const method = hasRSVPed ? 'DELETE' : 'POST';
+      const res = await fetch(
+        `http://localhost:5050/api/rsvps/${eventID}/${currentUserID}`,
+        {
+          method,
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+
+      if (res.status === 404) {
+        console.warn(`RSVP endpoint not found: ${res.status}`);
+        setHasRSVPed(!hasRSVPed);
+        return;
+      }
+
+      if (!res.ok) {
+        let err;
+        try {
+          const data = await res.json();
+          err = data.error;
+        } catch {
+          err = await res.text();
+        }
+        throw new Error(err || 'Failed to update RSVP');
+      }
+
+      setHasRSVPed(!hasRSVPed);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setRsvpLoading(false);
+    }
   };
 
   const handleCancelEvent = () => {
@@ -117,7 +170,13 @@ const EventPage = () => {
             <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#4a5568' }}>{eventTime}</div>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <button onClick={handleRSVPClick} style={buttonStyle(isExec ? '#388e3c' : '#005587')}>{isExec ? 'Admin View' : 'RSVP Now'}</button>
+            <button
+              onClick={handleRSVPClick}
+              disabled={rsvpLoading}
+              style={buttonStyle(hasRSVPed ? '#e74c3c' : '#005587')}
+            >
+              {hasRSVPed ? 'Cancel RSVP' : 'RSVP Now'}
+            </button>
             <button onClick={() => navigate(`/app/club/${clubID}`)} style={buttonStyle('#f57c00')}>View Club</button>
           </div>
         </div>
@@ -135,7 +194,15 @@ const EventPage = () => {
 };
 
 const buttonStyle = (bg) => ({
-  padding: '12px 24px', backgroundColor: bg, color: 'white', border: 'none', borderRadius: '6px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.2s'
+  padding: '12px 24px',
+  backgroundColor: bg,
+  color: 'white',
+  border: 'none',
+  borderRadius: '6px',
+  fontSize: '1rem',
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'background-color 0.2s',
 });
 
 export default EventPage;
