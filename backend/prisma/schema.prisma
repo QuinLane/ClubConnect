@@ -38,8 +38,6 @@ model Club {
   clubName         String         @unique
   description      String?        @db.Text
   createdAt        DateTime       @default(now())
-  president        Int
-  presidentUser    User           @relation("ClubPresident", fields: [president], references: [userID])
   executives       Executive[]
   members          MemberOf[]     @relation("ClubMembers")
   events           Event[]

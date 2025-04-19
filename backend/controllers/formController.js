@@ -92,7 +92,11 @@ export const handleFormApproval = async (req, res) => {
     let result;
     switch (form.formType) {
       case "ClubCreation":
-        result = await clubController.createClub({ body: details }, res);
+        const updatedDetails = {
+          ...details,
+          presidentID: form.userID.toString(),
+        };
+        result = await clubController.createClub({ body: updatedDetails }, res);
         break;
       case "EventApproval":
         result = await eventController.createEvent({ body: details }, res);
@@ -101,7 +105,10 @@ export const handleFormApproval = async (req, res) => {
         result = res.status(200).json({ message: "Funding request approved" });
         break;
       case "DeleteClub":
-        result = await clubController.deleteClub({ params: { clubID: details.clubID } },res);
+        result = await clubController.deleteClub(
+          { params: { clubID: details.clubID } },
+          res
+        );
         break;
       default:
         return res.status(400).json({ error: "Invalid form type" });
