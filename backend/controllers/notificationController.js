@@ -13,6 +13,20 @@ export const createNotification = async (req, res) => {
       return res.status(404).json({ error: "Sender not found" });
     }
 
+    // If clubID is provided, ensure the sender is authorized to send on behalf of that club
+    if (clubID) {
+      if (sender.userType !== "SUAdmin") {
+        const isClubAdmin = await prisma.executive.findFirst({
+          where: { userID: parseInt(senderID), clubID: parseInt(clubID) },
+        });
+        if (!isClubAdmin) {
+          return res
+            .status(403)
+            .json({ error: "Not authorized to send on behalf of this club" });
+        }
+      }
+    }
+
     const notification = await prisma.notification.create({
       data: {
         title,
@@ -195,17 +209,19 @@ export const getClubNotifications = async (req, res) => {
   try {
     const notifications = await prisma.notification.findMany({
       where: {
-        clubID: parseInt(clubID)
+        clubID: parseInt(clubID),
       },
       include: {
         sender: true,
-        club: true
+        club: true,
       },
-      orderBy: { postedAt: "desc" }
+      orderBy: { postedAt: "desc" },
     });
     res.status(200).json(notifications);
   } catch (error) {
-    res.status(500).json({ error: `Failed to fetch club notifications: ${error.message}` });
+    res
+      .status(500)
+      .json({ error: `Failed to fetch club notifications: ${error.message}` });
   }
 };
 
@@ -215,7 +231,7 @@ export const getExecutiveNotifications = async (req, res) => {
     // Get all clubs where user is an executive
     const executiveClubs = await prisma.executive.findMany({
       where: { userID: parseInt(userID) },
-      select: { clubID: true }
+      select: { clubID: true },
     });
 
     // Get notifications for these clubs
@@ -225,19 +241,21 @@ export const getExecutiveNotifications = async (req, res) => {
           // Notifications sent directly to user
           { recipients: { some: { userID: parseInt(userID) } } },
           // Notifications sent to clubs where user is executive
-          { clubID: { in: executiveClubs.map(ec => ec.clubID) } }
-        ]
+          { clubID: { in: executiveClubs.map((ec) => ec.clubID) } },
+        ],
       },
       include: {
         sender: true,
-        club: true
+        club: true,
       },
-      orderBy: { postedAt: "desc" }
+      orderBy: { postedAt: "desc" },
     });
 
     res.status(200).json(notifications);
   } catch (error) {
-    res.status(500).json({ error: `Failed to fetch executive notifications: ${error.message}` });
+    res.status(500).json({
+      error: `Failed to fetch executive notifications: ${error.message}`,
+    });
   }
 };
 
@@ -251,19 +269,21 @@ export const getNotificationsForUser = async (req, res) => {
           // Notifications sent to this user
           { recipients: { some: { userID: parseInt(userID) } } },
           // Notifications sent by this user
-          { senderID: parseInt(userID) }
-        ]
+          { senderID: parseInt(userID) },
+        ],
       },
       include: {
         sender: true,
         club: true,
-        recipients: true
+        recipients: true,
       },
-      orderBy: { postedAt: "desc" }
+      orderBy: { postedAt: "desc" },
     });
     res.status(200).json(notifications);
   } catch (error) {
-    res.status(500).json({ error: `Failed to fetch user notifications: ${error.message}` });
+    res
+      .status(500)
+      .json({ error: `Failed to fetch user notifications: ${error.message}` });
   }
 };
 
@@ -281,33 +301,34 @@ export const getNotificationsForSender = async (req, res) => {
           {
             AND: [
               { recipients: { some: { user: { userType: "SUAdmin" } } } },
-              { sender: { userType: "SUAdmin" } }
-            ]
-          }
-        ]
+              { sender: { userType: "SUAdmin" } },
+            ],
+          },
+        ],
       },
       include: {
         sender: true,
         club: true,
         recipients: {
           include: {
-            user: true
-          }
-        }
+            user: true,
+          },
+        },
       },
-      orderBy: { postedAt: "desc" }
+      orderBy: { postedAt: "desc" },
     });
 
     // Filter out duplicates and format the response
     const uniqueNotifications = notifications.filter(
       (notification, index, self) =>
-        index === self.findIndex(n => n.notificationID === notification.notificationID)
+        index ===
+        self.findIndex((n) => n.notificationID === notification.notificationID)
     );
 
     res.status(200).json(uniqueNotifications);
   } catch (error) {
-    res.status(500).json({ 
-      error: `Failed to fetch sender notifications: ${error.message}` 
+    res.status(500).json({
+      error: `Failed to fetch sender notifications: ${error.message}`,
     });
   }
 };
