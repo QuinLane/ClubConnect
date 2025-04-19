@@ -181,18 +181,20 @@ export const getExecutivesByClub = async (req, res) => {
     const executives = await prisma.executive.findMany({
       where: { clubID: parseInt(clubID) },
       include: {
-        user: true,
-        club: true,
+        user: true
       },
+      orderBy: {
+        role: 'asc' // Optional: Sort by role if you want
+      }
     });
+    
     res.status(200).json(executives);
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: `Failed to fetch club executives: ${error.message}` });
+    res.status(500).json({ 
+      error: `Failed to fetch club executives: ${error.message}` 
+    });
   }
 };
-
 // Note: Available to all
 export const getExecutivesByUser = async (req, res) => {
   const { userID } = req.params;

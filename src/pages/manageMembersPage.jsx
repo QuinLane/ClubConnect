@@ -44,22 +44,22 @@ const ManageMembers = () => {
         const execsRes = await fetch(`http://localhost:5050/api/executives/club/${clubID}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-    
+        
         if (!execsRes.ok) {
           const errorText = await execsRes.text();
           throw new Error(errorText.includes('<!DOCTYPE') ? 
             'Server returned HTML error page' : 
             errorText);
         }
-    
+        
         const execsData = await execsRes.json();
         
-        // Transform data
-        setMembers(membersData.map(m => ({
-          id: m.user.userID,
-          email: m.user.email,
-          name: `${m.user.firstName} ${m.user.lastName}`,
-          status: m.status || 'Active'
+        // Transform data - ensure all fields are properly mapped
+        setExecutives(execsData.map(e => ({
+          id: e.user.userID,
+          email: e.user.email,
+          name: `${e.user.firstName} ${e.user.lastName}`,
+          role: e.role || 'Executive' // Default role if none specified
         })));
     
         setExecutives(execsData.map(e => ({
