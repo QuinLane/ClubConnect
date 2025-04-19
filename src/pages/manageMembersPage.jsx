@@ -88,7 +88,16 @@ const ManageMembers = () => {
       const executive = executives.find(e => e.id === executiveId);
       const wasPresident = executive?.role === 'President';
       const willBePresident = newRole === 'President';
-      
+      const isCurrentUser = executiveId === user.userID;
+  
+      // If current user is trying to make someone else president
+      if (!isCurrentUser && willBePresident) {
+        setExecutiveToModify(executive);
+        setActionType('presidentChange');
+        setShowPresidentPrompt(true);
+        return;
+      }
+  
       // If changing from president to non-president, check if there are other presidents
       if (wasPresident && !willBePresident) {
         const hasOtherPresident = executives.some(
@@ -99,13 +108,6 @@ const ManageMembers = () => {
           setExecutiveToModify(executive);
           setActionType('update');
           setShowPresidentPrompt(true);
-          return;
-        }
-      }
-  
-      // If changing to president, we might want to confirm this action
-      if (!wasPresident && willBePresident) {
-        if (!window.confirm(`Are you sure you want to make ${executive.email} the new President?`)) {
           return;
         }
       }
@@ -192,21 +194,27 @@ const ManageMembers = () => {
 
   const handlePresidentSubmit = async () => {
     try {
-      const newPresident = executives.find(
-        exec => exec.email === newPresidentEmail
-      );
+      if (actionType === 'presidentChange') {
+        if (!newPresidentEmail.trim()) {
+          setPresidentError('Please enter a new role');
+          return;
+        }
+        
+        // Check if they're trying to set their new role as President
+        if (newPresidentEmail.trim().toLowerCase() === 'president') {
+          setPresidentError('Your new role cannot be "President"');
+          return;
+        }
   
-      if (!newPresident) {
-        setPresidentError('Not a member of the club');
-        return;
+        // First update the new president's role
+        await performRoleUpdate(executiveToModify.id, 'President');
+        
+        // Then update current user's role
+        await performRoleUpdate(user.userID, newPresidentEmail.trim());
+      } else {
+        // ... existing other case
       }
-  
-      await performRoleUpdate(newPresident.id, 'President');
-  
-      if (actionType === 'remove') {
-        await performExecutiveRemoval(executiveToModify.id);
-      }
-  
+    
       setShowPresidentPrompt(false);
       setNewPresidentEmail('');
       setExecutiveToModify(null);
@@ -214,7 +222,7 @@ const ManageMembers = () => {
       setPresidentError('');
     } catch (err) {
       console.error("Error handling president change:", err);
-      setPresidentError('Failed to assign new president');
+      setPresidentError('Failed to complete the role change');
     }
   };
 
@@ -468,25 +476,49 @@ const ManageMembers = () => {
       width: '400px',
       maxWidth: '90%'
     }}>
-      <h2 style={{ marginTop: 0 }}>Assign New President</h2>
-      <p>You must assign a new president before changing the current president's role.</p>
-      
-      <input
-        type="email"
-        placeholder="Enter new president's email"
-        value={newPresidentEmail}
-        onChange={(e) => {
-          setNewPresidentEmail(e.target.value);
-          setPresidentError('');
-        }}
-        style={{
-          width: '100%',
-          padding: '10px',
-          margin: '10px 0',
-          border: presidentError ? '1px solid red' : '1px solid #ddd',
-          borderRadius: '4px'
-        }}
-      />
+{actionType === 'presidentChange' ? (
+  <>
+    <h2 style={{ marginTop: 0 }}>Change Your Role</h2>
+    <p>Since you're making {executiveToModify?.email} the new president, please enter a new role for yourself (cannot be "President"):</p>
+    <input
+      type="text"
+      placeholder="Enter your new role"
+      value={newPresidentEmail} // Still reusing this state variable
+      onChange={(e) => {
+        setNewPresidentEmail(e.target.value);
+        setPresidentError('');
+      }}
+      style={{
+        width: '100%',
+        padding: '10px',
+        margin: '10px 0',
+        border: presidentError ? '1px solid red' : '1px solid #ddd',
+        borderRadius: '4px'
+      }}
+    />
+  </>
+) : (
+        <>
+          <h2 style={{ marginTop: 0 }}>Assign New President</h2>
+          <p>You must assign a new president before changing the current president's role.</p>
+          <input
+            type="email"
+            placeholder="Enter new president's email"
+            value={newPresidentEmail}
+            onChange={(e) => {
+              setNewPresidentEmail(e.target.value);
+              setPresidentError('');
+            }}
+            style={{
+              width: '100%',
+              padding: '10px',
+              margin: '10px 0',
+              border: presidentError ? '1px solid red' : '1px solid #ddd',
+              borderRadius: '4px'
+            }}
+          />
+        </>
+      )}
       
       {presidentError && (
         <div style={{ color: 'red', marginBottom: '10px' }}>
@@ -528,7 +560,6 @@ const ManageMembers = () => {
     </div>
   </div>
 )}
-
     </div>
   );
 };
