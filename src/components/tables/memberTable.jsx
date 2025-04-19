@@ -1,9 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-const MemberTable = ({ members, onRemoveMember, onUpdateRole }) => {
-  const [editingMemberId, setEditingMemberId] = useState(null);
-  const [editedRole, setEditedRole] = useState('');
-
+const MemberTable = ({ members, onRemoveMember }) => {
   const sortedMembers = [...members].sort((a, b) =>
     a.email.localeCompare(b.email)
   );
@@ -16,31 +13,6 @@ const MemberTable = ({ members, onRemoveMember, onUpdateRole }) => {
     sortedMembers.length * rowHeight + headerHeight,
     maxVisibleRows * rowHeight + headerHeight
   );
-
-  const handleDoubleClick = (member) => {
-    setEditingMemberId(member.id);
-    setEditedRole(member.role || '');
-  };
-
-  const handleRoleChange = (e) => {
-    setEditedRole(e.target.value);
-  };
-
-  const handleBlur = (memberId) => {
-    if (editedRole.trim() !== '') {
-      onUpdateRole(memberId, editedRole.trim());
-    }
-    setEditingMemberId(null);
-  };
-
-  const handleKeyDown = (e, memberId) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleBlur(memberId);
-    } else if (e.key === 'Escape') {
-      setEditingMemberId(null);
-    }
-  };
 
   return (
     <div style={{
@@ -56,14 +28,13 @@ const MemberTable = ({ members, onRemoveMember, onUpdateRole }) => {
         <thead style={{ backgroundColor: '#f0f0f0' }}>
           <tr>
             <th style={{ padding: '12px', textAlign: 'left' }}>Email</th>
-            <th style={{ padding: '12px', textAlign: 'left' }}>Role</th>
             <th style={{ padding: '12px' }}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {sortedMembers.length === 0 ? (
             <tr>
-              <td colSpan="3" style={{ padding: '12px', textAlign: 'center', color: '#888' }}>
+              <td colSpan="2" style={{ padding: '12px', textAlign: 'center', color: '#888' }}>
                 No members found.
               </td>
             </tr>
@@ -71,30 +42,6 @@ const MemberTable = ({ members, onRemoveMember, onUpdateRole }) => {
             sortedMembers.map((member) => (
               <tr key={member.id} style={{ borderBottom: '1px solid #eee' }}>
                 <td style={{ padding: '12px' }}>{member.email}</td>
-                <td
-                  style={{ padding: '12px', cursor: 'pointer' }}
-                  onDoubleClick={() => handleDoubleClick(member)}
-                >
-                  {editingMemberId === member.id ? (
-                    <input
-                      type="text"
-                      value={editedRole}
-                      onChange={handleRoleChange}
-                      onBlur={() => handleBlur(member.id)}
-                      onKeyDown={(e) => handleKeyDown(e, member.id)}
-                      autoFocus
-                      style={{
-                        width: '100%',
-                        fontSize: '1em',
-                        padding: '4px',
-                        borderRadius: '4px',
-                        border: '1px solid #ccc',
-                      }}
-                    />
-                  ) : (
-                    member.role || <span style={{ color: '#aaa' }}>(no role)</span>
-                  )}
-                </td>
                 <td style={{ padding: '12px', textAlign: 'center' }}>
                   <button
                     onClick={() => onRemoveMember(member.id)}
