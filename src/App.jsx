@@ -70,6 +70,7 @@ const App = () => {
                 />
               }
             >
+              <Route path="chatSU" element={<ChatSU />} />
               <Route path="admin-dashboard" element={<AdminDashboardPage />} />
             </Route>
           </Route>
@@ -88,7 +89,6 @@ const App = () => {
               <Route path="club/:clubID" element={<ClubPage />} />
               <Route path="events/:eventID" element={<EventPage />} />
               <Route path="chat" element={<ChatStudent />} />
-              <Route path="chatSU" element={<ChatSU />} />
               <Route
                 path="manage-members/:clubID"
                 element={<ManageMembersPage />}
