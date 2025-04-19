@@ -13,12 +13,13 @@ export default function FundingRequestForm({
   const [clubs,        setClubs]        = useState([]);
   const [loadingClubs, setLoadingClubs] = useState(true);
 
-  const [clubName,         setClubName]         = useState(initialData.clubName || '');
-  const [requestAmount,    setRequestAmount]    = useState(initialData.requestAmount || '');
-  const [purpose,          setPurpose]          = useState(initialData.purpose || '');
-  const [budgetBreakdown,  setBudgetBreakdown]  = useState(initialData.budgetBreakdown || '');
-  const [error,            setError]            = useState('');
-  const [isLoading,        setIsLoading]        = useState(false);
+  // form fields
+  const [clubName,        setClubName]        = useState(initialData.clubName || '');
+  const [requestAmount,   setRequestAmount]   = useState(initialData.requestAmount || '');
+  const [purpose,         setPurpose]         = useState(initialData.purpose || '');
+  const [budgetBreakdown, setBudgetBreakdown] = useState(initialData.budgetBreakdown || '');
+  const [error,           setError]           = useState('');
+  const [isLoading,       setIsLoading]       = useState(false);
 
   // fetch clubs the user is an exec of
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function FundingRequestForm({
       .then(data => {
         const names = data.map(rec => rec.club.clubName);
         setClubs(names);
-        // preload when reviewing
+        // preload clubName when reviewing
         if (isReadOnly && initialData.clubName) {
           setClubName(initialData.clubName);
         }
@@ -46,7 +47,7 @@ export default function FundingRequestForm({
       .finally(() => setLoadingClubs(false));
   }, [userID, isReadOnly, initialData]);
 
-  // when viewing an existing submission, preload other fields
+  // preload other fields when reviewing
   useEffect(() => {
     if (isReadOnly) {
       setRequestAmount(initialData.requestAmount || '');
@@ -91,7 +92,6 @@ export default function FundingRequestForm({
 
   return (
     <div>
-      <p>‎</p>
       <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{
           fontSize: '1.5rem',
@@ -109,7 +109,6 @@ export default function FundingRequestForm({
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {/* Club Name dropdown */}
         <Field
           label="Club Name"
           value={clubName}
@@ -226,24 +225,23 @@ function Field({
         }}>
           {label}
         </label>
-        {loading && !readOnly
-          ? <div style={{ ...commonStyle, color: '#6b7280' }}>Loading clubs…</div>
-          : (
-            <select
-              value={value}
-              onChange={readOnly ? undefined : (e) => onChange(e.target.value)}
-              required
-              disabled={readOnly}
-              style={{ ...commonStyle, cursor: readOnly ? 'default' : 'pointer' }}
-            >
-              <option value="">Select your club</option>
-              {options.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          )}
+        {readOnly ? (
+          <div style={commonStyle}>{value}</div>
+        ) : loading ? (
+          <div style={{ ...commonStyle, color: '#6b7280' }}>Loading clubs…</div>
+        ) : (
+          <select
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            required
+            style={{ ...commonStyle, cursor: 'pointer' }}
+          >
+            <option value="">Select your club</option>
+            {options.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        )}
       </div>
     );
   }
@@ -273,23 +271,7 @@ function Field({
     );
   }
 
-  if (readOnly) {
-    return (
-      <div>
-        <label style={{
-          display: 'block',
-          fontSize: '0.875rem',
-          fontWeight: 500,
-          color: '#374151',
-          marginBottom: '0.25rem',
-        }}>
-          {label}
-        </label>
-        <div style={commonStyle}>{value}</div>
-      </div>
-    );
-  }
-
+  // default input
   return (
     <div>
       <label style={{
@@ -310,6 +292,7 @@ function Field({
         min={min}
         step={step}
         style={commonStyle}
+        disabled={readOnly}
       />
     </div>
   );
