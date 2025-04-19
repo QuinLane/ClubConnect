@@ -23,6 +23,7 @@ import AdminDashboardPage from "./pages/Dashboards/adminDashboardPage";
 import ExploreClubsPage from "./pages/ExploreClubs"
 import ExploreEventsPage from "./pages/ExploreEvents"
 import StudentFormPage from "./pages/StudentFormPage"
+import EventPageWrapper from "./pages/eventPageWrapper";
 import { Forbidden } from "./pages/errors/Forbidden";
 
 // 404 Fallback Component
@@ -95,6 +96,7 @@ const App = () => {
           
           <Route path="explore-clubs" element={<ExploreClubsPage />} />
           <Route path="explore-events" element={<ExploreEventsPage />} />
+          <Route path="/app/events/:eventId" element={<EventPageWrapper />} />
 
         </Route>
 
