@@ -57,6 +57,7 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forbidden" element={<Forbidden />} />
+        
 
         {/* Nested Routes under /app */}
         <Route path="/app">
@@ -71,6 +72,7 @@ const App = () => {
               }
             >
               <Route path="chatSU" element={<ChatSU />} />
+              <Route path="forms-su" element={<RequestPage />} />
               <Route path="admin-dashboard" element={<AdminDashboardPage />} />
             </Route>
           </Route>
@@ -93,7 +95,6 @@ const App = () => {
                 path="manage-members/:clubID"
                 element={<ManageMembersPage />}
               />
-              <Route path="requests" element={<RequestPage />} />
               <Route path="student-forms" element={<StudentFormPage />} />
               <Route path="explore-clubs" element={<ExploreClubsPage />} />
               <Route path="explore-events" element={<ExploreEventsPage />} />

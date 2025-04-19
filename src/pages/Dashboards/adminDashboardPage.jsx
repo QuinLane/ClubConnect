@@ -6,16 +6,16 @@ const AdminDashboard = () => {
 
   const dashboardItems = [
     { 
-      title: 'Messages',
-      description: 'View and manage all messages',
+      title: 'SU Inbox',
+      description: 'View and manage all SU messages',
       color: '#005587',
-      onClick: () => navigate('../chatBoard')
+      onClick: () => navigate('../chatSU')
     },
     { 
-      title: 'Requests',
+      title: 'Requests & Form Submissions',
       description: 'Review pending requests',
       color: '#388e3c',
-      onClick: () => navigate('../requests')
+      onClick: () => navigate('../forms-su')
     },
     { 
       title: 'Explore Clubs',
