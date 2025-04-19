@@ -33,7 +33,7 @@ const ManageMembers = () => {
         setLoading(true);
         
         // Fetch members
-        const membersRes = await fetch(`http://localhost:5050/api/clubs/members/${clubID || 1}`, {
+        const membersRes = await fetch(`http://localhost:5050/api/clubs/members/${clubID}`, {
           headers: { 
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -58,7 +58,7 @@ const ManageMembers = () => {
         setMembers(formattedMembers);
 
         // Fetch executives
-        const execsRes = await fetch(`http://localhost:5050/api/clubs/executives/${clubID || 1}`, {
+        const execsRes = await fetch(`http://localhost:5050/api/clubs/${clubID || 1}/executives`, {
           headers: { 
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -97,34 +97,44 @@ const ManageMembers = () => {
     fetchData();
   }, [clubID, token, navigate]);
 
-  const handleRemoveMember = async (email) => {
+  const handleRemoveMember = async (userID) => {
     try {
-      const response = await fetch(`http://localhost:5050/api/clubs/${clubID || 1}/members`, {
+      // Confirm before deleting
+      if (!window.confirm('Are you sure you want to remove this member?')) {
+        return;
+      }
+  
+      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/members/${userID}`, {
         method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ email })
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-
+  
       if (!response.ok) {
-        throw new Error('Failed to remove member');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to remove member');
       }
-
-      // Update local state
-      setMembers(members.filter(m => m.email !== email));
+  
+      // Update both members and executives lists
+      setMembers(prevMembers => prevMembers.filter(m => m.id !== userID));
+      setExecutives(prevExecs => prevExecs.filter(e => e.id !== userID));
+      
     } catch (err) {
       console.error("Error removing member:", err);
       setError(err.message);
+      alert(`Error: ${err.message}`);
     }
   };
+  
+  
 
   const handleAddExecutive = async () => {
     if (!newExecutive.email || !newExecutive.role) return;
 
     try {
-      const response = await fetch(`http://localhost:5050/api/clubs/${clubID || 1}/executives`, {
+      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/executives`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -232,7 +242,7 @@ const ManageMembers = () => {
         <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
           <h1 style={{ margin: 0, textAlign: 'center' }}>Member Management</h1>
           <h2 style={{ margin: '10px 0 0', textAlign: 'center', color: '#bdc3c7' }}>
-            Club ID: {clubID || 1}
+            Club ID: {clubID}
           </h2>
         </div>
       </div>

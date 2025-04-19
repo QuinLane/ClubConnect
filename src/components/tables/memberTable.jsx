@@ -44,20 +44,20 @@ const MemberTable = ({ members, onRemoveMember }) => {
               <tr key={member.id} style={{ borderBottom: '1px solid #eee' }}>
                 <td style={{ padding: '12px' }}>{member.email}</td>
                 <td style={{ padding: '12px', textAlign: 'center' }}>
-                  <button 
-                    onClick={() => onRemoveMember(member.email)}
-                    style={{
-                      backgroundColor: '#c0392b',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '6px 10px',
-                      cursor: 'pointer',
-                      fontSize: '0.9em'
-                    }}
-                  >
-                    Remove
-                  </button>
+                <button 
+  onClick={() => onRemoveMember(member.id)}
+  style={{
+    backgroundColor: '#c0392b',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '6px 10px',
+    cursor: 'pointer',
+    fontSize: '0.9em'
+  }}
+>
+  Remove
+</button>
                 </td>
               </tr>
             ))
