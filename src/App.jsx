@@ -72,7 +72,9 @@ const App = () => {
           <Route path="events/:eventID" element={<EventPage />} />
           <Route path="chatboard" element={<ChatBoardPage />} />
           <Route path="chat" element={<ChatPage />} />
-          <Route path="manage-members" element={<ManageMembersPage />} />
+          <Route path="manage-members/:clubID" element={<ManageMembersPage />} />
+
+
           <Route path="requests" element={<RequestPage />} />
           <Route path="chat" element={<Chat />} />
           <Route path="completedForm" element={<CompletedForm />} />
