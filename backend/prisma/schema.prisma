@@ -142,8 +142,8 @@ model Event {
 model Reservation {
   reservationID Int      @id @default(autoincrement())
   date          DateTime
-  startTime     DateTime
-  endTime       DateTime
+  startTime     Int
+  endTime       Int
   venueID       Int
   venue         Venue    @relation(fields: [venueID], references: [venueID], onDelete: Cascade)
   eventID       Int      @unique

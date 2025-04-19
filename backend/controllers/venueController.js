@@ -81,8 +81,8 @@ export const createReservation = async (req, res) => {
         venueID: parseInt(venueID),
         eventID: parseInt(eventID),
         date: new Date(date),
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
+        startTime: parseInt(startTime),
+        endTime: parseInt(endTime),
       },
     });
     res.status(201).json(reservation);

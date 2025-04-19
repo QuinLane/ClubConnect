@@ -139,6 +139,11 @@ export const createEvent = async (req, res) => {
       },
     });
 
+    //if the start/end time isnt working and your sending strings here, then uncomment this
+    // // Convert startTime and endTime from "HH:mm" to integer (e.g., "14:00" → 1400)
+    // const startTimeInt = parseInt(startTime.replace(":", ""));
+    // const endTimeInt = parseInt(endTime.replace(":", ""));
+
     await venueController.createReservation(
       {
         body: {
