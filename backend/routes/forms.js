@@ -26,12 +26,7 @@ const approvalSchema = Joi.object({
 router.get("/", authenticate, formController.getAllForms);
 router.get("/open", authenticate, formController.getOpenForms);
 router.get("/:formID", authenticate, formController.getFormById);
-router.post(
-  "/:userID",
-  authenticate,
-  validate(formSchema),
-  formController.submitForm
-);
+router.post("/:userID", authenticate, validate(formSchema), formController.submitForm);
 router.put(
   "/:formID/approve",
   authenticate,
