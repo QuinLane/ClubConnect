@@ -5,7 +5,6 @@ import { validate } from "../middleware/validate.js";
 import {
   authenticate,
   requireSUAdmin,
-  requireClubAdmin,
 } from "../middleware/authenticate.js";
 
 const router = express.Router();
@@ -13,7 +12,7 @@ const router = express.Router();
 // Joi schema for form submission
 const formSchema = Joi.object({
   formType: Joi.string()
-    .valid("ClubCreation", "EventApproval", "Funding")
+    .valid("ClubCreation", "EventApproval", "Funding", "DeleteClub")
     .required(),
   details: Joi.object().required(),
 });
@@ -30,7 +29,6 @@ router.get("/:formID", authenticate, formController.getFormById);
 router.post(
   "/:clubID",
   authenticate,
-  requireClubAdmin,
   validate(formSchema),
   formController.submitForm
 );

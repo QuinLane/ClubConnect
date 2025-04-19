@@ -161,6 +161,7 @@ enum FormType {
   ClubCreation
   EventApproval
   Funding
+  DeleteClub
 }
 
 enum FormStatus {

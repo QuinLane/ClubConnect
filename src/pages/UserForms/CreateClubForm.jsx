@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+const token = localStorage.getItem('token');
 
-export default function ClubForm({ isReadOnly = false, clubID }) {
+export default function ClubForm({ onSubmit }) {
   const [clubName, setClubName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -8,40 +9,37 @@ export default function ClubForm({ isReadOnly = false, clubID }) {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch the club data if it's a read-only form
-  useEffect(() => {
-    if (isReadOnly && clubID) {
-      fetch(`http://localhost:3001/api/forms/${clubID}`)
-        .then((res) => res.json())
-        .then((data) => {
-          const formDetails = JSON.parse(data.details);
-          setClubName(formDetails.clubName);
-          setDescription(formDetails.description);
-          setCategory(formDetails.category);
-          setMeetingTime(formDetails.meetingTime);
-        })
-        .catch((err) => setError('Failed to fetch club details'));
-    }
-  }, [isReadOnly, clubID]);
-
+  /* ---------- submit as "ClubCreation" form ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
+    const payload = {
+      formType: 'ClubCreation',
+      details: { clubName, description, category, meetingTime },
+    };
+
     try {
-      const res = await fetch('http://localhost:3001/api/clubs/create', {
+      const res = await fetch('http://localhost:5050/api/forms/1', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clubName, description, category, meetingTime }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.message || 'Failed to create club');
+        throw new Error(err.error || 'Failed to submit club request');
       }
 
-      alert('Club created successfully!');
+      if (onSubmit) {
+        onSubmit(payload.details);   // parent closes modal & adds row
+      } else {
+        alert('Club creation request submitted!');
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -49,89 +47,69 @@ export default function ClubForm({ isReadOnly = false, clubID }) {
     }
   };
 
-  const handleDecision = async (decision) => {
-    const status = decision === 'approve' ? 'Approved' : 'Rejected';
-    try {
-      const res = await fetch(`http://localhost:3001/api/forms/${clubID}/approve`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Failed to approve/deny request');
-      }
-
-      alert(`${status} the club request!`);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
+  /* ---------- UI ---------- */
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: '500px', backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', padding: '2rem' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#1a1a1a', marginBottom: '0.5rem' }}>
-            {isReadOnly ? 'Club Request Review' : 'Create a New Club'}
-          </h2>
-          <p style={{ color: '#6b7280' }}>
-            {isReadOnly ? 'Review the details before approving or denying the request.' : 'Fill out the form to register your club'}
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <Field label="Club Name" value={clubName} onChange={setClubName} readOnly={isReadOnly} />
-          <Field label="Description" value={description} onChange={setDescription} readOnly={isReadOnly} isTextarea />
-          <Field label="Category" value={category} onChange={setCategory} readOnly={isReadOnly} isSelect />
-          <Field label="Meeting Time" value={meetingTime} onChange={setMeetingTime} readOnly={isReadOnly} />
-
-          {error && (
-            <div style={{ padding: '0.75rem', backgroundColor: '#fef2f2', color: '#dc2626', fontSize: '0.875rem', borderRadius: '0.375rem', border: '1px solid #fecaca' }}>
-              {error}
-            </div>
-          )}
-
-          {isReadOnly ? (
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
-              <button
-                type="button"
-                onClick={() => handleDecision('approve')}
-                style={{ flex: 1, marginRight: '0.5rem', padding: '0.75rem', borderRadius: '0.375rem', backgroundColor: '#10b981', color: 'white', fontWeight: '500', border: 'none', cursor: 'pointer' }}
-              >
-                Approve
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDecision('deny')}
-                style={{ flex: 1, marginLeft: '0.5rem', padding: '0.75rem', borderRadius: '0.375rem', backgroundColor: '#ef4444', color: 'white', fontWeight: '500', border: 'none', cursor: 'pointer' }}
-              >
-                Deny
-              </button>
-            </div>
-          ) : (
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '0.375rem', backgroundColor: isLoading ? '#9ca3af' : '#4f46e5', color: 'white', fontWeight: '500', border: 'none', cursor: isLoading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', marginTop: '0.5rem' }}
-            >
-              {isLoading ? 'Creating Club...' : 'Create Club'}
-            </button>
-          )}
-        </form>
+    <div>
+      <p>‎ </p>
+      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1a1a1a', marginBottom: '0.5rem' }}>
+          Create a New Club
+        </h2>
+        <p style={{ color: '#6b7280' }}>
+          Fill out the form to register your club.
+        </p>
       </div>
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <Field label="Club Name" value={clubName} onChange={setClubName} />
+        <Field label="Description" value={description} onChange={setDescription} isTextarea />
+        <Field label="Category" value={category} onChange={setCategory} isSelect />
+        <Field label="Meeting Time" value={meetingTime} onChange={setMeetingTime} />
+
+        {error && (
+          <div style={{
+            padding: '0.75rem',
+            backgroundColor: '#fef2f2',
+            color: '#dc2626',
+            fontSize: '0.875rem',
+            borderRadius: '0.375rem',
+            border: '1px solid #fecaca',
+          }}>
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            borderRadius: '0.375rem',
+            backgroundColor: isLoading ? '#9ca3af' : '#4f46e5',
+            color: 'white',
+            fontWeight: 500,
+            border: 'none',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s',
+            marginTop: '0.5rem',
+          }}
+        >
+          {isLoading ? 'Submitting...' : 'Submit Club Request'}
+        </button>
+      </form>
     </div>
   );
 }
 
-function Field({ label, value, onChange, readOnly, isTextarea, isSelect }) {
+/* ---------- reusable field ---------- */
+function Field({ label, value, onChange, isTextarea = false, isSelect = false, type = 'text' }) {
   const commonStyle = {
     width: '100%',
     padding: '0.75rem',
     borderRadius: '0.375rem',
     border: '1px solid #d1d5db',
-    backgroundColor: readOnly ? '#f3f4f6' : 'white',
+    backgroundColor: 'white',
     outline: 'none',
     boxSizing: 'border-box',
     resize: isTextarea ? 'vertical' : 'none',
@@ -139,12 +117,17 @@ function Field({ label, value, onChange, readOnly, isTextarea, isSelect }) {
 
   return (
     <div>
-      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.25rem' }}>
+      <label style={{
+        display: 'block',
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        color: '#374151',
+        marginBottom: '0.25rem',
+      }}>
         {label}
       </label>
-      {readOnly ? (
-        <div style={commonStyle}>{value}</div>
-      ) : isTextarea ? (
+
+      {isTextarea ? (
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -153,7 +136,12 @@ function Field({ label, value, onChange, readOnly, isTextarea, isSelect }) {
           style={{ ...commonStyle, minHeight: '100px' }}
         />
       ) : isSelect ? (
-        <select value={value} onChange={(e) => onChange(e.target.value)} required style={{ ...commonStyle, cursor: 'pointer' }}>
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required
+          style={{ ...commonStyle, cursor: 'pointer' }}
+        >
           <option value="">Select a category</option>
           <option value="academic">Academic</option>
           <option value="cultural">Cultural</option>
@@ -163,7 +151,13 @@ function Field({ label, value, onChange, readOnly, isTextarea, isSelect }) {
           <option value="other">Other</option>
         </select>
       ) : (
-        <input type="text" value={value} onChange={(e) => onChange(e.target.value)} required style={commonStyle} />
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required
+          style={commonStyle}
+        />
       )}
     </div>
   );
