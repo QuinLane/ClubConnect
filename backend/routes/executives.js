@@ -49,8 +49,7 @@ router.put(
 );
 router.delete(
   "/:clubID/:userID",
-  authenticate,
-  requireSUAdmin,
+  authenticate,  // Changed from requireSUAdmin
   executiveController.deleteExecutive
 );
 router.put(

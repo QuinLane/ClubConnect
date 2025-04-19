@@ -132,17 +132,45 @@ export const updateExecutive = async (req, res) => {
 // Note: Only SU admins
 export const deleteExecutive = async (req, res) => {
   const { clubID, userID } = req.params;
+  const requestingUserID = req.user.userID;
+
   try {
+    // Verify requesting user has permission for this club
+    const isAdmin = await prisma.executive.findFirst({
+      where: {
+        userID: requestingUserID,
+        clubID: parseInt(clubID),
+        role: { in: ['President', 'Vice President', 'Admin'] }
+      }
+    });
+
+    if (!isAdmin && !req.user.isSUAdmin) {
+      return res.status(403).json({ error: "Unauthorized: You don't have permission for this club" });
+    }
+
+    // Prevent removing yourself if you're the last president
+    if (parseInt(userID) === requestingUserID) {
+      const presidents = await prisma.executive.count({
+        where: {
+          clubID: parseInt(clubID),
+          role: 'President'
+        }
+      });
+      
+      if (presidents <= 1) {
+        return res.status(400).json({ error: "Cannot remove the last president" });
+      }
+    }
+
     await prisma.executive.delete({
       where: {
         clubID_userID: { clubID: parseInt(clubID), userID: parseInt(userID) },
       },
     });
+    
     res.status(204).json();
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: `Failed to delete executive: ${error.message}` });
+    res.status(500).json({ error: `Failed to delete executive: ${error.message}` });
   }
 };
 
