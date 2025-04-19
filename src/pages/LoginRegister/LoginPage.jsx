@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
 
-
 export default function LoginPage() {
   const [email, setEmail] = useState(""); // Changed from UCID to email
   const [password, setPassword] = useState("");
@@ -33,13 +32,13 @@ export default function LoginPage() {
       // Store the token in localStorage or context
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-
-      // Redirect based on user type
-      if (user.userType === "SUAdmin") {
-        navigate("/app/admin-dashboard");
-      } else {
-        navigate("/app/dashboard");
-      }
+      setTimeout(() => {
+        if (user.userType === "SUAdmin") {
+          navigate("/app/admin-dashboard", { replace: true });
+        } else {
+          navigate("/app/dashboard", { replace: true });
+        }
+      }, 0); // Delay to ensure localStorage is set and route re-evaluates
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {
@@ -91,7 +90,6 @@ export default function LoginPage() {
           </h2>
           <p style={{ color: "#6b7280" }}>Sign in to access your account</p>
         </div>
-
 
         <form
           onSubmit={handleLogin}
@@ -190,7 +188,14 @@ export default function LoginPage() {
           >
             {isLoading ? "Signing in..." : "Sign In"}
           </button>
-          <p style={{ marginTop: "1rem", textAlign: "center", fontSize: "0.875rem", color: "#374151" }}>
+          <p
+            style={{
+              marginTop: "1rem",
+              textAlign: "center",
+              fontSize: "0.875rem",
+              color: "#374151",
+            }}
+          >
             Don’t have an account?{" "}
             <span
               onClick={() => navigate("/register")}
@@ -204,7 +209,6 @@ export default function LoginPage() {
               Create one
             </span>
           </p>
-
         </form>
       </div>
     </div>

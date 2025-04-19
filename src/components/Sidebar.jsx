@@ -1,58 +1,64 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.png';
-import SidebarButton from './SideButton';
-import IconButton from './IconButton';
-import { 
-  LogOut, 
-  Home, 
-  Users, 
-  Calendar, 
-  ShieldHalf, 
-  Bell, 
-  StickyNote, 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
+import SidebarButton from "./SideButton";
+import IconButton from "./IconButton";
+import {
+  LogOut,
+  Home,
+  Users,
+  Calendar,
+  ShieldHalf,
+  Bell,
+  StickyNote,
   User,
-  MessageSquareText // 👈 Importing a suitable message icon from Lucide
-} from 'lucide-react';
+  MessageSquareText, // 👈 Importing a suitable message icon from Lucide
+} from "lucide-react";
 
 export default function Sidebar() {
   const navigate = useNavigate();
-  const [activeIcon, setActiveIcon] = useState('home');
+  const [activeIcon, setActiveIcon] = useState("home");
 
   const handleLogout = () => {
-    console.log('Logging out...');
-    navigate('/login');
+    console.log("Logging out...");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
-  const iconStyle = (name) => 
+  const iconStyle = (name) =>
     `p-1.5 rounded-full transition ${
       activeIcon === name
-        ? 'bg-white text-indigo-700'
-        : 'text-white hover:bg-indigo-600'
+        ? "bg-white text-indigo-700"
+        : "text-white hover:bg-indigo-600"
     }`;
 
   return (
-    <div className="text-white w-64 h-full flex flex-col p-4 shadow-lg"
-    style={{
-      width: "13%",
-      borderRight: "1px solid #142075",
-      borderRightColor:'',
-      backgroundColor: "white",
-    }}>
-      <img 
-        src={logo} 
-        alt="ClubConnect Logo" 
+    <div
+      className="text-white w-64 h-full flex flex-col p-4 shadow-lg"
+      style={{
+        width: "13%",
+        borderRight: "1px solid #142075",
+        borderRightColor: "",
+        backgroundColor: "white",
+      }}
+    >
+      <img
+        src={logo}
+        alt="ClubConnect Logo"
         style={{
           height: "9%",
           width: "90%",
         }}
       />
 
-      <div style={{
-        marginBottom: "10%",
-        display: "flex",
-        justifyContent: "space-evenly"
-      }}>
+      <div
+        style={{
+          marginBottom: "10%",
+          display: "flex",
+          justifyContent: "space-evenly",
+        }}
+      >
         <IconButton
           icon={User}
           navigateTo="/app/profile"
@@ -118,17 +124,17 @@ export default function Sidebar() {
         <button
           onClick={handleLogout}
           style={{
-            width: '100%',
-            height: '60px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            backgroundColor: '#f05959',
-            borderRadius: '0',
-            color: 'white',
-            fontSize: '0.875rem',
-            transition: 'all 0.2s ease',
+            width: "100%",
+            height: "60px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.5rem",
+            backgroundColor: "#f05959",
+            borderRadius: "0",
+            color: "white",
+            fontSize: "0.875rem",
+            transition: "all 0.2s ease",
           }}
         >
           <LogOut size={18} />
