@@ -2,50 +2,71 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 const CreateAnnouncement = ({ onAnnouncementCreate, userRole, managedClubs = [] }) => {
+  const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
-  const [author, setAuthor] = useState('');
   const [recipientType, setRecipientType] = useState('');
   const [specificClub, setSpecificClub] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isAdmin = userRole === 'admin';
-  // Admins can send to all students, all executives, or specific clubs
-  const recipientOptions = isAdmin
-    ? ['All Students', 'All Club Executives', 'Specific Club']
-    // Non-admins can only send to clubs they manage
+  const isSUAdmin = userRole === 'SUAdmin';
+  
+  // Determine recipient options based on user role
+  const recipientOptions = isSUAdmin
+    ? ['All Students', 'Specific Club']
     : managedClubs.length > 0 
-      ? managedClubs.map(club => club.name) 
-      : ['No clubs managed'];
+      ? managedClubs.map(club => club.clubName) 
+      : [];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Create the new announcement
-    const newAnnouncement = {
-      id: Date.now(),
-      message,
-      author,
-      recipientType,
-      specificClub: recipientType === 'Specific Club' ? specificClub : null,
-      timestamp: new Date().toISOString(),
-    };
+    try {
+      const newAnnouncement = {
+        title,
+        message,
+        recipientType: isSUAdmin 
+          ? recipientType === 'All Students' ? 'allstudents' : 'specificclub'
+          : 'clubmembers',
+        specificClub: isSUAdmin 
+          ? specificClub 
+          : managedClubs.find(c => c.clubName === recipientType)?.clubID
+      };
 
-    // Pass to parent component
-    onAnnouncementCreate(newAnnouncement);
-    
-    // Reset form fields
-    setMessage('');
-    setAuthor('');
-    setRecipientType('');
-    setSpecificClub('');
-    setIsSubmitting(false);
+      await onAnnouncementCreate(newAnnouncement);
+      
+      // Reset form
+      setTitle('');
+      setMessage('');
+      setRecipientType('');
+      setSpecificClub('');
+    } catch (error) {
+      console.error("Error creating announcement:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Create New Announcement</h2>
       <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={styles.formGroup}>
+          <label htmlFor="title" style={styles.label}>
+            Title:
+          </label>
+          <input
+            type="text"
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            style={styles.input}
+            required
+            maxLength={100}
+            placeholder="Enter announcement title..."
+          />
+        </div>
+
         <div style={styles.formGroup}>
           <label htmlFor="message" style={styles.label}>
             Message:
@@ -58,21 +79,6 @@ const CreateAnnouncement = ({ onAnnouncementCreate, userRole, managedClubs = [] 
             required
             maxLength={500}
             placeholder="Enter your announcement message..."
-          />
-        </div>
-        
-        <div style={styles.formGroup}>
-          <label htmlFor="author" style={styles.label}>
-            Your Name/Role:
-          </label>
-          <input
-            type="text"
-            id="author"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            style={styles.input}
-            required
-            placeholder="e.g. John Doe (Chess Club President)"
           />
         </div>
 
@@ -89,32 +95,27 @@ const CreateAnnouncement = ({ onAnnouncementCreate, userRole, managedClubs = [] 
           >
             <option value="">Select recipient type</option>
             {recipientOptions.map(option => (
-              <option key={option} value={option.replace(/\s+/g, '').toLowerCase()}>
+              <option key={option} value={option}>
                 {option}
               </option>
             ))}
           </select>
         </div>
 
-        {(recipientType === 'specificclub' || recipientType === 'clubmembers') && !isAdmin && (
+        {(recipientType === 'Specific Club' && isSUAdmin) && (
           <div style={styles.formGroup}>
             <label htmlFor="specificClub" style={styles.label}>
-              Select Club:
+              Club ID:
             </label>
-            <select
+            <input
+              type="text"
               id="specificClub"
               value={specificClub}
               onChange={(e) => setSpecificClub(e.target.value)}
-              style={styles.select}
+              style={styles.input}
               required
-            >
-              <option value="">Select a club</option>
-              {managedClubs.map(club => (
-                <option key={club.id} value={club.name}>
-                  {club.name}
-                </option>
-              ))}
-            </select>
+              placeholder="Enter club ID"
+            />
           </div>
         )}
 
@@ -129,6 +130,7 @@ const CreateAnnouncement = ({ onAnnouncementCreate, userRole, managedClubs = [] 
     </div>
   );
 };
+
 
 const styles = {
   container: {

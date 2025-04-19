@@ -24,7 +24,7 @@ import ExploreClubsPage from "./pages/ExploreClubs";
 import ExploreEventsPage from "./pages/ExploreEvents";
 import StudentFormPage from "./pages/FormsStudent";
 import { Forbidden } from "./pages/errors/Forbidden";
-
+import NotificationsPage from "./pages/notificationsPage";
 const NotFound = () => {
   return <div>404 - Page Not Found</div>;
 };
@@ -57,6 +57,8 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forbidden" element={<Forbidden />} />
+        <Route path="/app/notifications" element={<NotificationsPage />} />
+
 
         {/* Nested Routes under /app */}
         <Route path="/app">
@@ -72,6 +74,7 @@ const App = () => {
             >
               <Route path="chatSU" element={<ChatSU />} />
               <Route path="admin-dashboard" element={<AdminDashboardPage />} />
+
             </Route>
           </Route>
 
@@ -89,6 +92,7 @@ const App = () => {
               <Route path="club/:clubID" element={<ClubPage />} />
               <Route path="events/:eventID" element={<EventPage />} />
               <Route path="chat" element={<ChatStudent />} />
+
               <Route
                 path="manage-members/:clubID"
                 element={<ManageMembersPage />}
@@ -97,6 +101,7 @@ const App = () => {
               <Route path="student-forms" element={<StudentFormPage />} />
               <Route path="explore-clubs" element={<ExploreClubsPage />} />
               <Route path="explore-events" element={<ExploreEventsPage />} />
+
             </Route>
           </Route>
         </Route>
