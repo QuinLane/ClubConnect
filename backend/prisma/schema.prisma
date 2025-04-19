@@ -17,8 +17,7 @@ model User {
   createdAt             DateTime                @default(now())
   executives            Executive[]
   rsvps                 RSVP[]
-  sentMessages          SUMessage[]             @relation("SentMessages")
-  receivedMessages      SUMessage[]             @relation("ReceivedMessages")
+  Messages              SUMessage[]             @relation("Messages")
   sentNotifications     Notification[]          @relation("SentNotifications")
   receivedNotifications NotificationRecipient[] @relation("ReceivedNotifications")
   presidentClubs        Club[]                  @relation("ClubPresident")
@@ -37,7 +36,7 @@ model MemberOf {
 model Club {
   clubID           Int            @id @default(autoincrement())
   clubName         String         @unique
-  description      String?
+  description      String?        @db.Text
   createdAt        DateTime       @default(now())
   president        Int
   presidentUser    User           @relation("ClubPresident", fields: [president], references: [userID])
@@ -81,18 +80,22 @@ model Form {
   user        User       @relation(fields: [userID], references: [userID])
 }
 
-model SUMessage {
-  messageID  Int      @id @default(autoincrement())
-  senderID   Int? // Null for SU messages
-  receiverID Int? // Null for messages to SU, userID for SU replies
-  content    String
-  sentAt     DateTime @default(now())
-  isRead     Boolean  @default(false)
-  isActive   Boolean  @default(true) //tracks if the message thread is active
-  threadID   Int // Groups messages into a thread
-  sender     User?    @relation("SentMessages", fields: [senderID], references: [userID])
-  receiver   User?    @relation("ReceivedMessages", fields: [receiverID], references: [userID])
+
+enum MessageDirection {
+  SU_TO_EXEC   // when SU → exec
+  EXEC_TO_SU   // when exec → SU
 }
+
+model SUMessage {
+  messageID  Int              @id @default(autoincrement())
+  userID     Int?             // ID of the person on the exec side
+  content    String           @db.Text
+  direction  MessageDirection 
+  sentAt     DateTime         @default(now())
+  isRead     Boolean          @default(false)
+  User       User?            @relation("Messages", fields: [userID], references: [userID])
+}
+
 
 model Notification {
   notificationID Int                     @id @default(autoincrement())
@@ -129,7 +132,7 @@ model Venue {
 model Event {
   eventID     Int          @id @default(autoincrement())
   name        String
-  description String
+  description String      @db.Text
   clubID      Int
   club        Club         @relation(fields: [clubID], references: [clubID], onDelete: Cascade)
   reservation Reservation?
@@ -168,3 +171,4 @@ enum FormStatus {
   Approved
   Rejected
 }
+
