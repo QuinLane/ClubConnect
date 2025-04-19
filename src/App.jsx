@@ -1,9 +1,15 @@
 // src/App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import ProtectedRoute from "./auth/ProtectedRoute"; // Import ProtectedRoute
 
 import Layout from "./pages/Layout";
+import SuLayout from "./pages/SuLayout";
 import LoginPage from "./pages/LoginRegister/LoginPage";
 import RegisterPage from "./pages/LoginRegister/Register";
 import ClubPage from "./pages/ClubPage";
@@ -24,27 +30,52 @@ const NotFound = () => {
   return <div>404 - Page Not Found</div>;
 };
 
+// Root Redirect Component
+const RootRedirect = () => {
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user")
+    ? JSON.parse(localStorage.getItem("user"))
+    : null;
+
+  // If not logged in, redirect to login
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirect based on user type
+  if (user.userType === "SUAdmin") {
+    return <Navigate to="/app/admin-dashboard" replace />;
+  } else {
+    return <Navigate to="/app/dashboard" replace />;
+  }
+};
+
 const App = () => {
   return (
     <Router>
       <Routes>
+        {/* Root Route */}
+        <Route path="/" element={<RootRedirect />} />
+
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forbidden" element={<Forbidden />} />
 
-        {/* Nested Routes under /app with Layout */}
-        <Route path="/app" element={<Layout />}>
-          {/* SUAdmin-only route */}
-          <Route
-            element={
-              <ProtectedRoute
-                allowedUserType="SUAdmin"
-                redirectPath="/forbidden"
-              />
-            }
-          >
-            <Route path="admin-dashboard" element={<AdminDashboardPage />} />
+        {/* Nested Routes under /app */}
+        <Route path="/app">
+          {/* SUAdmin-only routes with suLayout */}
+          <Route element={<SuLayout />}>
+            <Route
+              element={
+                <ProtectedRoute
+                  allowedUserType="SUAdmin"
+                  redirectPath="/forbidden"
+                />
+              }
+            >
+              <Route path="admin-dashboard" element={<AdminDashboardPage />} />
+            </Route>
           </Route>
 
           {/* Student-only routes */}
