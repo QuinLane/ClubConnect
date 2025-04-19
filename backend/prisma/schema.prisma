@@ -13,6 +13,7 @@ model User {
   username              String                  @unique
   email                 String                  @unique
   passwordHash          String
+  forms                 Form[]
   createdAt             DateTime                @default(now())
   executives            Executive[]
   rsvps                 RSVP[]
@@ -43,7 +44,6 @@ model Club {
   executives       Executive[]
   members          MemberOf[]     @relation("ClubMembers")
   events           Event[]
-  forms            Form[]
   notifications    Notification[] @relation("ClubNotifications")
   socialMediaLinks String?
   website          String?
@@ -73,12 +73,12 @@ model RSVP {
 
 model Form {
   formID      Int        @id @default(autoincrement())
-  clubID      Int
+  userID      Int
   formType    FormType
   status      FormStatus @default(Pending)
   submittedAt DateTime   @default(now())
   details     String?
-  club        Club       @relation(fields: [clubID], references: [clubID])
+  user        User       @relation(fields: [userID], references: [userID])
 }
 
 model SUMessage {

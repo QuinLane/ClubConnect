@@ -21,11 +21,6 @@ const roleSchema = Joi.object({
 // Executive routes
 router.get("/", authenticate, executiveController.getAllExecutives);
 router.get(
-  "/:clubID/:userID",
-  authenticate,
-  executiveController.getExecutiveById
-);
-router.get(
   "/club/:clubID",
   authenticate,
   executiveController.getExecutivesByClub
@@ -34,6 +29,11 @@ router.get(
   "/user/:userID",
   authenticate,
   executiveController.getExecutivesByUser
+);
+router.get(
+  "/:clubID/:userID",
+  authenticate,
+  executiveController.getExecutiveById
 );
 router.post(
   "/",

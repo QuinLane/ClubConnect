@@ -27,7 +27,7 @@ router.get("/", authenticate, formController.getAllForms);
 router.get("/open", authenticate, formController.getOpenForms);
 router.get("/:formID", authenticate, formController.getFormById);
 router.post(
-  "/:clubID",
+  "/:userID",
   authenticate,
   validate(formSchema),
   formController.submitForm

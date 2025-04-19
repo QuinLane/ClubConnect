@@ -7,7 +7,6 @@ export const getAllOpenForms = async (req, res) => {
   try {
     const forms = await prisma.form.findMany({
       where: {
-        clubID: 1, // SU club
         status: "Pending",
       },
       include: {
@@ -26,7 +25,7 @@ export const getAllOpenForms = async (req, res) => {
 export const getSUStats = async (req, res) => {
   try {
     const openFormsCount = await prisma.form.count({
-      where: { clubID: 1, status: "Pending" },
+      where: {status: "Pending" },
     });
     const activeThreadsCount = await prisma.sUMessage.count({
       where: {

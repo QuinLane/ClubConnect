@@ -1,21 +1,15 @@
-import React, { useState } from 'react';
+// src/components/tables/StatusTable.jsx
+import React from 'react';
 import PropTypes from 'prop-types';
 
-const FormRequestsTable = ({ requests, onRowClick }) => {
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  
+const FormRequestsTable = ({ requests, onRowClick, selectedId }) => {
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case 'approved': return '#388e3c';
-      case 'pending': return '#ff9800';
+      case 'pending':  return '#ff9800';
       case 'rejected': return '#d32f2f';
-      default: return '#666';
+      default:         return '#666';
     }
-  };
-
-  const handleRowClick = (request) => {
-    setSelectedRequest(request.id === selectedRequest ? null : request.id);
-    onRowClick(request);
   };
 
   return (
@@ -27,41 +21,33 @@ const FormRequestsTable = ({ requests, onRowClick }) => {
       width: '100%'
     }}>
       <div style={{ overflowX: 'auto' }}>
-        <table style={{
-          width: '100%',
-          borderCollapse: 'collapse'
-        }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{
-              backgroundColor: '#f9f9f9',
-              borderBottom: '1px solid #e0e0e0'
-            }}>
-              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Form</th>
+            <tr style={{ backgroundColor: '#f9f9f9', borderBottom: '1px solid #e0e0e0' }}>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Form Type</th>
               <th style={{ padding: '12px 16px', textAlign: 'left' }}>Club</th>
               <th style={{ padding: '12px 16px', textAlign: 'left' }}>Status</th>
             </tr>
           </thead>
           <tbody>
-            {requests.map((request) => (
-              <tr 
+            {requests.map(request => (
+              <tr
                 key={request.id}
-                onClick={() => handleRowClick(request)}
+                onClick={() => onRowClick(request)}
                 style={{
                   borderBottom: '1px solid #f0f0f0',
-                  backgroundColor: request.id === selectedRequest ? '#1890ff' : 'transparent',
-                  color: request.id === selectedRequest ? '#ffffff' : 'inherit',
+                  backgroundColor: request.id === selectedId ? '#1890ff' : 'transparent',
+                  color:            request.id === selectedId ? '#ffffff' : 'inherit',
                   cursor: 'pointer'
                 }}
               >
-                <td style={{ padding: '12px 16px' }}>
-                  {request.formName || request.formType}
-                </td>
-                <td style={{ padding: '12px 16px' }}>
-                  {request.clubName}
-                </td>
-                <td style={{ 
+                <td style={{ padding: '12px 16px' }}>{request.formType}</td>
+                <td style={{ padding: '12px 16px' }}>{request.clubName}</td>
+                <td style={{
                   padding: '12px 16px',
-                  color: request.id === selectedRequest ? '#ffffff' : getStatusColor(request.status)
+                  color: request.id === selectedId
+                    ? '#ffffff'
+                    : getStatusColor(request.status)
                 }}>
                   {request.status}
                 </td>
@@ -77,14 +63,14 @@ const FormRequestsTable = ({ requests, onRowClick }) => {
 FormRequestsTable.propTypes = {
   requests: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      formName: PropTypes.string,
-      formType: PropTypes.string.isRequired,
-      clubName: PropTypes.string.isRequired,
-      status: PropTypes.oneOf(['Approved', 'Pending', 'Rejected']).isRequired,
+      id:        PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      formType:  PropTypes.string.isRequired,
+      clubName:  PropTypes.string.isRequired,
+      status:    PropTypes.oneOf(['Approved','Pending','Rejected']).isRequired,
     })
   ).isRequired,
-  onRowClick: PropTypes.func.isRequired
+  onRowClick: PropTypes.func.isRequired,
+  selectedId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
 };
 
 export default FormRequestsTable;
