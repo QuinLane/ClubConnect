@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Message from '../components/messages/message';
+import Message from '../components/messages/Message';
 import MessageInput from '../components/messages/messageInput';
 import MessagingBoard from '../components/messages/messagingBoard';
 
