@@ -97,18 +97,27 @@ export const updateEvent = async (req, res) => {
   }
 };
 
-// Note: Only club execs can delete events
+export async function deleteEventById(eventID) {
+  const id = parseInt(eventID, 10);
+
+  await prisma.rSVP.deleteMany({ where: { eventID: id } });
+  await prisma.reservation.deleteMany({ where: { eventID: id } });
+  // remove the event itself
+  await prisma.event.delete({ where: { eventID: id } });
+}
+
+// HTTP‑handler just calls the helper:
 export const deleteEvent = async (req, res) => {
-  const { eventID } = req.params;
   try {
-    await prisma.event.delete({
-      where: { eventID: parseInt(eventID) },
-    });
-    res.status(204).json();
-  } catch (error) {
-    res.status(500).json({ error: `Failed to delete event: ${error.message}` });
+    await deleteEventById(req.params.eventID);
+    return res.status(204).end();
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ error: `Failed to delete event: ${err.message}` });
   }
 };
+
 
 // Note: Only called internally by formController after approval
 export const createEvent = async (req, res) => {

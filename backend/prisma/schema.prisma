@@ -148,7 +148,7 @@ model Reservation {
   eventID       Int      @unique
   event         Event    @relation(fields: [eventID], references: [eventID])
 
-  @@unique(venueID)
+  @@unique(reservationID)
 }
 
 enum UserType {
