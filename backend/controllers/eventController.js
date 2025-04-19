@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 // Helper to convert image buffer to base64 or load default image
 const getImageAsBase64 = async (imageBuffer) => {
   if (!imageBuffer) {
-    const defaultImage = await fs.readFile("public/images/default.webp");
+    const defaultImage = await fs.readFile("../public/images/default.webp");
     return `data:image/webp;base64,${defaultImage.toString("base64")}`;
   }
   return `data:image/webp;base64,${imageBuffer.toString("base64")}`;
