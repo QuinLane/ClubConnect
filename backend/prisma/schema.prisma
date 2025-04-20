@@ -41,7 +41,7 @@ model Club {
   members          MemberOf[]     @relation("ClubMembers")
   events           Event[]
   notifications    Notification[] @relation("ClubNotifications")
-  socialMediaLinks String?
+  socialMediaLinks String?        @db.Text
   website          String?
   clubEmail        String?
   image            Bytes?
@@ -96,7 +96,7 @@ model SUMessage {
 model Notification {
   notificationID Int                     @id @default(autoincrement())
   title          String
-  content        String
+  content        String                  @db.Text
   postedAt       DateTime                @default(now())
   senderID       Int
   clubID         Int? // Optional, for club-specific notifications
