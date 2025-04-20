@@ -37,7 +37,6 @@ export const createNotification = async (req, res) => {
         recipients: {
           create: recipientIDs.map((userID) => ({
             userID: parseInt(userID),
-            isRead: false,
           })),
         },
       },
@@ -81,7 +80,6 @@ export const sendNotificationToAll = async (req, res) => {
         recipients: {
           create: users.map((user) => ({
             userID: user.userID,
-            isRead: false,
           })),
         },
       },
@@ -148,7 +146,6 @@ export const sendNotificationToClub = async (req, res) => {
         recipients: {
           create: uniqueRecipientIDs.map(userID => ({
             userID,
-            isRead: false,
           })),
         },
       },
@@ -212,26 +209,7 @@ export const getUserNotifications = async (req, res) => {
       .json({ error: `Failed to fetch user notifications: ${error.message}` });
   }
 };
-// Note: Available to authenticated users
-export const markNotificationRead = async (req, res) => {
-  const { notificationID, userID } = req.params;
-  try {
-    const recipient = await prisma.notificationRecipient.update({
-      where: {
-        notificationID_userID: {
-          notificationID: parseInt(notificationID),
-          userID: parseInt(userID),
-        },
-      },
-      data: { isRead: true },
-    });
-    res.status(200).json(recipient);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: `Failed to mark notification as read: ${error.message}` });
-  }
-};
+
 
 // In notificationController.js
 export const getClubNotifications = async (req, res) => {

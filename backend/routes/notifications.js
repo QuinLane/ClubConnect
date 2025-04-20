@@ -59,11 +59,6 @@ router.get(
   authenticate,
   notificationController.getUserNotifications
 );
-router.put(
-  "/read/:notificationID/:userID",
-  authenticate,
-  notificationController.markNotificationRead
-);
 
 router.get(
   "/sender/:userID",

@@ -25,9 +25,7 @@ export const sendMessageStudent = async (req, res) => {
     // create message with direction EXEC_TO_SU
     const message = await prisma.sUMessage.create({
       data: { userID: uid, content, direction: "EXEC_TO_SU", }, });
-      // console.log(threads);
-      // threads.add(uid);
-      // console.log(threads);
+
       res.status(201).json(message);
   } catch (error) {
     res.status(500).json({ error: `Failed to send SU message: ${error.message}` });
@@ -65,9 +63,6 @@ export const getConversation = async (req, res) => {
 
   // Only return messages if this exec has chatted before
   if (!threads.has(execId)) {
-    // console.log(execId);
-    // console.log(threads);
-    // console.log(".");
     return res.status(200).json([]);
   }
 
@@ -133,31 +128,5 @@ export const getDistinctExecIDs = async (req, res) => {
     return res
       .status(500)
       .json({ error: `Failed to fetch exec IDs: ${error.message}` });
-  }
-};
-
-
-// Mark a message as read
-export const markSUMessageRead = async (req, res) => {
-  const messageID = parseInt(req.params.messageID, 10);
-  const callerId = parseInt(req.params.userID, 10);
-
-  try {
-    const message = await prisma.sUMessage.findUnique({ where: { messageID } });
-    if (!message) return res.status(404).json({ error: "Message not found" });
-
-    const caller = await prisma.user.findUnique({ where: { userID: callerId } });
-    if (!caller) return res.status(404).json({ error: "User not found" });
-
-    const canMark =
-      (caller.userType === "SUAdmin" && message.direction === "EXEC_TO_SU") ||
-      (caller.userType === "Student" && message.direction === "SU_TO_EXEC");
-
-    if (!canMark) return res.status(403).json({ error: "Not authorized to mark read" });
-
-    await prisma.sUMessage.update({ where: { messageID }, data: { isRead: true } });
-    res.status(200).json({ message: "Marked as read" });
-  } catch (error) {
-    res.status(500).json({ error: `Failed to mark message as read: ${error.message}` });
   }
 };
