@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import ExploreComponent from '../components/clubEventPages/explore';
-import EventPage from './EventPage';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import ExploreComponent from "../components/clubEventPages/explore";
+import EventPage from "./EventPage";
 
 const ExploreEvents = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
 
   // COMMON auth redirect
   useEffect(() => {
-    if (!token) navigate('/login');
+    if (!token) navigate("/login");
   }, [token, navigate]);
 
   // DETAIL view
@@ -29,36 +29,77 @@ const ExploreEvents = () => {
     if (!eventId) return;
     setLoadingDetail(true);
     fetch(`http://localhost:5050/api/events/${eventId}`, {
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     })
-      .then(async res => {
+      .then(async (res) => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
         return data;
       })
-      .then(data => {
-        // check exec rights
+      .then((data) => {
+        // Check exec rights
         const execs = data.club?.executives || [];
-        setIsExec(execs.some(exec => exec.userID === JSON.parse(localStorage.getItem('user') || '{}').userID));
-        // shape for EventPage
+        const currentUserID = JSON.parse(
+          localStorage.getItem("user") || "{}"
+        ).userID;
+        setIsExec(execs.some((exec) => exec.userID === currentUserID));
+
+        // Format date, time, and venue to match EventPage.jsx
+        let eventDate = "Date TBD";
+        let eventTime = "Time TBD";
+        let venueName = "Venue TBD";
+        let venueAddress = "Address TBD";
+
+        if (data.reservation) {
+          const startDate = new Date(data.reservation.start);
+          const endDate = new Date(data.reservation.endTime);
+
+          if (!isNaN(startDate.getTime())) {
+            eventDate = startDate.toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+          }
+
+          if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+            const startTime = startDate.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            const endTime = endDate.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            eventTime = `${startTime} - ${endTime}`;
+          }
+
+          if (data.reservation.venue) {
+            venueName = data.reservation.venue.name || "Venue TBD";
+            venueAddress = data.reservation.venue.address || "Address TBD";
+          }
+        }
+
+        // Shape for EventPage
         setEventDetail({
           eventTitle: data.name,
-          logoUrl: data.club?.logo || '/images/club-logo.png',
-          eventPhoto: data.image || data.reservation?.imageUrl || '/images/event-photo.jpg',
-          bioText: data.description || 'No description available',
-          eventDate: data.reservation?.date
-            ? new Date(data.reservation.date).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
-            : 'Date not specified',
-          eventTime: data.reservation
-            ? `${data.reservation.startTime} - ${data.reservation.endTime}`
-            : 'Time not specified',
-          clubName: data.club?.clubName,
-          approvalStatus: data.status || 'Approved',
+          logoUrl: data.club?.logo || "/images/club-logo.png",
+          eventPhoto: data.image || "/images/event-photo.jpg",
+          bioText: data.description || "No description available",
+          eventDate,
+          eventTime,
+          venueName,
+          venueAddress,
+          approvalStatus: data.status || "Approved",
           clubID: data.clubID,
           eventData: data,
         });
       })
-      .catch(err => setErrorDetail(err.message))
+      .catch((err) => setErrorDetail(err.message))
       .finally(() => setLoadingDetail(false));
   }, [eventId, token]);
 
@@ -66,52 +107,95 @@ const ExploreEvents = () => {
   useEffect(() => {
     if (eventId) return;
     setLoadingList(true);
-    fetch('http://localhost:5050/api/events', {
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+    fetch("http://localhost:5050/api/events", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     })
-      .then(async res => {
+      .then(async (res) => {
         const text = await res.text();
         let data;
-        try { data = JSON.parse(text); } 
-        catch { throw new Error(`Non-JSON response: ${text}`); }
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error(`Non-JSON response: ${text}`);
+        }
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
         return data;
       })
-      .then(list => {
-        setEventsList(list.map(event => ({
-          id: event.eventID,
-          title: event.name,
-          description: event.description,
-          imageUrl: event.image,
-          date: event.reservation?.date
-            ? new Date(event.reservation.date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' })
-            : 'Date not set',
-          rawDate: event.reservation?.date,
-          startTime: event.reservation?.startTime
-            ? new Date(event.reservation.startTime).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })
-            : null,
-          endTime: event.reservation?.endTime
-            ? new Date(event.reservation.endTime).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })
-            : null,
-          clubName: event.club?.clubName,
-          clubLogo: event.club?.logo,
-          club: event.club,
-          reservation: event.reservation,
-        })));
+      .then((list) => {
+        setEventsList(
+          list.map((event) => {
+            let eventDate = "Date TBD";
+            let eventTime = null;
+            let venueName = "Venue TBD";
+
+            if (event.reservation) {
+              const startDate = new Date(event.reservation.start);
+              const endDate = new Date(event.reservation.endTime);
+
+              if (!isNaN(startDate.getTime())) {
+                eventDate = startDate.toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                });
+              }
+
+              if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                const startTime = startDate.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                const endTime = endDate.toLocaleTimeString("en-US", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                eventTime = `${startTime} - ${endTime}`;
+              }
+
+              if (event.reservation.venue) {
+                venueName = event.reservation.venue.name || "Venue TBD";
+              }
+            }
+
+            return {
+              id: event.eventID,
+              title: event.name,
+              description: event.description,
+              imageUrl: event.image || "/images/event-photo.jpg",
+              date: eventDate,
+              rawDate: event.reservation?.start,
+              startTime: eventTime ? eventTime.split(" - ")[0] : null,
+              endTime: eventTime ? eventTime.split(" - ")[1] : null,
+              clubName: event.club?.name || "Unknown Club",
+              clubLogo: event.club?.logo || "/images/club-logo.png",
+              venueName,
+              club: event.club,
+              reservation: event.reservation,
+            };
+          })
+        );
       })
-      .catch(err => setErrorList(err.message))
+      .catch((err) => setErrorList(err.message))
       .finally(() => setLoadingList(false));
   }, [eventId, token]);
 
   // Handlers for detail actions
   const handleCancelEvent = async () => {
     try {
-      const res = await fetch(`http://localhost:5050/api/events/${eventId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+      const res = await fetch(`http://localhost:5050/api/events/${eventId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Failed to cancel event');
+        throw new Error(err.error || "Failed to cancel event");
       }
-      navigate('/explore', { state:{ message:'Event cancelled successfully' }});
+      navigate("/explore", {
+        state: { message: "Event cancelled successfully" },
+      });
     } catch (err) {
       setErrorDetail(err.message);
     }
@@ -120,26 +204,28 @@ const ExploreEvents = () => {
   const handleUpdateEvent = async (updated) => {
     try {
       const formData = new FormData();
-      formData.append('name', updated.name);
-      formData.append('description', updated.description);
-      if (updated.imageFile) formData.append('image', updated.imageFile);
+      formData.append("name", updated.name);
+      formData.append("description", updated.description);
+      if (updated.imageFile) formData.append("image", updated.imageFile);
 
       const res = await fetch(`http://localhost:5050/api/events/${eventId}`, {
-        method:'PUT', headers:{ Authorization:`Bearer ${token}` }, body: formData
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update event');
+      if (!res.ok) throw new Error(data.error || "Failed to update event");
       // update state
-      setEventDetail(prev => ({
+      setEventDetail((prev) => ({
         ...prev,
         eventTitle: data.name,
         bioText: data.description,
         eventPhoto: data.image || prev.eventPhoto,
         eventData: data,
       }));
-      return { success:true, message:'Event updated successfully' };
+      return { success: true, message: "Event updated successfully" };
     } catch (err) {
-      return { success:false, message: err.message };
+      return { success: false, message: err.message };
     }
   };
 
@@ -160,14 +246,20 @@ const ExploreEvents = () => {
 
   // list
   if (loadingList) return <div>Loading events...</div>;
-  if (errorList) return <div style={{ color:'red' }}>Error: {errorList}</div>;
+  if (errorList) return <div style={{ color: "red" }}>Error: {errorList}</div>;
   return (
-    <div style={{ backgroundColor:'#f5f5f5', minHeight:'100vh', padding:'20px 0' }}>
+    <div
+      style={{
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+        padding: "20px 0",
+      }}
+    >
       <ExploreComponent
         title="Explore Events"
         items={eventsList}
         type="event"
-        onItemClick={id => navigate(`/app/events/${id}`)}
+        onItemClick={(id) => navigate(`/app/events/${id}`)}
       />
     </div>
   );
