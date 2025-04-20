@@ -8,14 +8,6 @@ const MessagingBoard = ({
   const [selectedContact, setSelectedContact] = useState(null);
   const [unreadContacts, setUnreadContacts] = useState(new Set());
 
-  // Set first contact as selected by default
-  useEffect(() => {
-    if (contacts.length > 0 && !selectedContact) {
-      setSelectedContact(contacts[0].email);
-      onSelectContact(contacts[0].email);
-    }
-  }, [contacts, selectedContact, onSelectContact]);
-
   // Sort contacts by most recent message (newest first)
   const sortedContacts = [...contacts].sort((a, b) => 
     new Date(b.lastMessageTime) - new Date(a.lastMessageTime)
@@ -129,11 +121,12 @@ MessagingBoard.propTypes = {
         PropTypes.instanceOf(Date)
       ])
     })
-  ).isRequired,
+  ),
   onSelectContact: PropTypes.func
 };
 
 MessagingBoard.defaultProps = {
+  contacts: [],
   onSelectContact: () => {}
 };
 

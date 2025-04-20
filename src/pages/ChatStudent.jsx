@@ -1,8 +1,8 @@
-// src/pages/ChatStudent.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import Message from '../components/messages/message';
 import MessageInput from '../components/messages/messageInput';
 
+const API_URL = 'http://localhost:5050';
 
 const ChatStudent = () => {
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -11,11 +11,12 @@ const ChatStudent = () => {
   const endRef     = useRef(null);
 
   const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchMessages = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5050/api/su-messages/conversation/${userID}`,
+        `${API_URL}/api/su-messages/conversation/${userID}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -25,23 +26,20 @@ const ChatStudent = () => {
       );
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data = await res.json();
-      setMessages(data.sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt)));
-      endRef.current?.scrollIntoView({ behavior: 'smooth' });
+      const sorted = data
+        .sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
+      setMessages(sorted);
     } catch (err) {
       console.error('Failed to fetch messages', err);
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 5500);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleSend = async (text) => {
     try {
       const res = await fetch(
-        `http://localhost:5050/api/su-messages/messageStudent`,
+        `${API_URL}/api/su-messages/messageStudent`,
         {
           method: 'POST',
           headers: {
@@ -58,6 +56,19 @@ const ChatStudent = () => {
       console.error('Failed to send message', err);
     }
   };
+
+  useEffect(() => {
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5500);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Scroll to bottom whenever messages update
+  useEffect(() => {
+    if (messages.length > 0) {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   return (
     <div
@@ -99,7 +110,12 @@ const ChatStudent = () => {
           scrollBehavior: 'smooth',
         }}
       >
-        {messages.length === 0 && (
+        {isLoading && messages.length === 0 && (
+          <div style={{ textAlign: 'center', color: '#666', marginTop: '50%' }}>
+            Loading messages...
+          </div>
+        )}
+        {!isLoading && messages.length === 0 && (
           <div style={{ textAlign: 'center', color: '#666', marginTop: '50%' }}>
             No messages yet.
           </div>

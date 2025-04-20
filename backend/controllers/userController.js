@@ -53,6 +53,25 @@ export const createUser = async (req, res) => {
   }
 };
 
+// Get a user's name by their userID
+export const getNameFromId = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const userID = parseInt(id, 10);
+    const user = await prisma.user.findUnique({
+      where: { userID },
+      select: { username: true }
+    });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json({ name: user.username });
+  } catch (error) {
+    console.error("[GET NAME ERROR]", error);
+    res.status(500).json({ error: "Failed to get user name" });
+  }
+};
+
 
 export const getAllUsers = async (req, res) => {};
 export const getUserById = async (req, res) => {};

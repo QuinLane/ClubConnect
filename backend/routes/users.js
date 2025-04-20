@@ -14,6 +14,8 @@ const router = express.Router();
 // User CRUD
 router.post("/", userController.createUser); // Create user
 router.post("/login", userController.login); // Login endpoint
+router.get("/:id/name", userController.getNameFromId);
+
 // router.get("/", userController.getAllUsers); // Get all users
 // router.get("/:userID", userController.getUserById); // Get user by ID
 // router.put("/:userID", userController.updateUser); // Update user

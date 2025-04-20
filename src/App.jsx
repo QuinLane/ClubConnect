@@ -16,6 +16,7 @@ import ClubPage from "./pages/ClubPage";
 import EventPage from "./pages/EventPage";
 import ChatStudent from "./pages/ChatStudent";
 import ChatSU from "./pages/ChatSU";
+import ChatSUConversation from "./pages/ChatSUConversation"
 import ManageMembersPage from "./pages/manageMembersPage";
 import RequestPage from "./pages/FormsSU";
 import DashboardPage from "./pages/Dashboards/dashboardPage";
@@ -73,6 +74,7 @@ const App = () => {
               }
             >
               <Route path="chatSU" element={<ChatSU />} />
+              <Route path="chatSU/:ucid" element={<ChatSUConversation />} />
               <Route path="forms-su" element={<RequestPage />} />
               <Route path="admin-dashboard" element={<AdminDashboardPage />} />
 
