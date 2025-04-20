@@ -46,10 +46,10 @@ export const getExecutiveById = async (req, res) => {
 // Note: Only SU admins
 export const createExecutive = async (req, res) => {
   const { email, clubID, role } = req.body;
-  const requestingUserID = req.user.userID; // Get the current user
-  
+  const requestingUserID = req.user.userID;
+
   try {
-    // Verify requesting user has permission for this club
+    // 1. Permission check
     const isAdmin = await prisma.executive.findFirst({
       where: {
         userID: requestingUserID,
@@ -57,21 +57,17 @@ export const createExecutive = async (req, res) => {
         role: { in: ['President', 'Vice President', 'Admin'] }
       }
     });
-
     if (!isAdmin && !req.user.isSUAdmin) {
       return res.status(403).json({ error: "Unauthorized: You don't have permission for this club" });
     }
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
-
+    // 2. Find the user by email
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if already an executive
+    // 3. Prevent duplicates
     const existingExec = await prisma.executive.findUnique({
       where: {
         clubID_userID: {
@@ -80,12 +76,29 @@ export const createExecutive = async (req, res) => {
         }
       }
     });
-
     if (existingExec) {
       return res.status(400).json({ error: "User is already an executive" });
     }
 
-    // Create executive
+    // 4. Ensure they’re a member first
+    const existingMember = await prisma.memberOf.findUnique({
+      where: {
+        userID_clubID: {
+          userID: user.userID,
+          clubID: parseInt(clubID)
+        }
+      }
+    });
+    if (!existingMember) {
+      await prisma.memberOf.create({
+        data: {
+          userID: user.userID,
+          clubID: parseInt(clubID),
+        }
+      });
+    }
+
+    // 5. Finally create the executive record
     const executive = await prisma.executive.create({
       data: {
         userID: user.userID,
@@ -96,11 +109,11 @@ export const createExecutive = async (req, res) => {
     });
 
     res.status(201).json(executive);
-    
   } catch (error) {
     res.status(500).json({ error: `Failed to create executive: ${error.message}` });
   }
 };
+
 
 // Note: Only SU admins
 export const updateExecutive = async (req, res) => {
