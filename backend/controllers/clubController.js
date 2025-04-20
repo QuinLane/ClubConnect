@@ -20,7 +20,6 @@ export const getAllClubs = async (req, res) => {
       include: {
         executives: { include: { user: true } },
         members: { include: { user: true } },
-        presidentUser: true,
       },
     });
     // Convert images to base64
@@ -45,7 +44,6 @@ export const getClubById = async (req, res) => {
       include: {
         executives: { include: { user: true } },
         members: { include: { user: true } },
-        presidentUser: true,
       },
     });
     if (!club) {
@@ -90,7 +88,6 @@ export const createClub = async (req, res) => {
         clubName,
         description,
         createdAt: new Date(),
-        president: parseInt(president),
         socialMediaLinks,
         website,
         clubEmail,
@@ -127,22 +124,11 @@ export const updateClub = async (req, res) => {
   const {
     clubName,
     description,
-    president,
     socialMediaLinks,
     website,
     clubEmail,
   } = req.body;
-  if (president) {
-    const member = await prisma.memberOf.findUnique({
-      where: {
-        userID_clubID: {
-          clubID: parseInt(clubID),
-          userID: parseInt(president),
-        },
-      },
-    });
-    if (!member) throw new Error("President must be a club member");
-  }
+
   try {
     // Check for uploaded image
     let image = undefined; // Use undefined to avoid overwriting if no image is provided
@@ -159,7 +145,6 @@ export const updateClub = async (req, res) => {
       data: {
         clubName,
         description,
-        president: president ? parseInt(president) : undefined,
         socialMediaLinks: socialMediaLinks
           ? JSON.parse(socialMediaLinks)
           : undefined,
@@ -336,7 +321,6 @@ export const getUserClubs = async (req, res) => {
         executives: { include: { user: true } },
         members: { include: { user: true } },
         events: true,
-        presidentUser: true,
       },
     });
     // Convert images to base64
@@ -422,7 +406,6 @@ export const searchClubs = async (req, res) => {
         executives: { include: { user: true } },
         members: { include: { user: true } },
         events: true,
-        presidentUser: true,
       },
     });
     // Convert images to base64

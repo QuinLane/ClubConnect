@@ -20,7 +20,6 @@ model User {
   Messages              SUMessage[]             @relation("Messages")
   sentNotifications     Notification[]          @relation("SentNotifications")
   receivedNotifications NotificationRecipient[] @relation("ReceivedNotifications")
-  presidentClubs        Club[]                  @relation("ClubPresident")
   memberships           MemberOf[]              @relation("UserMemberships")
 }
 
