@@ -13,16 +13,14 @@ export const createNotification = async (req, res) => {
       return res.status(404).json({ error: "Sender not found" });
     }
 
-    // If clubID is provided, ensure the sender is authorized to send on behalf of that club
+    // If clubID is provided, ensure the sender is authorized
     if (clubID) {
       if (sender.userType !== "SUAdmin") {
         const isClubAdmin = await prisma.executive.findFirst({
           where: { userID: parseInt(senderID), clubID: parseInt(clubID) },
         });
         if (!isClubAdmin) {
-          return res
-            .status(403)
-            .json({ error: "Not authorized to send on behalf of this club" });
+          return res.status(403).json({ error: "Not authorized to send on behalf of this club" });
         }
       }
     }
@@ -36,7 +34,7 @@ export const createNotification = async (req, res) => {
         clubID: clubID ? parseInt(clubID) : null,
         recipients: {
           create: recipientIDs.map((userID) => ({
-            userID: parseInt(userID),
+            userID: parseInt(userID)
           })),
         },
       },
@@ -49,27 +47,34 @@ export const createNotification = async (req, res) => {
 
     res.status(201).json(notification);
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: `Failed to create notification: ${error.message}` });
+    console.error("Create notification error:", error);
+    res.status(500).json({ 
+      error: `Failed to create notification`,
+      details: error.message 
+    });
   }
 };
-
-// Note: Available to SU admins
+// Updated sendNotificationToAll
 export const sendNotificationToAll = async (req, res) => {
   const { title, content, senderID } = req.body;
   try {
     const sender = await prisma.user.findUnique({
       where: { userID: parseInt(senderID) },
     });
+    
     if (!sender || sender.userType !== "SUAdmin") {
       return res.status(403).json({ error: "Only SU admins can send to all" });
     }
 
-    const users = await prisma.user.findMany({
+    // Get ALL students (not just club members)
+    const students = await prisma.user.findMany({
       where: { userType: "Student" },
       select: { userID: true },
     });
+
+    if (students.length === 0) {
+      return res.status(404).json({ error: "No students found to notify" });
+    }
 
     const notification = await prisma.notification.create({
       data: {
@@ -78,63 +83,70 @@ export const sendNotificationToAll = async (req, res) => {
         postedAt: new Date(),
         senderID: parseInt(senderID),
         recipients: {
-          create: users.map((user) => ({
-            userID: user.userID,
+          create: students.map(student => ({
+            userID: student.userID
           })),
         },
       },
       include: {
         sender: true,
-        club: true,
-        recipients: { include: { user: true } },
+        recipients: true,
       },
     });
 
     res.status(201).json(notification);
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: `Failed to send notification to all: ${error.message}` });
+    console.error("Send to all error:", error);
+    res.status(500).json({ 
+      error: "Failed to send notification to all students",
+      details: error.message 
+    });
   }
 };
 
+// Updated sendNotificationToClub
 export const sendNotificationToClub = async (req, res) => {
   const { title, content, senderID, clubID } = req.body;
   try {
     const sender = await prisma.user.findUnique({
       where: { userID: parseInt(senderID) },
     });
+    
     if (!sender) {
       return res.status(404).json({ error: "Sender not found" });
     }
 
-    // Check if sender is SU admin or club admin
+    // SUAdmins can send to any club without being admins
     if (sender.userType !== "SUAdmin") {
       const isClubAdmin = await prisma.executive.findFirst({
-        where: { userID: parseInt(senderID), clubID: parseInt(clubID) },
+        where: { 
+          userID: parseInt(senderID), 
+          clubID: parseInt(clubID) 
+        },
       });
       if (!isClubAdmin) {
-        return res
-          .status(403)
-          .json({ error: "Not authorized to send to this club" });
+        return res.status(403).json({ error: "Not authorized to send to this club" });
       }
     }
 
-    // Get all members of the club (both regular members and executives)
+    // Get all club members (including executives)
     const members = await prisma.memberOf.findMany({
       where: { clubID: parseInt(clubID) },
       select: { userID: true },
     });
 
-    // Get all executives of the club (in case they're not members)
     const executives = await prisma.executive.findMany({
       where: { clubID: parseInt(clubID) },
       select: { userID: true },
     });
 
-    // Combine and deduplicate recipient IDs
+    // Combine and deduplicate
     const allRecipients = [...members, ...executives];
     const uniqueRecipientIDs = [...new Set(allRecipients.map(r => r.userID))];
+
+    if (uniqueRecipientIDs.length === 0) {
+      return res.status(404).json({ error: "No members found in this club" });
+    }
 
     const notification = await prisma.notification.create({
       data: {
@@ -145,24 +157,27 @@ export const sendNotificationToClub = async (req, res) => {
         clubID: parseInt(clubID),
         recipients: {
           create: uniqueRecipientIDs.map(userID => ({
-            userID,
+            userID
           })),
         },
       },
       include: {
         sender: true,
         club: true,
-        recipients: { include: { user: true } },
+        recipients: true,
       },
     });
 
     res.status(201).json(notification);
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: `Failed to send notification to club: ${error.message}` });
+    console.error("Send to club error:", error);
+    res.status(500).json({ 
+      error: "Failed to send notification to club",
+      details: error.message 
+    });
   }
 };
+// [Rest of your existing functions remain unchanged...]
 
 // Note: Available to authenticated users
 export const getUserNotifications = async (req, res) => {

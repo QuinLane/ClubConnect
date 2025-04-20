@@ -93,42 +93,51 @@ const NotificationsPage = () => {
 
   const handleNewAnnouncement = async (newAnnouncement) => {
     try {
-      let endpoint = 'http://localhost:5050/api/notifications';
+      let endpoint = '';
       let body = {
         title: newAnnouncement.title,
         content: newAnnouncement.message,
-        senderID: currentUserID
+        senderID: parseInt(currentUserID)
       };
-
-      // Determine recipient type and set appropriate endpoint/body
+  
+      // Determine endpoint and additional body params based on recipient type
       if (newAnnouncement.recipientType === 'allstudents' && isSUAdmin) {
-        endpoint += '/all';
+        endpoint = 'http://localhost:5050/api/notifications/all';
       } else if (newAnnouncement.recipientType === 'specificclub') {
-        endpoint += '/club';
-        body.clubID = newAnnouncement.specificClub;
-      } else if (newAnnouncement.recipientType === 'clubmembers') {
-        endpoint += '/club';
-        body.clubID = newAnnouncement.specificClub;
+        endpoint = 'http://localhost:5050/api/notifications/club';
+        body.clubID = parseInt(newAnnouncement.specificClub);
+      } else if (newAnnouncement.recipientType === 'clubmembers' && isExecutive) {
+        endpoint = 'http://localhost:5050/api/notifications/club';
+        body.clubID = parseInt(newAnnouncement.specificClub);
+      } else {
+        throw new Error('Invalid recipient type or insufficient permissions');
       }
-
+  
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(body)
       });
-
-      if (!response.ok) throw new Error('Failed to create announcement');
-
-      // Refresh announcements
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create announcement');
+      }
+  
+      // Refresh notifications after successful creation
       const notificationsResponse = await fetch(`http://localhost:5050/api/notifications/user/${currentUserID}`, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+      
+      if (!notificationsResponse.ok) {
+        throw new Error('Failed to fetch updated notifications');
+      }
       
       const notificationsData = await notificationsResponse.json();
       const transformedAnnouncements = notificationsData.map(notification => ({
@@ -146,6 +155,7 @@ const NotificationsPage = () => {
       setAnnouncements(transformedAnnouncements);
       setShowCreateForm(false);
     } catch (err) {
+      console.error('Notification error:', err);
       setError(err.message);
     }
   };
