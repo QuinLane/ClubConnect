@@ -1,21 +1,12 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
-const CreateAnnouncement = ({ onAnnouncementCreate, userRole, managedClubs = [] }) => {
+const CreateAnnouncement = ({ onAnnouncementCreate, isSUAdmin, managedClubs = [] }) => {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [recipientType, setRecipientType] = useState('');
-  const [specificClub, setSpecificClub] = useState('');
+  const [specificClubID, setSpecificClubID] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const isSUAdmin = userRole === 'SUAdmin';
-  
-  // Determine recipient options based on user role
-  const recipientOptions = isSUAdmin
-    ? ['All Students', 'Specific Club']
-    : managedClubs.length > 0 
-      ? managedClubs.map(club => club.clubName) 
-      : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,8 +20,8 @@ const CreateAnnouncement = ({ onAnnouncementCreate, userRole, managedClubs = [] 
           ? recipientType === 'All Students' ? 'allstudents' : 'specificclub'
           : 'clubmembers',
         specificClub: isSUAdmin 
-          ? specificClub 
-          : managedClubs.find(c => c.clubName === recipientType)?.clubID
+          ? specificClubID 
+          : recipientType // For executives, recipientType is the clubID
       };
 
       await onAnnouncementCreate(newAnnouncement);
@@ -39,7 +30,7 @@ const CreateAnnouncement = ({ onAnnouncementCreate, userRole, managedClubs = [] 
       setTitle('');
       setMessage('');
       setRecipientType('');
-      setSpecificClub('');
+      setSpecificClubID('');
     } catch (error) {
       console.error("Error creating announcement:", error);
     } finally {
@@ -86,38 +77,54 @@ const CreateAnnouncement = ({ onAnnouncementCreate, userRole, managedClubs = [] 
           <label htmlFor="recipientType" style={styles.label}>
             Send To:
           </label>
-          <select
-            id="recipientType"
-            value={recipientType}
-            onChange={(e) => setRecipientType(e.target.value)}
-            style={styles.select}
-            required
-          >
-            <option value="">Select recipient type</option>
-            {recipientOptions.map(option => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {(recipientType === 'Specific Club' && isSUAdmin) && (
-          <div style={styles.formGroup}>
-            <label htmlFor="specificClub" style={styles.label}>
-              Club ID:
-            </label>
-            <input
-              type="text"
-              id="specificClub"
-              value={specificClub}
-              onChange={(e) => setSpecificClub(e.target.value)}
-              style={styles.input}
+          {isSUAdmin ? (
+            <>
+              <select
+                id="recipientType"
+                value={recipientType}
+                onChange={(e) => setRecipientType(e.target.value)}
+                style={styles.select}
+                required
+              >
+                <option value="">Select recipient type</option>
+                <option value="All Students">All Students</option>
+                <option value="Specific Club">Specific Club</option>
+              </select>
+              
+              {recipientType === 'Specific Club' && (
+                <div style={{ marginTop: '10px' }}>
+                  <label htmlFor="specificClub" style={styles.label}>
+                    Club ID:
+                  </label>
+                  <input
+                    type="text"
+                    id="specificClub"
+                    value={specificClubID}
+                    onChange={(e) => setSpecificClubID(e.target.value)}
+                    style={styles.input}
+                    required
+                    placeholder="Enter club ID"
+                  />
+                </div>
+              )}
+            </>
+          ) : (
+            <select
+              id="recipientType"
+              value={recipientType}
+              onChange={(e) => setRecipientType(e.target.value)}
+              style={styles.select}
               required
-              placeholder="Enter club ID"
-            />
-          </div>
-        )}
+            >
+              <option value="">Select a club</option>
+              {managedClubs.map(club => (
+                <option key={club.clubID} value={club.clubID}>
+                  {club.clubName}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
 
         <button 
           type="submit" 
@@ -130,7 +137,6 @@ const CreateAnnouncement = ({ onAnnouncementCreate, userRole, managedClubs = [] 
     </div>
   );
 };
-
 
 const styles = {
   container: {
@@ -208,11 +214,11 @@ const styles = {
 
 CreateAnnouncement.propTypes = {
   onAnnouncementCreate: PropTypes.func.isRequired,
-  userRole: PropTypes.oneOf(['admin', 'clubManager', 'member']).isRequired,
+  isSUAdmin: PropTypes.bool.isRequired,
   managedClubs: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-      name: PropTypes.string.isRequired,
+      clubID: PropTypes.number.isRequired,
+      clubName: PropTypes.string.isRequired,
     })
   ),
 };

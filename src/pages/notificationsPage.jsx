@@ -21,7 +21,7 @@ const NotificationsPage = () => {
       try {
         setLoading(true);
         
-        // Check if user is an executive for any club
+        // First check if user is an executive and get their managed clubs
         const execResponse = await fetch(`http://localhost:5050/api/executives/user/${currentUserID}`, {
           headers: { 
             Authorization: `Bearer ${token}`,
@@ -33,8 +33,13 @@ const NotificationsPage = () => {
           const execData = await execResponse.json();
           setIsExecutive(execData.length > 0);
           
-          // Get managed clubs if user is an executive
-          
+          // Extract clubs from executive data (similar to dashboard approach)
+          const clubs = execData.map(exec => ({
+            clubID: exec.clubID,
+            clubName: exec.club.clubName,
+            image: exec.club.image
+          }));
+          setManagedClubs(clubs);
         }
 
         // Fetch notifications
@@ -56,14 +61,13 @@ const NotificationsPage = () => {
           id: notification.notificationID,
           message: notification.content,
           title: notification.title,
-          author: notification.sender 
-            ? `${notification.sender.firstName} ${notification.sender.lastName}` + 
-              (notification.club ? ` (${notification.club.clubName})` : '')
-            : 'System',
+          author: notification.sender?.userType === "SUAdmin" 
+            ? "SUAdmin" 
+            : notification.club?.clubName || 'System',
           timestamp: notification.postedAt,
-          isSender: notification.senderID === parseInt(currentUserID)
+          isSender: notification.senderID === parseInt(currentUserID),
+          isSUAdminNotification: notification.sender?.userType === "SUAdmin"
         }));
-        
         setAnnouncements(transformedAnnouncements);
       } catch (err) {
         setError(err.message);
@@ -121,12 +125,12 @@ const NotificationsPage = () => {
         id: notification.notificationID,
         message: notification.content,
         title: notification.title,
-        author: notification.sender 
-          ? `${notification.sender.firstName} ${notification.sender.lastName}` + 
-            (notification.club ? ` (${notification.club.clubName})` : '')
-          : 'System',
+        author: notification.sender?.userType === "SUAdmin" 
+          ? "SUAdmin" 
+          : notification.club?.clubName || 'System',
         timestamp: notification.postedAt,
-        isSender: notification.senderID === parseInt(currentUserID)
+        isSender: notification.senderID === parseInt(currentUserID),
+        isSUAdminNotification: notification.sender?.userType === "SUAdmin"
       }));
       
       setAnnouncements(transformedAnnouncements);
