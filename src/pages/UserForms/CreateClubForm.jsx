@@ -11,8 +11,6 @@ export default function CreateClubForm({
 }) {
   const [clubName,         setClubName]         = useState(initialData.clubName        || '');
   const [description,      setDescription]      = useState(initialData.description     || '');
-  const [category,         setCategory]         = useState(initialData.category        || '');
-  const [meetingTime,      setMeetingTime]      = useState(initialData.meetingTime     || '');
   const [website,          setWebsite]          = useState(initialData.website         || '');
   const [clubEmail,        setClubEmail]        = useState(initialData.clubEmail       || '');
   const [socialLinksText,  setSocialLinksText]  = useState(
@@ -25,8 +23,6 @@ export default function CreateClubForm({
     if (isReadOnly) {
       setClubName(initialData.clubName        || '');
       setDescription(initialData.description  || '');
-      setCategory(initialData.category        || '');
-      setMeetingTime(initialData.meetingTime  || '');
       setWebsite(initialData.website          || '');
       setClubEmail(initialData.clubEmail      || '');
       setSocialLinksText(initialData.socialMediaLinks);
@@ -44,8 +40,6 @@ export default function CreateClubForm({
       details: {
         clubName,
         description,
-        category,
-        meetingTime,
         website,
         clubEmail,
         socialMediaLinks: socialLinksText,
@@ -107,22 +101,6 @@ export default function CreateClubForm({
           value={description}
           onChange={setDescription}
           isTextarea
-          readOnly={isReadOnly}
-        />
-
-        <Field
-          label="Category"
-          value={category}
-          onChange={setCategory}
-          isSelect
-          options={['Academic','Cultural','Sports','Arts','Volunteer','Other']}
-          readOnly={isReadOnly}
-        />
-
-        <Field
-          label="Meeting Time"
-          value={meetingTime}
-          onChange={setMeetingTime}
           readOnly={isReadOnly}
         />
 
