@@ -72,8 +72,89 @@ export const getNameFromId = async (req, res) => {
   }
 };
 
+export const makeUserAdmin = async (req, res) => {
+  const { userID } = req.params;
 
-export const getAllUsers = async (req, res) => {};
+  try {
+    // Update the target user's type
+    const updatedUser = await prisma.user.update({
+      where: { userID: parseInt(userID) },
+      data: { userType: "SUAdmin" },
+      select: {
+        userID: true,
+        username: true,
+        email: true,
+        userType: true
+      }
+    });
+
+    res.status(200).json({
+      message: "User successfully promoted to admin",
+      user: updatedUser
+    });
+  } catch (error) {
+    if (error.code === "P2025") { // Prisma "Record not found" error
+      return res.status(404).json({ error: "User not found" });
+    }
+    console.error("[MAKE ADMIN ERROR]", error);
+    res.status(500).json({ error: "Failed to update user privileges" });
+  }
+};
+
+export const makeUserStudent = async (req, res) => {
+  const { userID } = req.params;
+
+  try {
+    // Update the user's type to Student
+    const updatedUser = await prisma.user.update({
+      where: { userID: parseInt(userID) },
+      data: { userType: "Student" },
+      select: {
+        userID: true,
+        username: true,
+        email: true,
+        userType: true
+      }
+    });
+
+    // If the user was an executive in any clubs, remove those roles
+    await prisma.executive.deleteMany({
+      where: { userID: parseInt(userID) }
+    });
+
+    res.status(200).json({
+      message: "User role changed to Student successfully",
+      user: updatedUser
+    });
+  } catch (error) {
+    if (error.code === "P2025") { // Prisma "Record not found" error
+      return res.status(404).json({ error: "User not found" });
+    }
+    console.error("[MAKE STUDENT ERROR]", error);
+    res.status(500).json({ error: "Failed to update user role" });
+  }
+};
+// controllers/userController.js
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        userID: true,
+        username: true,
+        userType: true
+      },
+      orderBy: { username: 'asc' }
+    });
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('[GET ALL USERS ERROR]', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+};
+
+
+
+
 export const getUserById = async (req, res) => {};
 export const updateUser = async (req, res) => {};
 export const deleteUser = async (req, res) => {};

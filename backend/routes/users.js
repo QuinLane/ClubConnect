@@ -1,6 +1,7 @@
 import express from "express";
 import * as userController from "../controllers/userController.js";
 import Joi from "joi";
+import { authenticate } from "../middleware/authenticate.js";
 
 const userSchema = Joi.object({
   userType: Joi.string().valid("Student", "SUAdmin").required(),
@@ -12,9 +13,28 @@ const userSchema = Joi.object({
 const router = express.Router();
 
 // User CRUD
-router.post("/", userController.createUser); // Create user
-router.post("/login", userController.login); // Login endpoint
+router.post("/", userController.createUser);
+router.post("/login", userController.login); 
 router.get("/:id/name", userController.getNameFromId);
+router.patch(
+  "/:userID/make-admin",
+  authenticate,
+  userController.makeUserAdmin
+);
+
+router.patch(
+  "/:userID/make-student",
+  authenticate,
+  userController.makeUserStudent
+);
+
+router.get(
+  '/getall',
+  authenticate,
+  userController.getAllUsers
+);
+
+
 
 // router.get("/", userController.getAllUsers); // Get all users
 // router.get("/:userID", userController.getUserById); // Get user by ID

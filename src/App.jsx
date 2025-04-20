@@ -26,6 +26,9 @@ import ExploreEventsPage from "./pages/ExploreEvents";
 import StudentFormPage from "./pages/FormsStudent";
 import { Forbidden } from "./pages/errors/Forbidden";
 import NotificationsPage from "./pages/notificationsPage";
+import ManageClubs from "./pages/ManageClubs";
+import ManageUsers from "./pages/ManageUsers";
+
 const NotFound = () => {
   return <div>404 - Page Not Found</div>;
 };
@@ -77,7 +80,8 @@ const App = () => {
               <Route path="chatSU/:ucid" element={<ChatSUConversation />} />
               <Route path="forms-su" element={<RequestPage />} />
               <Route path="admin-dashboard" element={<AdminDashboardPage />} />
-
+              <Route path="manage-clubs" element={<ManageClubs />} />
+              <Route path="manage-users" element={<ManageUsers />} />
             </Route>
           </Route>
 
