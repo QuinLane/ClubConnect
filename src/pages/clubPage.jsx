@@ -13,6 +13,7 @@ const ClubPage = () => {
   const currentUserID = storedUser.userID;
 
   const [club, setClub] = useState(null);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isExec, setIsExec] = useState(false);
@@ -26,7 +27,6 @@ const ClubPage = () => {
       return;
     }
 
-
     const fetchClub = async () => {
       try {
         setLoading(true);
@@ -35,63 +35,62 @@ const ClubPage = () => {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-  
-        // Check if current user is an executive or member and get their role
+
         const execList = data.executives || [];
         const memberList = data.members || [];
         const userExecRole = execList.find(e => e.userID === currentUserID)?.role;
         setIsExec(!!userExecRole);
         setIsMember(memberList.some(m => m.userID === currentUserID));
-        
-        // Store the user's role if they're an executive
-        setClub(prev => ({
-          ...prev,
-          userRole: userExecRole || null
-        }));
 
-        // Format club data
-        setClub(prev => ({
-          ...prev,
+        setClub({
           clubName: data.clubName,
           logoUrl: data.image || '/images/default-club.png',
           bioText: data.description || 'No description available.',
           memberCount: memberList.length,
-          upcomingEvents: (data.events || []).map(evt => ({
-            imageUrl: evt.image || '/images/event-default.png',
-            title: evt.name,
-            date: evt.reservation?.date
-              ? new Date(evt.reservation.date).toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })
-              : 'Date TBD',
-            titleOnImage: true
-          })),
           contact: {
             email: data.clubEmail,
             instagram: data.socialMediaLinks?.instagram,
             website: data.website
           },
           userRole: userExecRole || null
-        }));
+        });
       } catch (err) {
         console.error(err);
         setError(err.message);
+      }
+    };
+
+    const fetchUpcoming = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:5050/api/events/upcoming/club/${clubID}`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        if (!res.ok) throw new Error('Couldn’t load upcoming events');
+        const events = await res.json();
+        setUpcomingEvents(
+          events.map(evt => ({
+            id: evt.eventID,
+            imageUrl: evt.image,
+            title: evt.name,
+            date: evt.reservation.start
+          }))
+        );
+      } catch (err) {
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchClub();
+    fetchUpcoming();
   }, [clubID, token, navigate, currentUserID]);
+
   const handleJoinClub = async () => {
     if (!token || !clubID) return;
-    
     try {
       setJoinLoading(true);
-      
       const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/join`, {
         method: 'POST',
         headers: {
@@ -99,21 +98,17 @@ const ClubPage = () => {
           'Content-Type': 'application/json'
         }
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to join club');
       }
-
-      // Update member status
       setIsMember(true);
       setClub(prev => ({
         ...prev,
         memberCount: prev.memberCount + 1
       }));
-
     } catch (err) {
-      console.error("Error joining club:", err);
+      console.error('Error joining club:', err);
       alert(`Error: ${err.message}`);
     } finally {
       setJoinLoading(false);
@@ -122,10 +117,8 @@ const ClubPage = () => {
 
   const handleLeaveClub = async () => {
     if (!token || !clubID) return;
-    
     try {
       setLeaveLoading(true);
-      
       const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/leave`, {
         method: 'DELETE',
         headers: {
@@ -133,37 +126,30 @@ const ClubPage = () => {
           'Content-Type': 'application/json'
         }
       });
-  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to leave club');
       }
-  
-      // Update member status
       setIsMember(false);
       setClub(prev => ({
         ...prev,
         memberCount: prev.memberCount - 1
       }));
-  
     } catch (err) {
-      console.error("Error leaving club:", err);
+      console.error('Error leaving club:', err);
       alert(`Error: ${err.message}`);
     } finally {
       setLeaveLoading(false);
     }
   };
 
-  const handleApplyForPosition = () => {
-    // You can implement actual application logic here
-    alert('Application for position submitted!');
-  };
+
 
   if (loading) return <div>Loading club...</div>;
   if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
   if (!club) return <div>Club not found</div>;
 
-  const { clubName, logoUrl, bioText, memberCount, upcomingEvents, contact } = club;
+  const { clubName, logoUrl, bioText, memberCount, contact, userRole } = club;
 
   return (
     <div style={{
@@ -183,14 +169,26 @@ const ClubPage = () => {
         boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         border: '1px solid #e0e0e0'
       }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '30px' }}>
-          <h1 style={{ fontSize: '2rem', margin: 0, flex: 1, color: '#2c3e50', lineHeight: '1.2' }}>{clubName}</h1>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '20px',
+          marginBottom: '30px'
+        }}>
+          <h1 style={{ fontSize: '2rem', margin: 0, flex: 1, color: '#2c3e50', lineHeight: '1.2' }}>
+            {clubName}
+          </h1>
           <Logo imageUrl={logoUrl} size={80} />
         </div>
 
-        {/* Bio & Contact */}
-        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '30px' }}>
+        <div style={{
+          display: 'flex',
+          gap: '20px',
+          flexWrap: 'wrap',
+          marginBottom: '30px'
+        }}>
           <div style={{ flex: 2, minWidth: '300px', height: '200px' }}>
             <Bio text={bioText} width="100%" height="100%" />
           </div>
@@ -199,58 +197,43 @@ const ClubPage = () => {
           </div>
         </div>
 
-        {/* Members & Actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '40px' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '20px',
+          marginBottom: '40px'
+        }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2c3e50' }}>
+            <div style={{
+              fontSize: '1.5rem',
+              fontWeight: 700,
+              color: '#2c3e50'
+            }}>
               Number of members: {memberCount}
             </div>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {isExec ? (
-  <>  
-    <button onClick={() => navigate(`/app/events/create?club=${clubID}`)} style={buttonStyle('#388e3c')}>
-      Create Event
-    </button>
-    {club.userRole === 'President' && (
-      <button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>
-        Manage Members
-      </button>
-    )}
-  </>
-) : (
-  <>
-    {isMember ? (
-      <button 
-        onClick={handleLeaveClub}
-        disabled={leaveLoading}
-        style={buttonStyle('#4CAF50', leaveLoading)}
-      >
-        {leaveLoading ? 'Leaving...' : 'Joined Club'}
-      </button>
-    ) : (
-      <button 
-        onClick={handleJoinClub} 
-        disabled={joinLoading}
-        style={buttonStyle('#005587', joinLoading)}
-      >
-        {joinLoading ? 'Joining...' : 'Join Club'}
-      </button>
-    )}
-    <button 
-      onClick={handleApplyForPosition} 
-      style={buttonStyle('#f57c00')}
-    >
-      Apply for Position
-    </button>
-  </>
-)}
+            {isExec ? (
+              <><button onClick={() => navigate(`/app/events/create?club=${clubID}`)} style={buttonStyle('#388e3c')}>Create Event</button>
+                {userRole === 'President' && (<button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>Manage Members</button>)}
+              </>
+            ) : (
+              <>
+                {isMember ? (<button onClick={handleLeaveClub} disabled={leaveLoading} style={buttonStyle('#4CAF50', leaveLoading)}>{leaveLoading ? 'Leaving...' : 'Joined Club'}</button>) : (<button onClick={handleJoinClub} disabled={joinLoading} style={buttonStyle('#005587', joinLoading)}>{joinLoading ? 'Joining...' : 'Join Club'}</button>)}
+              </>
+            )}
           </div>
         </div>
 
         {/* Events Carousel */}
         <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: '40px' }}>
-          <CompressedEventCarousel events={upcomingEvents} title="Upcoming Events" carouselHeight="240px" />
+          <CompressedEventCarousel
+            items={upcomingEvents}
+            title="Upcoming Events"
+            type="event"
+          />
         </div>
       </div>
     </div>
