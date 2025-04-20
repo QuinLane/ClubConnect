@@ -260,6 +260,20 @@ const ManageMembers = () => {
   };
   const handleRemoveMember = async (userID) => {
     try {
+      // Is this member also an executive President?
+      const memberExec = executives.find(e => e.id === userID && e.role === 'President');
+      if (memberExec) {
+        // Count how many presidents exist
+        const presidentCount = executives.filter(e => e.role === 'President').length;
+        if (presidentCount === 1) {
+          // If they're the last president, trigger the “assign new president” prompt
+          setExecutiveToModify(memberExec);
+          setActionType('remove');
+          setShowPresidentPrompt(true);
+          return;
+        }
+     }
+
       if (!window.confirm('Are you sure you want to remove this member?')) {
         return;
       }
@@ -292,6 +306,11 @@ const ManageMembers = () => {
       setError('Email and role are required');
       return;
     }
+    if (executives.some(exec => exec.email === newExecutive.email)) {
+      alert('User is already an executive');
+      return;
+    }
+  
   
     try {
       const response = await fetch(`http://localhost:5050/api/executives`, {
@@ -331,6 +350,7 @@ const ManageMembers = () => {
       console.error("Error adding executive:", err);
       setError(err.message);
     }
+
   };
 
   // Styles
