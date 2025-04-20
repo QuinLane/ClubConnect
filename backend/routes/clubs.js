@@ -115,4 +115,12 @@ router.delete(
   clubController.leaveClub
 );
 
+router.patch(
+  "/:clubID/name",
+  authenticate,
+  requireClubAdmin,
+  validate(Joi.object({ clubName: Joi.string().required().min(1) })),
+  clubController.updateClubName
+);
+
 export default router;

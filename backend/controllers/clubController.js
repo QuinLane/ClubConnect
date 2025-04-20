@@ -564,3 +564,23 @@ export const updateBio = async (req, res) => {
     res.status(500).json({ error: `Failed to update bio: ${error.message}` });
   }
 };
+
+export const updateClubName = async (req, res) => {
+  const { clubID } = req.params;
+  const { clubName } = req.body;
+
+  if (!clubName || clubName.trim().length === 0) {
+    return res.status(400).json({ error: "Club name cannot be empty" });
+  }
+
+  try {
+    const updatedClub = await prisma.club.update({
+      where: { clubID: parseInt(clubID) },
+      data: { clubName },
+    });
+    
+    res.status(200).json(updatedClub);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to update club name: ${error.message}` });
+  }
+};
