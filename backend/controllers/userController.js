@@ -152,10 +152,18 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const getUserById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { userID: parseInt(id, 10) },
+      select: { userID: true, username: true, email: true, userType: true }
+    });
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user);
+  } catch (error) {
+    console.error("[GET USER BY ID ERROR]", error);
+    res.status(500).json({ error: "Failed to fetch user" });
+  }
+};
 
-
-
-export const getUserById = async (req, res) => {};
-export const updateUser = async (req, res) => {};
-export const deleteUser = async (req, res) => {};
-export const BanUser = async (req, res) => {};

@@ -34,11 +34,12 @@ router.get(
   userController.getAllUsers
 );
 
+// router for users
+router.get(
+  "/:id",
+  authenticate,
+  userController.getUserById
+);
 
-
-// router.get("/", userController.getAllUsers); // Get all users
-// router.get("/:userID", userController.getUserById); // Get user by ID
-// router.put("/:userID", userController.updateUser); // Update user
-// router.delete("/:userID", userController.deleteUser); // Delete user
 
 export default router;
