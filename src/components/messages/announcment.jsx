@@ -31,7 +31,7 @@ const styles = {
     backgroundColor: '#f0f8ff',
     borderRadius: '20px',
     padding: '16px 24px',
-    maxWidth: '80%',
+    maxWidth: '100%',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
     position: 'relative',
   },
@@ -48,7 +48,11 @@ const styles = {
     fontSize: '16px',
     lineHeight: '1.5',
     color: '#333',
+    overflowWrap: 'break-word',
+    wordBreak: 'break-word',
+    hyphens: 'auto',
   },
+  
   footer: {
     display: 'flex',
     justifyContent: 'space-between',
