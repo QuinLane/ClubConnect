@@ -46,11 +46,6 @@ router.get(
   suMessageController.getSUThreads
 );
 
-router.put(
-  "/read/:messageID/:userID",
-  authenticate,
-  suMessageController.markSUMessageRead
-);
 
 router.get(
   '/exec-ids',
