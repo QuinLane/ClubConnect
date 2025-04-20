@@ -100,6 +100,15 @@ router.post(
   clubController.joinClub
 );
 
+// Add this with your other routes
+router.patch(
+  "/:clubID/bio",
+  authenticate,
+  requireClubAdmin,
+  validate(Joi.object({ description: Joi.string().allow("") })),
+  clubController.updateBio
+);
+
 router.delete(
   "/:clubID/leave",
   authenticate,
