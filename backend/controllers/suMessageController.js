@@ -25,7 +25,7 @@ export const sendMessageStudent = async (req, res) => {
     // create message with direction EXEC_TO_SU
     const message = await prisma.sUMessage.create({
       data: { userID: uid, content, direction: "EXEC_TO_SU", }, });
-
+      threads.add(uid);
       res.status(201).json(message);
   } catch (error) {
     res.status(500).json({ error: `Failed to send SU message: ${error.message}` });
