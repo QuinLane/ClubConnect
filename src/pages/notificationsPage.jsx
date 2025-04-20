@@ -8,27 +8,33 @@ const NotificationsPage = () => {
   const [error, setError] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [managedClubs, setManagedClubs] = useState([]);
+  const [isExecutive, setIsExecutive] = useState(false);
 
   // Get current user from localStorage
-  const user = JSON.parse(localStorage.getItem('user') || {});
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   const currentUserID = user.userID;
   const token = localStorage.getItem('token');
+  const isSUAdmin = user.userType === 'SUAdmin';
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Fetch managed clubs if user is an executive
-        if (user.userType === 'ClubExecutive') {
-          const clubsResponse = await fetch(`http://localhost:5050/api/executives/user/${currentUserID}/clubs`, {
-            headers: { 
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          const clubsData = await clubsResponse.json();
-          setManagedClubs(clubsData);
+        // Check if user is an executive for any club
+        const execResponse = await fetch(`http://localhost:5050/api/executives/user/${currentUserID}`, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (execResponse.ok) {
+          const execData = await execResponse.json();
+          setIsExecutive(execData.length > 0);
+          
+          // Get managed clubs if user is an executive
+          
         }
 
         // Fetch notifications
@@ -69,7 +75,7 @@ const NotificationsPage = () => {
     if (currentUserID) {
       fetchData();
     }
-  }, [currentUserID, token, user.userType]);
+  }, [currentUserID, token]);
 
   const handleNewAnnouncement = async (newAnnouncement) => {
     try {
@@ -81,7 +87,7 @@ const NotificationsPage = () => {
       };
 
       // Determine recipient type and set appropriate endpoint/body
-      if (newAnnouncement.recipientType === 'allstudents' && user.userType === 'SUAdmin') {
+      if (newAnnouncement.recipientType === 'allstudents' && isSUAdmin) {
         endpoint += '/all';
       } else if (newAnnouncement.recipientType === 'specificclub') {
         endpoint += '/club';
@@ -134,11 +140,13 @@ const NotificationsPage = () => {
     new Date(b.timestamp) - new Date(a.timestamp)
   );
 
+  const canCreateAnnouncements = isSUAdmin || isExecutive;
+
   return (
     <div style={styles.pageContainer}>
       <h1 style={styles.header}>Announcements</h1>
 
-      {(user.userType === 'SUAdmin' || managedClubs.length > 0) && (
+      {canCreateAnnouncements && (
         <button 
           onClick={() => setShowCreateForm(prev => !prev)} 
           style={styles.button}
@@ -150,7 +158,7 @@ const NotificationsPage = () => {
       {showCreateForm && (
         <CreateAnnouncement 
           onAnnouncementCreate={handleNewAnnouncement}
-          userRole={user.userType}
+          isSUAdmin={isSUAdmin}
           managedClubs={managedClubs}
         />
       )}
@@ -178,9 +186,6 @@ const NotificationsPage = () => {
     </div>
   );
 };
-
-// ... styles remain the same ...
-
 
 const styles = {
   pageContainer: {
