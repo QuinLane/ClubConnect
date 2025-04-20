@@ -215,15 +215,25 @@ const ClubPage = () => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {isExec ? (
-              <><button onClick={() => navigate(`/app/events/create?club=${clubID}`)} style={buttonStyle('#388e3c')}>Create Event</button>
-                {userRole === 'President' && (<button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>Manage Members</button>)}
-              </>
-            ) : (
-              <>
-                {isMember ? (<button onClick={handleLeaveClub} disabled={leaveLoading} style={buttonStyle('#4CAF50', leaveLoading)}>{leaveLoading ? 'Leaving...' : 'Joined Club'}</button>) : (<button onClick={handleJoinClub} disabled={joinLoading} style={buttonStyle('#005587', joinLoading)}>{joinLoading ? 'Joining...' : 'Join Club'}</button>)}
-              </>
-            )}
+          {isExec ? (
+  <>
+    {userRole === 'President' && (
+      <button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>Manage Members</button>
+    )}
+  </>
+) : (
+  <>
+    {isMember ? (
+      <button onClick={handleLeaveClub} disabled={leaveLoading} style={buttonStyle('#4CAF50', leaveLoading)}>
+        {leaveLoading ? 'Leaving...' : 'Joined Club'}
+      </button>
+    ) : (
+      <button onClick={handleJoinClub} disabled={joinLoading} style={buttonStyle('#005587', joinLoading)}>
+        {joinLoading ? 'Joining...' : 'Join Club'}
+      </button>
+    )}
+  </>
+)}
           </div>
         </div>
 
