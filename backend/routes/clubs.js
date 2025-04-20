@@ -94,11 +94,7 @@ router.delete(
 );
 
 // Add this with your other routes
-router.post(
-  "/:clubID/join",
-  authenticate,
-  clubController.joinClub
-);
+router.post("/:clubID/join", authenticate, clubController.joinClub);
 
 // Add this with your other routes
 router.patch(
@@ -109,11 +105,7 @@ router.patch(
   clubController.updateBio
 );
 
-router.delete(
-  "/:clubID/leave",
-  authenticate,
-  clubController.leaveClub
-);
+router.delete("/:clubID/leave", authenticate, clubController.leaveClub);
 
 router.patch(
   "/:clubID/name",
@@ -121,6 +113,20 @@ router.patch(
   requireClubAdmin,
   validate(Joi.object({ clubName: Joi.string().required().min(1) })),
   clubController.updateClubName
+);
+
+router.patch(
+  "/:clubID/contact",
+  authenticate,
+  requireClubAdmin,
+  validate(
+    Joi.object({
+      clubEmail: Joi.string().email().required(),
+      socialMediaLinks: Joi.string().allow(""),
+      website: Joi.string().uri().allow(""),
+    })
+  ),
+  clubController.updateContact
 );
 
 export default router;

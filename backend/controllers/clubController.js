@@ -121,13 +121,8 @@ export const createClub = async (req, res) => {
 // Note: Only club admins should be able to do this
 export const updateClub = async (req, res) => {
   const { clubID } = req.params;
-  const {
-    clubName,
-    description,
-    socialMediaLinks,
-    website,
-    clubEmail,
-  } = req.body;
+  const { clubName, description, socialMediaLinks, website, clubEmail } =
+    req.body;
 
   try {
     // Check for uploaded image
@@ -184,14 +179,14 @@ export const deleteClub = async (req, res) => {
     await prisma.notificationRecipient.deleteMany({
       where: {
         notification: {
-          clubID: clubID
-        }
-      }
+          clubID: clubID,
+        },
+      },
     });
-    
+
     // Then delete the notifications themselves
-    await prisma.notification.deleteMany({ 
-      where: { clubID } 
+    await prisma.notification.deleteMany({
+      where: { clubID },
     });
 
     // 3. Delete all memberships and executive roles
@@ -558,7 +553,7 @@ export const updateBio = async (req, res) => {
       where: { clubID: parseInt(clubID) },
       data: { description },
     });
-    
+
     res.status(200).json(updatedClub);
   } catch (error) {
     res.status(500).json({ error: `Failed to update bio: ${error.message}` });
@@ -578,9 +573,43 @@ export const updateClubName = async (req, res) => {
       where: { clubID: parseInt(clubID) },
       data: { clubName },
     });
-    
+
     res.status(200).json(updatedClub);
   } catch (error) {
-    res.status(500).json({ error: `Failed to update club name: ${error.message}` });
+    res
+      .status(500)
+      .json({ error: `Failed to update club name: ${error.message}` });
+  }
+};
+
+export const updateContact = async (req, res) => {
+  const { clubID } = req.params;
+  const { clubEmail, socialMediaLinks, website } = req.body;
+
+  try {
+    // Check if the club exists
+    const club = await prisma.club.findUnique({
+      where: { clubID: parseInt(clubID) },
+    });
+    if (!club) {
+      return res
+        .status(404)
+        .json({ error: `Club with ID ${clubID} not found` });
+    }
+
+    const updatedClub = await prisma.club.update({
+      where: { clubID: parseInt(clubID) },
+      data: { clubEmail, socialMediaLinks, website },
+    });
+
+    res.status(200).json(updatedClub);
+  } catch (error) {
+    console.error(`Error updating contact for club ${clubID}:`, error); // Log the full error
+    if (error.code === "P2002") {
+      return res.status(400).json({ error: "Database constraint violation" });
+    }
+    res
+      .status(500)
+      .json({ error: `Failed to update contact: ${error.message}` });
   }
 };
