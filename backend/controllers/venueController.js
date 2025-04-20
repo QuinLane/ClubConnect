@@ -106,3 +106,22 @@ export const deleteReservation = async (req, res) => {
       .json({ error: `Failed to delete reservation: ${error.message}` });
   }
 };
+
+export const getUpcomingReservationsByVenue = async (req, res) => {
+  const { venueID } = req.params;
+  try {
+    const now = new Date();
+    const reservations = await prisma.reservation.findMany({
+      where: {
+        venueID: parseInt(venueID, 10),
+        start: { gte: now },
+      },
+      orderBy: { start: 'asc' },
+    });
+    res.status(200).json(reservations);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: `Failed to fetch upcoming reservations: ${error.message}` });
+  }
+};

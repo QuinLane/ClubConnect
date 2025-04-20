@@ -332,3 +332,24 @@ export const getNotificationsForSender = async (req, res) => {
     });
   }
 };
+
+export const deleteClubNotifications = async (req, res) => {
+  const { clubID } = req.params;
+
+  try {
+
+    // Delete all notifications for this club (Prisma cascades to recipients)
+    const deleteResult = await prisma.notification.deleteMany({
+      where: { clubID: parseInt(clubID) },
+    });
+
+    res.status(200).json({
+      message: `Successfully deleted ${deleteResult.count} notifications`,
+      count: deleteResult.count,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: `Failed to delete club notifications: ${error.message}`,
+    });
+  }
+};

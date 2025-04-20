@@ -14,7 +14,7 @@ export default function SUFormsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [activeForm, setActiveForm] = useState(null);
 
-  // 1️⃣ Fetch all pending forms on mount
+  //  Fetch all pending forms on mount
   useEffect(() => {
     const fetchOpenForms = async () => {
       try {
@@ -44,7 +44,7 @@ export default function SUFormsPage() {
     fetchOpenForms();
   }, [token]);
 
-  // 2️⃣ Open modal with read‑only form preview
+  // Open modal with read‑only form preview
   const handleRowClick = (frm) => {
     let FormComponent;
     switch (frm.formType) {
@@ -67,7 +67,7 @@ export default function SUFormsPage() {
     setModalOpen(true);
   };
 
-  // 3️⃣ Approve / Deny API call
+  // Approve / Deny API call
   const handleDecision = async (formID, status) => {
     try {
       const res = await fetch(`http://localhost:5050/api/forms/${formID}/approve`, {

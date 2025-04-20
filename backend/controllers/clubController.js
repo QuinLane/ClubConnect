@@ -20,6 +20,7 @@ export const getAllClubs = async (req, res) => {
       include: {
         executives: { include: { user: true } },
         members: { include: { user: true } },
+        presidentUser: true,
       },
     });
     // Convert images to base64
@@ -44,6 +45,7 @@ export const getClubById = async (req, res) => {
       include: {
         executives: { include: { user: true } },
         members: { include: { user: true } },
+        presidentUser: true,
       },
     });
     if (!club) {
@@ -65,10 +67,10 @@ export const createClub = async (req, res) => {
   const {
     clubName,
     description,
+    president,
     socialMediaLinks,
     website,
     clubEmail,
-    presidentID,
   } = req.body;
   try {
     // Check for uploaded image
@@ -88,6 +90,7 @@ export const createClub = async (req, res) => {
         clubName,
         description,
         createdAt: new Date(),
+        president: parseInt(president),
         socialMediaLinks,
         website,
         clubEmail,
@@ -96,13 +99,13 @@ export const createClub = async (req, res) => {
     });
     await prisma.memberOf.create({
       data: {
-        userID: parseInt(presidentID),
+        userID: parseInt(president),
         clubID: club.clubID,
       },
     });
     await prisma.executive.create({
       data: {
-        userID: parseInt(presidentID),
+        userID: parseInt(president),
         clubID: club.clubID,
         role: "President",
       },
@@ -121,8 +124,25 @@ export const createClub = async (req, res) => {
 // Note: Only club admins should be able to do this
 export const updateClub = async (req, res) => {
   const { clubID } = req.params;
-  const { clubName, description, socialMediaLinks, website, clubEmail } =
-    req.body;
+  const {
+    clubName,
+    description,
+    president,
+    socialMediaLinks,
+    website,
+    clubEmail,
+  } = req.body;
+  if (president) {
+    const member = await prisma.memberOf.findUnique({
+      where: {
+        userID_clubID: {
+          clubID: parseInt(clubID),
+          userID: parseInt(president),
+        },
+      },
+    });
+    if (!member) throw new Error("President must be a club member");
+  }
   try {
     // Check for uploaded image
     let image = undefined; // Use undefined to avoid overwriting if no image is provided
@@ -139,6 +159,7 @@ export const updateClub = async (req, res) => {
       data: {
         clubName,
         description,
+        president: president ? parseInt(president) : undefined,
         socialMediaLinks: socialMediaLinks
           ? JSON.parse(socialMediaLinks)
           : undefined,
@@ -163,23 +184,36 @@ export const deleteClub = async (req, res) => {
   const clubID = parseInt(req.params.clubID, 10);
 
   try {
-    //  Fetch all eventIDs for this club
+    // 1. First delete all events and their related data (RSVPs, reservations)
     const events = await prisma.event.findMany({
       where: { clubID },
       select: { eventID: true },
     });
 
-    // Delete each event (and its RSVPs + reservation) via our helper
     for (const { eventID } of events) {
-      await deleteEventById(eventID);
+      await deleteEventById(eventID); // Assuming this helper exists
     }
 
-    //  Now tear down the rest of the club’s data
+    // 2. Delete all notifications and their recipients for this club
+    // First delete notification recipients (if not using cascade)
+    await prisma.notificationRecipient.deleteMany({
+      where: {
+        notification: {
+          clubID: clubID
+        }
+      }
+    });
+    
+    // Then delete the notifications themselves
+    await prisma.notification.deleteMany({ 
+      where: { clubID } 
+    });
+
+    // 3. Delete all memberships and executive roles
     await prisma.memberOf.deleteMany({ where: { clubID } });
     await prisma.executive.deleteMany({ where: { clubID } });
-    await prisma.notification.deleteMany({ where: { clubID } });
 
-    //  Finally delete the club record
+    // 4. Finally delete the club itself
     await prisma.club.delete({ where: { clubID } });
 
     return res.status(204).end();
@@ -302,6 +336,7 @@ export const getUserClubs = async (req, res) => {
         executives: { include: { user: true } },
         members: { include: { user: true } },
         events: true,
+        presidentUser: true,
       },
     });
     // Convert images to base64
@@ -387,6 +422,7 @@ export const searchClubs = async (req, res) => {
         executives: { include: { user: true } },
         members: { include: { user: true } },
         events: true,
+        presidentUser: true,
       },
     });
     // Convert images to base64
