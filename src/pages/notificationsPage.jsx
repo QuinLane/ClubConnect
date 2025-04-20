@@ -61,14 +61,13 @@ const NotificationsPage = () => {
           id: notification.notificationID,
           message: notification.content,
           title: notification.title,
-          author: notification.sender 
-            ? `${notification.sender.firstName} ${notification.sender.lastName}` + 
-              (notification.club ? ` (${notification.club.clubName})` : '')
-            : 'System',
+          author: notification.sender?.userType === "SUAdmin" 
+            ? "SUAdmin" 
+            : notification.club?.clubName || 'System',
           timestamp: notification.postedAt,
-          isSender: notification.senderID === parseInt(currentUserID)
+          isSender: notification.senderID === parseInt(currentUserID),
+          isSUAdminNotification: notification.sender?.userType === "SUAdmin"
         }));
-        
         setAnnouncements(transformedAnnouncements);
       } catch (err) {
         setError(err.message);
@@ -126,12 +125,12 @@ const NotificationsPage = () => {
         id: notification.notificationID,
         message: notification.content,
         title: notification.title,
-        author: notification.sender 
-          ? `${notification.sender.firstName} ${notification.sender.lastName}` + 
-            (notification.club ? ` (${notification.club.clubName})` : '')
-          : 'System',
+        author: notification.sender?.userType === "SUAdmin" 
+          ? "SUAdmin" 
+          : notification.club?.clubName || 'System',
         timestamp: notification.postedAt,
-        isSender: notification.senderID === parseInt(currentUserID)
+        isSender: notification.senderID === parseInt(currentUserID),
+        isSUAdminNotification: notification.sender?.userType === "SUAdmin"
       }));
       
       setAnnouncements(transformedAnnouncements);
