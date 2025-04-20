@@ -26,6 +26,7 @@ const ClubPage = () => {
       return;
     }
 
+
     const fetchClub = async () => {
       try {
         setLoading(true);
@@ -34,15 +35,23 @@ const ClubPage = () => {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-
-        // Check if current user is an executive or member
+  
+        // Check if current user is an executive or member and get their role
         const execList = data.executives || [];
         const memberList = data.members || [];
-        setIsExec(execList.some(e => e.userID === currentUserID));
+        const userExecRole = execList.find(e => e.userID === currentUserID)?.role;
+        setIsExec(!!userExecRole);
         setIsMember(memberList.some(m => m.userID === currentUserID));
+        
+        // Store the user's role if they're an executive
+        setClub(prev => ({
+          ...prev,
+          userRole: userExecRole || null
+        }));
 
         // Format club data
-        setClub({
+        setClub(prev => ({
+          ...prev,
           clubName: data.clubName,
           logoUrl: data.image || '/images/default-club.png',
           bioText: data.description || 'No description available.',
@@ -64,8 +73,9 @@ const ClubPage = () => {
             email: data.clubEmail,
             instagram: data.socialMediaLinks?.instagram,
             website: data.website
-          }
-        });
+          },
+          userRole: userExecRole || null
+        }));
       } catch (err) {
         console.error(err);
         setError(err.message);
@@ -73,10 +83,9 @@ const ClubPage = () => {
         setLoading(false);
       }
     };
-
+  
     fetchClub();
   }, [clubID, token, navigate, currentUserID]);
-
   const handleJoinClub = async () => {
     if (!token || !clubID) return;
     
@@ -198,38 +207,44 @@ const ClubPage = () => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            {isExec ? (
-              <>  
-                <button onClick={() => navigate(`/app/events/create?club=${clubID}`)} style={buttonStyle('#388e3c')}>Create Event</button>
-                <button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>Manage Members</button>
-              </>
-            ) : (
-              <>
-                {isMember ? (
-                  <button 
-                    onClick={handleLeaveClub}
-                    disabled={leaveLoading}
-                    style={buttonStyle('#4CAF50', leaveLoading)}
-                  >
-                    {leaveLoading ? 'Leaving...' : 'Joined Club'}
-                  </button>
-                ) : (
-                  <button 
-                    onClick={handleJoinClub} 
-                    disabled={joinLoading}
-                    style={buttonStyle('#005587', joinLoading)}
-                  >
-                    {joinLoading ? 'Joining...' : 'Join Club'}
-                  </button>
-                )}
-                <button 
-                  onClick={handleApplyForPosition} 
-                  style={buttonStyle('#f57c00')}
-                >
-                  Apply for Position
-                </button>
-              </>
-            )}
+          {isExec ? (
+  <>  
+    <button onClick={() => navigate(`/app/events/create?club=${clubID}`)} style={buttonStyle('#388e3c')}>
+      Create Event
+    </button>
+    {club.userRole === 'President' && (
+      <button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>
+        Manage Members
+      </button>
+    )}
+  </>
+) : (
+  <>
+    {isMember ? (
+      <button 
+        onClick={handleLeaveClub}
+        disabled={leaveLoading}
+        style={buttonStyle('#4CAF50', leaveLoading)}
+      >
+        {leaveLoading ? 'Leaving...' : 'Joined Club'}
+      </button>
+    ) : (
+      <button 
+        onClick={handleJoinClub} 
+        disabled={joinLoading}
+        style={buttonStyle('#005587', joinLoading)}
+      >
+        {joinLoading ? 'Joining...' : 'Join Club'}
+      </button>
+    )}
+    <button 
+      onClick={handleApplyForPosition} 
+      style={buttonStyle('#f57c00')}
+    >
+      Apply for Position
+    </button>
+  </>
+)}
           </div>
         </div>
 
