@@ -87,32 +87,16 @@ const ClubPage = () => {
     fetchUpcoming();
   }, [clubID, token, navigate, currentUserID]);
 
-
-
   const handleBioUpdate = async (newBio) => {
     if (!token || !clubID) return;
     try {
-      const formData = new FormData();
-      formData.append('description', newBio);
-      formData.append('clubName', club.clubName);
-      if (club.contact.instagram) {
-        formData.append('socialMediaLinks', JSON.stringify({ 
-          instagram: club.contact.instagram 
-        }));
-      }
-      if (club.contact.website) {
-        formData.append('website', club.contact.website);
-      }
-      if (club.contact.email) {
-        formData.append('clubEmail', club.contact.email);
-      }
-  
-      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}`, {
-        method: 'PUT',
+      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/bio`, {
+        method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        body: formData
+        body: JSON.stringify({ description: newBio })
       });
       
       if (!response.ok) {

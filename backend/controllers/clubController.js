@@ -548,3 +548,19 @@ export const leaveClub = async (req, res) => {
     res.status(500).json({ error: `Failed to leave club: ${error.message}` });
   }
 };
+// Note: Only club admins can update bio
+export const updateBio = async (req, res) => {
+  const { clubID } = req.params;
+  const { description } = req.body;
+
+  try {
+    const updatedClub = await prisma.club.update({
+      where: { clubID: parseInt(clubID) },
+      data: { description },
+    });
+    
+    res.status(200).json(updatedClub);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to update bio: ${error.message}` });
+  }
+};
