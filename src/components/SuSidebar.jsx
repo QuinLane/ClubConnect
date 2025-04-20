@@ -12,7 +12,7 @@ import {
   Bell,
   StickyNote,
   User,
-  MessageSquareText, // 👈 Importing a suitable message icon from Lucide
+  MessageSquareText, 
 } from "lucide-react";
 
 export default function SuSidebar() {
@@ -79,7 +79,7 @@ export default function SuSidebar() {
         <SidebarButton
           icon={Home}
           label="Home"
-          navigateTo="/app/dashboard"
+          navigateTo="/app/admin-dashboard"
           activeIcon={activeIcon}
           iconName="home"
           setActiveIcon={setActiveIcon}

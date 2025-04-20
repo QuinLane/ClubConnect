@@ -12,22 +12,22 @@ const AdminDashboard = () => {
       onClick: () => navigate('../chatSU')
     },
     { 
-      title: 'Requests & Form Submissions',
+      title: 'Requests & Forms',
       description: 'Review pending requests',
       color: '#388e3c',
       onClick: () => navigate('../forms-su')
     },
     { 
-      title: 'Explore Clubs',
-      description: 'Browse and manage clubs',
+      title: 'Manage Clubs',
+      description: 'View and manage clubs',
       color: '#d32f2f',
-      onClick: () => navigate('../exploreClubs')
+      onClick: () => navigate('../manage-clubs')
     },
     { 
-      title: 'Explore Events',
-      description: 'Browse and manage events',
+      title: 'Manage Users',
+      description: 'View and manage events',
       color: '#ff9800',
-      onClick: () => navigate('../exploreEvents')
+      onClick: () => navigate('../manage-users')
     }
   ];
 
