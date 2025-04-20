@@ -87,6 +87,55 @@ const ClubPage = () => {
     fetchUpcoming();
   }, [clubID, token, navigate, currentUserID]);
 
+
+
+  const handleBioUpdate = async (newBio) => {
+    if (!token || !clubID) return;
+    try {
+      const formData = new FormData();
+      formData.append('description', newBio);
+      formData.append('clubName', club.clubName);
+      if (club.contact.instagram) {
+        formData.append('socialMediaLinks', JSON.stringify({ 
+          instagram: club.contact.instagram 
+        }));
+      }
+      if (club.contact.website) {
+        formData.append('website', club.contact.website);
+      }
+      if (club.contact.email) {
+        formData.append('clubEmail', club.contact.email);
+      }
+  
+      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update bio');
+      }
+      
+      setClub(prev => ({
+        ...prev,
+        bioText: newBio
+      }));
+    } catch (err) {
+      console.error('Error updating bio:', err);
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+
+
+
+
+
+
   const handleJoinClub = async () => {
     if (!token || !clubID) return;
     try {
@@ -190,7 +239,13 @@ const ClubPage = () => {
           marginBottom: '30px'
         }}>
           <div style={{ flex: 2, minWidth: '300px', height: '200px' }}>
-            <Bio text={bioText} width="100%" height="100%" />
+          <Bio 
+          text={bioText} 
+          width="100%" 
+          height="100%" 
+          isEditable={isExec}
+          onSave={handleBioUpdate}
+        />
           </div>
           <div style={{ flex: 1, minWidth: '200px', height: '200px' }}>
             <Contact email={contact.email} instagram={contact.instagram} website={contact.website} />
