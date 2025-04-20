@@ -100,6 +100,13 @@ const NotificationsPage = () => {
         senderID: parseInt(currentUserID)
       };
   
+      // Frontend validation - check if club is selected when needed
+      if ((newAnnouncement.recipientType === 'specificclub' || 
+           newAnnouncement.recipientType === 'clubmembers') && 
+          (!newAnnouncement.specificClub || newAnnouncement.specificClub === '')) {
+        throw new Error('Please select a valid club');
+      }
+  
       // Determine endpoint and additional body params based on recipient type
       if (newAnnouncement.recipientType === 'allstudents' && isSUAdmin) {
         endpoint = 'http://localhost:5050/api/notifications/all';
@@ -124,6 +131,10 @@ const NotificationsPage = () => {
   
       if (!response.ok) {
         const errorData = await response.json();
+        // Handle specific backend error for invalid club
+        if (errorData.error && errorData.error.includes('valid clubID')) {
+          throw new Error('Please select a valid club');
+        }
         throw new Error(errorData.error || 'Failed to create announcement');
       }
   
@@ -154,6 +165,7 @@ const NotificationsPage = () => {
       
       setAnnouncements(transformedAnnouncements);
       setShowCreateForm(false);
+      setError(null); // Clear any previous errors
     } catch (err) {
       console.error('Notification error:', err);
       setError(err.message);

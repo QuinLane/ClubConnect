@@ -25,6 +25,12 @@ export const createNotification = async (req, res) => {
       }
     }
 
+    // Include sender in recipients if not already included
+    const allRecipients = [...new Set([
+      ...recipientIDs.map(id => parseInt(id)),
+      parseInt(senderID) // Add sender to recipients
+    ])];
+
     const notification = await prisma.notification.create({
       data: {
         title,
@@ -33,8 +39,8 @@ export const createNotification = async (req, res) => {
         senderID: parseInt(senderID),
         clubID: clubID ? parseInt(clubID) : null,
         recipients: {
-          create: recipientIDs.map((userID) => ({
-            userID: parseInt(userID)
+          create: allRecipients.map(userID => ({
+            userID
           })),
         },
       },
@@ -76,6 +82,12 @@ export const sendNotificationToAll = async (req, res) => {
       return res.status(404).json({ error: "No students found to notify" });
     }
 
+    // Include sender in recipients
+    const allRecipients = [
+      ...students.map(s => s.userID),
+      parseInt(senderID)
+    ];
+
     const notification = await prisma.notification.create({
       data: {
         title,
@@ -83,8 +95,8 @@ export const sendNotificationToAll = async (req, res) => {
         postedAt: new Date(),
         senderID: parseInt(senderID),
         recipients: {
-          create: students.map(student => ({
-            userID: student.userID
+          create: allRecipients.map(userID => ({
+            userID
           })),
         },
       },
@@ -116,6 +128,15 @@ export const sendNotificationToClub = async (req, res) => {
       return res.status(404).json({ error: "Sender not found" });
     }
 
+    // First check if club exists
+    const club = await prisma.club.findUnique({
+      where: { clubID: parseInt(clubID) },
+    });
+
+    if (!club) {
+      return res.status(400).json({ error: "Please select a valid clubID" });
+    }
+
     // SUAdmins can send to any club without being admins
     if (sender.userType !== "SUAdmin") {
       const isClubAdmin = await prisma.executive.findFirst({
@@ -140,9 +161,14 @@ export const sendNotificationToClub = async (req, res) => {
       select: { userID: true },
     });
 
-    // Combine and deduplicate
+    // Combine, deduplicate, and include sender
     const allRecipients = [...members, ...executives];
-    const uniqueRecipientIDs = [...new Set(allRecipients.map(r => r.userID))];
+    const uniqueRecipientIDs = [
+      ...new Set([
+        ...allRecipients.map(r => r.userID),
+        parseInt(senderID) // Add sender to recipients
+      ])
+    ];
 
     if (uniqueRecipientIDs.length === 0) {
       return res.status(404).json({ error: "No members found in this club" });
