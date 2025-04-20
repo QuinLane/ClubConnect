@@ -90,14 +90,6 @@ const ManageMembers = () => {
       const willBePresident = newRole === 'President';
       const isCurrentUser = executiveId === user.userID;
   
-      // If current user is trying to make someone else president
-      if (!isCurrentUser && willBePresident) {
-        setExecutiveToModify(executive);
-        setActionType('presidentChange');
-        setShowPresidentPrompt(true);
-        return;
-      }
-  
       // If changing from president to non-president, check if there are other presidents
       if (wasPresident && !willBePresident) {
         const hasOtherPresident = executives.some(
