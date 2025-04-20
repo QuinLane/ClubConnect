@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Logo from '../components/clubEventPages/logo';
-import Bio from '../components/clubEventPages/bio';
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Logo from "../components/clubEventPages/logo";
+import Bio from "../components/clubEventPages/bio";
 
 const EventPage = () => {
   const { eventID } = useParams();
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
-  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const token = localStorage.getItem("token");
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const currentUserID = storedUser.userID;
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isExec, setIsExec] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedEventTitle, setEditedEventTitle] = useState("");
+  const titleInputRef = useRef(null);
 
   // RSVP state
   const [hasRSVPed, setHasRSVPed] = useState(false);
@@ -21,7 +24,7 @@ const EventPage = () => {
 
   useEffect(() => {
     if (!token) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
@@ -29,43 +32,93 @@ const EventPage = () => {
       try {
         // Fetch event details
         const res = await fetch(`http://localhost:5050/api/events/${eventID}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
-        // Set executive status
+        // Debug executive status
         const execs = data.club?.executives || [];
-        setIsExec(execs.some(e => e.userID === currentUserID));
+        console.log("Executives:", execs);
+        console.log("Current User ID:", currentUserID);
+        const isExecutive = execs.some((e) => e.userID === currentUserID);
+        console.log("Is Executive:", isExecutive);
+        setIsExec(isExecutive);
 
-        // Format date/time
-        const eventDate = data.reservation?.date
-          ? new Date(data.reservation.date).toLocaleDateString('en-US', {
-              weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-            })
-          : 'Date TBD';
-        const eventTime = data.reservation
-          ? `${data.reservation.startTime} - ${data.reservation.endTime}`
-          : 'Time TBD';
+        // const execList = data.executives || [];
+        // const memberList = data.members || [];
+        // const userExecRole = execList.find(
+        //   (e) => e.userID === currentUserID
+        // )?.role;
+        // setIsExec(!!userExecRole);
+
+        // Format date and time using reservation.start and reservation.endTime
+        let eventDate = "Date TBD";
+        let eventTime = "Time TBD";
+        let venueName = "Venue TBD";
+        let venueAddress = "Address TBD";
+        if (data.reservation) {
+          console.log("Reservation Start:", data.reservation.start);
+          console.log("Reservation End:", data.reservation.endTime);
+          const startDate = new Date(data.reservation.start);
+          const endDate = new Date(data.reservation.endTime);
+          console.log("Parsed Start Date:", startDate);
+          console.log("Parsed End Date:", endDate);
+
+          if (!isNaN(startDate.getTime())) {
+            // Format date: e.g., "Tuesday, April 22, 2025"
+            eventDate = startDate.toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+          }
+
+          if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+            // Format time: e.g., "01:59 AM - 03:59 AM"
+            const startTime = startDate.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            const endTime = endDate.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            eventTime = `${startTime} - ${endTime}`;
+          }
+
+          // Extract venue information
+          if (data.reservation.venue) {
+            venueName = data.reservation.venue.name || "Venue TBD";
+            venueAddress = data.reservation.venue.address || "Address TBD";
+          }
+        }
 
         setEvent({
           eventTitle: data.name,
-          logoUrl: data.club?.logo || '/images/default-club.png',
-          eventPhoto: data.image || '/images/default-event.jpg',
-          bioText: data.description || 'No description available.',
+          logoUrl: data.club?.logo || "/images/default-club.png",
+          eventPhoto: data.image || "/images/default-event.jpg",
+          bioText: data.description || "No description available.",
           eventDate,
           eventTime,
-          approvalStatus: data.status || 'Pending',
-          clubID: data.clubID
+          venueName,
+          venueAddress,
+          approvalStatus: data.status || "Pending",
+          clubID: data.clubID,
         });
+        setEditedEventTitle(data.name);
 
         // Fetch RSVPs for this event (use plural 'rsvps' to match server mount)
-        const rsvpRes = await fetch(`http://localhost:5050/api/rsvps/${eventID}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const rsvpRes = await fetch(
+          `http://localhost:5050/api/rsvps/${eventID}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (rsvpRes.ok) {
           const rsvpData = await rsvpRes.json();
-          setHasRSVPed(rsvpData.some(r => r.userID === currentUserID));
+          setHasRSVPed(rsvpData.some((r) => r.userID === currentUserID));
         } else if (rsvpRes.status === 404) {
           // No RSVPs yet
           setHasRSVPed(false);
@@ -83,15 +136,21 @@ const EventPage = () => {
     fetchData();
   }, [eventID, token, navigate, currentUserID]);
 
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, [isEditingTitle]);
+
   const handleRSVPClick = async () => {
     setRsvpLoading(true);
     try {
-      const method = hasRSVPed ? 'DELETE' : 'POST';
+      const method = hasRSVPed ? "DELETE" : "POST";
       const res = await fetch(
         `http://localhost:5050/api/rsvps/${eventID}/${currentUserID}`,
         {
           method,
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -109,7 +168,7 @@ const EventPage = () => {
         } catch {
           err = await res.text();
         }
-        throw new Error(err || 'Failed to update RSVP');
+        throw new Error(err || "Failed to update RSVP");
       }
 
       setHasRSVPed(!hasRSVPed);
@@ -122,70 +181,301 @@ const EventPage = () => {
   };
 
   const handleCancelEvent = () => {
-    if (!window.confirm('Cancel this event?')) return;
+    if (!window.confirm("Cancel this event?")) return;
     fetch(`http://localhost:5050/api/events/${eventID}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to cancel event');
-        navigate('/app/explore-events');
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to cancel event");
+        navigate("/app/explore-events");
       })
-      .catch(err => setError(err.message));
+      .catch((err) => setError(err.message));
+  };
+
+  const handleBioUpdate = async (newBio) => {
+    if (!token || !eventID) return;
+    try {
+      const response = await fetch(
+        `http://localhost:5050/api/events/${eventID}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ description: newBio }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update event bio");
+      }
+
+      setEvent((prev) => ({
+        ...prev,
+        bioText: newBio,
+      }));
+    } catch (err) {
+      console.error("Error updating event bio:", err);
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+  const handleTitleDoubleClick = () => {
+    if (isExec) {
+      setIsEditingTitle(true);
+    }
+  };
+
+  const handleTitleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleEventTitleUpdate();
+    } else if (e.key === "Escape") {
+      setEditedEventTitle(event.eventTitle);
+      setIsEditingTitle(false);
+    }
+  };
+
+  const handleTitleBlur = () => {
+    handleEventTitleUpdate();
+  };
+
+  const handleEventTitleUpdate = async () => {
+    if (!token || !eventID || !editedEventTitle.trim()) return;
+    try {
+      const response = await fetch(
+        `http://localhost:5050/api/events/${eventID}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: editedEventTitle }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update event title");
+      }
+
+      setEvent((prev) => ({
+        ...prev,
+        eventTitle: editedEventTitle,
+      }));
+      setIsEditingTitle(false);
+    } catch (err) {
+      console.error("Error updating event title:", err);
+      alert(`Error: ${err.message}`);
+      setEditedEventTitle(event.eventTitle);
+      setIsEditingTitle(false);
+    }
   };
 
   if (loading) return <div>Loading event...</div>;
-  if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
+  if (error) return <div style={{ color: "red" }}>Error: {error}</div>;
   if (!event) return <div>Event not found</div>;
 
-  const { eventTitle, logoUrl, eventPhoto, bioText, eventDate, eventTime, approvalStatus, clubID } = event;
+  const {
+    eventTitle,
+    logoUrl,
+    eventPhoto,
+    bioText,
+    eventDate,
+    eventTime,
+    venueName,
+    venueAddress,
+    approvalStatus,
+    clubID,
+  } = event;
 
   return (
-    <div style={{
-      display: 'grid', placeItems: 'center', minHeight: '100vh', width: '100vw',
-      padding: '20px', backgroundColor: '#f5f5f5'
-    }}>
-      <div style={{
-        maxWidth: '900px', width: '100%', padding: '40px', backgroundColor: '#fff',
-        borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e0e0e0'
-      }}>
+    <div
+      style={{
+        display: "grid",
+        placeItems: "center",
+        minHeight: "100vh",
+        width: "100vw",
+        padding: "20px",
+        backgroundColor: "#f5f5f5",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "900px",
+          width: "100%",
+          padding: "40px",
+          backgroundColor: "#fff",
+          borderRadius: "12px",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+          border: "1px solid #e0e0e0",
+        }}
+      >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '30px' }}>
-          <h1 style={{ fontSize: '2rem', margin: 0, flex: 1, color: '#2c3e50', lineHeight: '1.2' }}>{eventTitle}</h1>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "20px",
+            marginBottom: "30px",
+          }}
+        >
+          {isEditingTitle ? (
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={editedEventTitle}
+              onChange={(e) => setEditedEventTitle(e.target.value)}
+              onKeyDown={handleTitleKeyDown}
+              onBlur={handleTitleBlur}
+              style={{
+                fontSize: "2rem",
+                margin: 0,
+                flex: 1,
+                color: "#2c3e50",
+                lineHeight: "1.2",
+                border: "1px solid #ddd",
+                padding: "4px",
+                borderRadius: "4px",
+              }}
+            />
+          ) : (
+            <h1
+              style={{
+                fontSize: "2rem",
+                margin: 0,
+                flex: 1,
+                color: "#2c3e50",
+                lineHeight: "1.2",
+                cursor: isExec ? "pointer" : "default",
+              }}
+              onDoubleClick={handleTitleDoubleClick}
+            >
+              {eventTitle}
+            </h1>
+          )}
           <Logo imageUrl={logoUrl} size={80} />
         </div>
 
         {/* Bio & Photo */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginBottom: '30px', flexWrap: 'wrap' }}>
-          <Bio text={bioText} width="400px" height="400px" />
-          <div style={{ width: '400px', height: '400px', overflow: 'hidden', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            <img src={eventPhoto} alt={eventTitle} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "30px",
+            marginBottom: "30px",
+            flexWrap: "wrap",
+          }}
+        >
+          <Bio
+            text={bioText}
+            width="400px"
+            height="400px"
+            isEditable={isExec}
+            onSave={handleBioUpdate}
+          />
+          <div
+            style={{
+              width: "400px",
+              height: "400px",
+              overflow: "hidden",
+              borderRadius: "8px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            }}
+          >
+            <img
+              src={eventPhoto}
+              alt={eventTitle}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
           </div>
         </div>
 
-        {/* Date/Time & Actions */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '40px' }}>
+        {/* Date/Time, Venue & Actions */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "20px",
+            marginBottom: "40px",
+          }}
+        >
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2c3e50' }}>{eventDate}</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#4a5568' }}>{eventTime}</div>
+            <div
+              style={{ fontSize: "1.5rem", fontWeight: 700, color: "#2c3e50" }}
+            >
+              {eventDate}
+            </div>
+            <div
+              style={{ fontSize: "1.25rem", fontWeight: 600, color: "#4a5568" }}
+            >
+              {eventTime}
+            </div>
+            <div
+              style={{
+                fontSize: "1.1rem",
+                fontWeight: 600,
+                color: "#2c3e50",
+                marginTop: "8px",
+              }}
+            >
+              {venueName}
+            </div>
+            <div style={{ fontSize: "1rem", color: "#4a5568" }}>
+              {venueAddress}
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
             <button
               onClick={handleRSVPClick}
               disabled={rsvpLoading}
-              style={buttonStyle(hasRSVPed ? '#e74c3c' : '#005587')}
+              style={buttonStyle(hasRSVPed ? "#e74c3c" : "#005587")}
             >
-              {hasRSVPed ? 'Cancel RSVP' : 'RSVP Now'}
+              {hasRSVPed ? "Cancel RSVP" : "RSVP Now"}
             </button>
-            <button onClick={() => navigate(`/app/club/${clubID}`)} style={buttonStyle('#f57c00')}>View Club</button>
+            <button
+              onClick={() => navigate(`/app/club/${clubID}`)}
+              style={buttonStyle("#f57c00")}
+            >
+              View Club
+            </button>
           </div>
         </div>
 
         {/* Exec Controls */}
         {isExec && (
-          <div style={{ marginTop: '20px', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px', border: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '1.1rem', fontWeight: 600 }}>Status: <strong style={{ color: approvalStatus === 'Approved' ? '#388e3c' : '#e74c3c' }}>{approvalStatus}</strong></span>
-            <button onClick={handleCancelEvent} style={buttonStyle('#e74c3c')}>Cancel Event</button>
+          <div
+            style={{
+              marginTop: "20px",
+              padding: "12px",
+              backgroundColor: "#f0f0f0",
+              borderRadius: "6px",
+              border: "1px solid #e0e0e0",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <span style={{ fontSize: "1.1rem", fontWeight: 600 }}>
+              Status:{" "}
+              <strong
+                style={{
+                  color: approvalStatus === "Approved" ? "#388e3c" : "#e74c3c",
+                }}
+              >
+                {approvalStatus}
+              </strong>
+            </span>
+            <button onClick={handleCancelEvent} style={buttonStyle("#e74c3c")}>
+              Cancel Event
+            </button>
           </div>
         )}
       </div>
@@ -194,15 +484,15 @@ const EventPage = () => {
 };
 
 const buttonStyle = (bg) => ({
-  padding: '12px 24px',
+  padding: "12px 24px",
   backgroundColor: bg,
-  color: 'white',
-  border: 'none',
-  borderRadius: '6px',
-  fontSize: '1rem',
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  fontSize: "1rem",
   fontWeight: 600,
-  cursor: 'pointer',
-  transition: 'background-color 0.2s',
+  cursor: "pointer",
+  transition: "background-color 0.2s",
 });
 
 export default EventPage;

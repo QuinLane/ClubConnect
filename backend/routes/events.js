@@ -2,7 +2,11 @@ import express from "express";
 import Joi from "joi";
 import * as eventController from "../controllers/eventController.js";
 import { validate } from "../middleware/validate.js";
-import { authenticate, requireClubAdmin } from "../middleware/authenticate.js";
+import {
+  authenticate,
+  requireClubAdminForEvent,
+  requireClubAdmin,
+} from "../middleware/authenticate.js";
 
 const router = express.Router();
 
@@ -54,8 +58,16 @@ router.put(
 router.delete(
   "/:eventID",
   authenticate,
-  requireClubAdmin,
+  requireClubAdminForEvent,
   eventController.deleteEvent
+);
+
+router.patch(
+  "/:eventID",
+  authenticate,
+  requireClubAdminForEvent,
+  validate(updateEventSchema),
+  eventController.updateEvent
 );
 
 export default router;

@@ -13,6 +13,28 @@ const getImageAsBase64 = async (imageBuffer) => {
   return `data:image/webp;base64,${imageBuffer.toString("base64")}`;
 };
 
+// Helper to check if a user is an executive of the club associated with an event
+export const checkClubAdminPermissionsForEvent = async (userID, eventID) => {
+  const event = await prisma.event.findUnique({
+    where: { eventID: parseInt(eventID) },
+    include: {
+      club: {
+        include: {
+          executives: true,
+        },
+      },
+    },
+  });
+
+  if (!event) {
+    throw new Error("Event not found");
+  }
+
+  // Check if the user is an executive of the club
+  const isExec = event.club.executives.some((exec) => exec.userID === userID);
+  return isExec;
+};
+
 // Note: Available to all
 export const getAllEvents = async (req, res) => {
   try {
@@ -36,22 +58,29 @@ export const getAllEvents = async (req, res) => {
   }
 };
 
-// Note: Available to all
 export const getEventById = async (req, res) => {
   const { eventID } = req.params;
   try {
     const event = await prisma.event.findUnique({
       where: { eventID: parseInt(eventID) },
       include: {
-        club: true,
+        club: {
+          include: {
+            executives: { include: { user: true } },
+            members: { include: { user: true } },
+          },
+        },
         rsvps: { include: { user: true } },
-        reservation: true,
+        reservation: {
+          include: {
+            venue: true, // Include the Venue relation
+          },
+        },
       },
     });
     if (!event) {
       return res.status(404).json({ error: "Event not found" });
     }
-    // Convert image to base64
     const eventWithImage = {
       ...event,
       image: await getImageAsBase64(event.image),
