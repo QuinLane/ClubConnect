@@ -61,11 +61,13 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forbidden" element={<Forbidden />} />
-        <Route path="/app/notifications" element={<NotificationsPage />} />
+        
+        
 
 
         {/* Nested Routes under /app */}
         <Route path="/app">
+        <Route path="notifications" element={<NotificationsPage />} />
           {/* SUAdmin-only routes with suLayout */}
           <Route element={<SuLayout />}>
             <Route

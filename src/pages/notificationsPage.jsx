@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Announcement from '../components/messages/announcment';
 import CreateAnnouncement from '../components/messages/createAnnouncement';
+import Sidebar from '../components/Sidebar';
+import SuSidebar from '../components/SuSidebar';
 
 const NotificationsPage = () => {
   const [announcements, setAnnouncements] = useState([]);
@@ -15,6 +17,14 @@ const NotificationsPage = () => {
   const currentUserID = user.userID;
   const token = localStorage.getItem('token');
   const isSUAdmin = user.userType === 'SUAdmin';
+
+  function sidebar() { 
+    return (
+      <div>
+        {isSUAdmin ? <SuSidebar /> : <Sidebar />}
+      </div>
+    );
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -147,45 +157,50 @@ const NotificationsPage = () => {
   const canCreateAnnouncements = isSUAdmin || isExecutive;
 
   return (
-    <div style={styles.pageContainer}>
-      <h1 style={styles.header}>Announcements</h1>
+    <div className="flex h-screen bg-gray-50">
+      {isSUAdmin && <SuSidebar />}
+      {!isSUAdmin && <Sidebar />}
 
-      {canCreateAnnouncements && (
-        <button 
-          onClick={() => setShowCreateForm(prev => !prev)} 
-          style={styles.button}
-        >
-          {showCreateForm ? 'Cancel' : 'Create Announcement'}
-        </button>
-      )}
+      <div style={styles.pageContainer}>
+        <h1 style={styles.header}>Announcements</h1>
 
-      {showCreateForm && (
-        <CreateAnnouncement 
-          onAnnouncementCreate={handleNewAnnouncement}
-          isSUAdmin={isSUAdmin}
-          managedClubs={managedClubs}
-        />
-      )}
-
-      <div style={styles.announcementsContainer}>
-        {loading ? (
-          <div style={styles.loading}>Loading announcements...</div>
-        ) : error ? (
-          <div style={styles.error}>Error: {error}</div>
-        ) : sortedAnnouncements.length === 0 ? (
-          <div style={styles.empty}>No announcements to display</div>
-        ) : (
-          sortedAnnouncements.map(announcement => (
-            <Announcement
-              key={announcement.id}
-              message={announcement.message}
-              title={announcement.title}
-              author={announcement.author}
-              timestamp={announcement.timestamp}
-              isSender={announcement.isSender}
-            />
-          ))
+        {canCreateAnnouncements && (
+          <button 
+            onClick={() => setShowCreateForm(prev => !prev)} 
+            style={styles.button}
+          >
+            {showCreateForm ? 'Cancel' : 'Create Announcement'}
+          </button>
         )}
+
+        {showCreateForm && (
+          <CreateAnnouncement 
+            onAnnouncementCreate={handleNewAnnouncement}
+            isSUAdmin={isSUAdmin}
+            managedClubs={managedClubs}
+          />
+        )}
+
+        <div style={styles.announcementsContainer}>
+          {loading ? (
+            <div style={styles.loading}>Loading announcements...</div>
+          ) : error ? (
+            <div style={styles.error}>Error: {error}</div>
+          ) : sortedAnnouncements.length === 0 ? (
+            <div style={styles.empty}>No announcements to display</div>
+          ) : (
+            sortedAnnouncements.map(announcement => (
+              <Announcement
+                key={announcement.id}
+                message={announcement.message}
+                title={announcement.title}
+                author={announcement.author}
+                timestamp={announcement.timestamp}
+                isSender={announcement.isSender}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
