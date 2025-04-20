@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Logo from '../components/clubEventPages/logo';
 import Bio from '../components/clubEventPages/bio';
@@ -20,6 +20,9 @@ const ClubPage = () => {
   const [isMember, setIsMember] = useState(false);
   const [joinLoading, setJoinLoading] = useState(false);
   const [leaveLoading, setLeaveLoading] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedClubName, setEditedClubName] = useState('');
+  const titleInputRef = useRef(null);
 
   useEffect(() => {
     if (!token) {
@@ -54,6 +57,7 @@ const ClubPage = () => {
           },
           userRole: userExecRole || null
         });
+        setEditedClubName(data.clubName);
       } catch (err) {
         console.error(err);
         setError(err.message);
@@ -66,7 +70,6 @@ const ClubPage = () => {
           `http://localhost:5050/api/events/upcoming/club/${clubID}`,
           { headers: { 'Authorization': `Bearer ${token}` } }
         );
-        if (!res.ok) throw new Error('Couldn’t load upcoming events');
         const events = await res.json();
         setUpcomingEvents(
           events.map(evt => ({
@@ -86,6 +89,12 @@ const ClubPage = () => {
     fetchClub();
     fetchUpcoming();
   }, [clubID, token, navigate, currentUserID]);
+
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, [isEditingTitle]);
 
   const handleBioUpdate = async (newBio) => {
     if (!token || !clubID) return;
@@ -114,11 +123,54 @@ const ClubPage = () => {
     }
   };
 
+  const handleClubNameUpdate = async () => {
+    if (!token || !clubID || !editedClubName.trim()) return;
+    try {
+      const response = await fetch(`http://localhost:5050/api/clubs/${clubID}/name`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ clubName: editedClubName })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update club name');
+      }
+      
+      setClub(prev => ({
+        ...prev,
+        clubName: editedClubName
+      }));
+      setIsEditingTitle(false);
+    } catch (err) {
+      console.error('Error updating club name:', err);
+      alert(`Error: ${err.message}`);
+      setEditedClubName(club.clubName);
+      setIsEditingTitle(false);
+    }
+  };
 
+  const handleTitleDoubleClick = () => {
+    if (isExec) {
+      setIsEditingTitle(true);
+    }
+  };
 
+  const handleTitleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleClubNameUpdate();
+    } else if (e.key === 'Escape') {
+      setEditedClubName(club.clubName);
+      setIsEditingTitle(false);
+    }
+  };
 
-
-
+  const handleTitleBlur = () => {
+    handleClubNameUpdate();
+  };
 
   const handleJoinClub = async () => {
     if (!token || !clubID) return;
@@ -176,8 +228,6 @@ const ClubPage = () => {
     }
   };
 
-
-
   if (loading) return <div>Loading club...</div>;
   if (error) return <div style={{ color: 'red' }}>Error: {error}</div>;
   if (!club) return <div>Club not found</div>;
@@ -210,9 +260,40 @@ const ClubPage = () => {
           gap: '20px',
           marginBottom: '30px'
         }}>
-          <h1 style={{ fontSize: '2rem', margin: 0, flex: 1, color: '#2c3e50', lineHeight: '1.2' }}>
-            {clubName}
-          </h1>
+          {isEditingTitle ? (
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={editedClubName}
+              onChange={(e) => setEditedClubName(e.target.value)}
+              onKeyDown={handleTitleKeyDown}
+              onBlur={handleTitleBlur}
+              style={{
+                fontSize: '2rem',
+                margin: 0,
+                flex: 1,
+                color: '#2c3e50',
+                lineHeight: '1.2',
+                border: '1px solid #ddd',
+                padding: '4px',
+                borderRadius: '4px'
+              }}
+            />
+          ) : (
+            <h1 
+              style={{ 
+                fontSize: '2rem', 
+                margin: 0, 
+                flex: 1, 
+                color: '#2c3e50', 
+                lineHeight: '1.2',
+                cursor: isExec ? 'pointer' : 'default'
+              }}
+              onDoubleClick={handleTitleDoubleClick}
+            >
+              {clubName}
+            </h1>
+          )}
           <Logo imageUrl={logoUrl} size={80} />
         </div>
 
@@ -223,13 +304,13 @@ const ClubPage = () => {
           marginBottom: '30px'
         }}>
           <div style={{ flex: 2, minWidth: '300px', height: '200px' }}>
-          <Bio 
-          text={bioText} 
-          width="100%" 
-          height="100%" 
-          isEditable={isExec}
-          onSave={handleBioUpdate}
-        />
+            <Bio 
+              text={bioText} 
+              width="100%" 
+              height="100%" 
+              isEditable={isExec}
+              onSave={handleBioUpdate}
+            />
           </div>
           <div style={{ flex: 1, minWidth: '200px', height: '200px' }}>
             <Contact email={contact.email} instagram={contact.instagram} website={contact.website} />
@@ -254,25 +335,25 @@ const ClubPage = () => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {isExec ? (
-  <>
-    {userRole === 'President' && (
-      <button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>Manage Members</button>
-    )}
-  </>
-) : (
-  <>
-    {isMember ? (
-      <button onClick={handleLeaveClub} disabled={leaveLoading} style={buttonStyle('#4CAF50', leaveLoading)}>
-        {leaveLoading ? 'Leaving...' : 'Joined Club'}
-      </button>
-    ) : (
-      <button onClick={handleJoinClub} disabled={joinLoading} style={buttonStyle('#005587', joinLoading)}>
-        {joinLoading ? 'Joining...' : 'Join Club'}
-      </button>
-    )}
-  </>
-)}
+            {isExec ? (
+              <>
+                {userRole === 'President' && (
+                  <button onClick={() => navigate(`/app/manage-members/${clubID}`)} style={buttonStyle('#f57c00')}>Manage Members</button>
+                )}
+              </>
+            ) : (
+              <>
+                {isMember ? (
+                  <button onClick={handleLeaveClub} disabled={leaveLoading} style={buttonStyle('#4CAF50', leaveLoading)}>
+                    {leaveLoading ? 'Leaving...' : 'Joined Club'}
+                  </button>
+                ) : (
+                  <button onClick={handleJoinClub} disabled={joinLoading} style={buttonStyle('#005587', joinLoading)}>
+                    {joinLoading ? 'Joining...' : 'Join Club'}
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
 
