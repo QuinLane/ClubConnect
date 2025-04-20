@@ -87,8 +87,8 @@ const ExploreEvents = () => {
         // Shape for EventPage
         setEventDetail({
           eventTitle: data.name,
-          logoUrl: data.club?.logo || "/images/club-logo.png",
-          eventPhoto: data.image || "/images/event-photo.jpg",
+          logoUrl: data.club?.image,
+          eventPhoto: data.image,
           bioText: data.description || "No description available",
           eventDate,
           eventTime,
