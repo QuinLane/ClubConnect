@@ -12,9 +12,9 @@ const router = express.Router();
 
 // Joi schema for updating events
 const updateEventSchema = Joi.object({
-  name: Joi.string(),
-  description: Joi.string(),
-}).min(1);
+  name: Joi.string().optional(),
+  description: Joi.string().optional(),
+}).or("name", "description"); // Allow requests with either name or description, but not required if image is present via FormData
 
 // Joi schema for searching events
 const searchSchema = Joi.object({
@@ -51,10 +51,10 @@ router.get("/:eventID/rsvp-count", authenticate, eventController.getRSVPCount);
 router.put(
   "/:eventID",
   authenticate,
-  requireClubAdmin,
-  validate(updateEventSchema),
+  requireClubAdminForEvent,
+  // validate(updateEventSchema),
   eventController.updateEvent
-); //EXPECTS FORMDATA IF YOU NEED TO UPDATE IMAGE
+); // EXPECTS FORMDATA IF YOU NEED TO UPDATE IMAGE
 router.delete(
   "/:eventID",
   authenticate,
@@ -68,6 +68,13 @@ router.patch(
   requireClubAdminForEvent,
   validate(updateEventSchema),
   eventController.updateEvent
+);
+
+router.put(
+  "/photo/:eventID",
+  authenticate,
+  requireClubAdminForEvent,
+  eventController.updateEventPhoto
 );
 
 export default router;

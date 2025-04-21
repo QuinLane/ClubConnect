@@ -1,16 +1,55 @@
 import { PrismaClient } from "@prisma/client";
 import * as venueController from "./venueController.js";
 import fs from "fs/promises"; // For reading default image file
+import imageSize from "image-size"; // For validating image buffers
 
 const prisma = new PrismaClient();
 
+// Helper to validate an image buffer
+const validateImageBuffer = (buffer) => {
+  try {
+    // Use image-size to validate the buffer and get dimensions
+    const dimensions = imageSize(buffer);
+    console.log("Image dimensions:", dimensions);
+    return true;
+  } catch (error) {
+    console.error("Invalid image buffer:", error);
+    return false;
+  }
+};
+
 // Helper to convert image buffer to base64 or load default image
-const getImageAsBase64 = async (imageBuffer) => {
+const getImageAsBase64 = async (imageBuffer, mimetype = "image/webp") => {
   if (!imageBuffer) {
     const defaultImage = await fs.readFile("../public/images/default.webp");
-    return `data:image/webp;base64,${defaultImage.toString("base64")}`;
+    const base64String = defaultImage.toString("base64");
+    console.log("Default image base64 length:", base64String.length);
+    return `data:image/webp;base64,${base64String}`;
   }
-  return `data:image/webp;base64,${imageBuffer.toString("base64")}`;
+
+  // Validate the image buffer
+  if (!validateImageBuffer(imageBuffer)) {
+    throw new Error("Invalid image buffer");
+  }
+
+  // Ensure the buffer is clean
+  console.log("Image buffer type:", imageBuffer instanceof Buffer);
+  const cleanBuffer = Buffer.from(imageBuffer);
+  const base64String = cleanBuffer.toString("base64");
+  console.log("Image base64 length:", base64String.length);
+  // Log the first 100 characters of the base64 string to inspect for invalid characters
+  console.log("Image base64 first 100 chars:", base64String.substring(0, 100));
+  // Check for invalid characters
+  const invalidChars = base64String.match(/[^A-Za-z0-9+/=]/g);
+  if (invalidChars) {
+    console.log("Invalid characters in base64 string:", invalidChars);
+    // Remove invalid characters (e.g., newlines, spaces)
+    const cleanedBase64String = base64String.replace(/[^A-Za-z0-9+/=]/g, "");
+    console.log("Cleaned base64 length:", cleanedBase64String.length);
+    return `data:${mimetype};base64,${cleanedBase64String}`;
+  }
+
+  return `data:${mimetype};base64,${base64String}`;
 };
 
 // Helper to check if a user is an executive of the club associated with an event
@@ -147,29 +186,26 @@ export const deleteEvent = async (req, res) => {
   }
 };
 
-// Note: Only called internally by formController after approval
 export const createEvent = async (req, res) => {
   const { name, description, clubID, date, startTime, endTime, venueID } =
     req.body;
 
   try {
-    // Check for uploaded image
     let image = null;
+    let mimetype = "image/webp"; // Default mimetype
     if (req.files && req.files.image) {
       const file = req.files.image;
       if (!file.mimetype.startsWith("image/")) {
         return res.status(400).json({ error: "Only image files are allowed" });
       }
       image = file.data;
+      mimetype = file.mimetype;
     }
 
-    // Parse date and times into DateTime format
     const startDateTime = new Date(`${date}T${startTime}`);
     const endDateTime = new Date(`${date}T${endTime}`);
 
-    // Create event and reservation in a single transaction
     const event = await prisma.$transaction(async (prisma) => {
-      // Create the event
       const createdEvent = await prisma.event.create({
         data: {
           name,
@@ -198,10 +234,9 @@ export const createEvent = async (req, res) => {
       return createdEvent;
     });
 
-    // Convert image to base64 if it exists
     const eventWithImage = {
       ...event,
-      image: event.image ? await getImageAsBase64(event.image) : null,
+      image: event.image ? await getImageAsBase64(event.image, mimetype) : null,
     };
 
     res.status(201).json(eventWithImage);
@@ -418,5 +453,61 @@ export const getUserRecommendedEvents = async (req, res) => {
     res
       .status(500)
       .json({ error: `Failed to fetch recommended events: ${error.message}` });
+  }
+};
+
+// Function to handle event photo updates
+export const updateEventPhoto = async (req, res) => {
+  const { eventID } = req.params;
+  try {
+    const parsedEventID = parseInt(eventID);
+    if (isNaN(parsedEventID)) {
+      return res.status(400).json({ error: "Invalid eventID" });
+    }
+
+    if (!req.files || !req.files.image) {
+      return res.status(400).json({ error: "No image file uploaded" });
+    }
+
+    const file = req.files.image;
+    if (!file.mimetype.startsWith("image/")) {
+      return res.status(400).json({ error: "Only image files are allowed" });
+    }
+
+    const image = Buffer.isBuffer(file.data)
+      ? file.data
+      : Buffer.from(file.data, "binary");
+    const mimetype = file.mimetype; // e.g., "image/jpeg"
+    console.log("Uploaded image buffer length:", image.length);
+    console.log("Uploaded image mimetype:", mimetype);
+    console.log("Uploaded image buffer type:", image instanceof Buffer);
+
+    // Validate the image buffer before saving
+    if (!validateImageBuffer(image)) {
+      return res
+        .status(400)
+        .json({ error: "Uploaded file is not a valid image" });
+    }
+
+    const event = await prisma.event.update({
+      where: { eventID: parsedEventID },
+      data: { image },
+      include: {
+        club: true,
+        rsvps: { include: { user: true } },
+        reservation: true,
+      },
+    });
+
+    const eventWithImage = {
+      ...event,
+      image: await getImageAsBase64(event.image, mimetype),
+    };
+    res.status(200).json(eventWithImage);
+  } catch (error) {
+    console.error("Update event photo error:", error);
+    res
+      .status(500)
+      .json({ error: `Failed to update event photo: ${error.message}` });
   }
 };

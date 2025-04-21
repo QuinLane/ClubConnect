@@ -17,8 +17,9 @@ const EventPage = () => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedEventTitle, setEditedEventTitle] = useState("");
   const titleInputRef = useRef(null);
+  const [isEditingPhoto, setIsEditingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
 
-  // RSVP state
   const [hasRSVPed, setHasRSVPed] = useState(false);
   const [rsvpLoading, setRsvpLoading] = useState(false);
 
@@ -30,14 +31,12 @@ const EventPage = () => {
 
     const fetchData = async () => {
       try {
-        // Fetch event details
         const res = await fetch(`http://localhost:5050/api/events/${eventID}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
-        // Debug executive status
         const execs = data.club?.executives || [];
         console.log("Executives:", execs);
         console.log("Current User ID:", currentUserID);
@@ -45,14 +44,6 @@ const EventPage = () => {
         console.log("Is Executive:", isExecutive);
         setIsExec(isExecutive);
 
-        // const execList = data.executives || [];
-        // const memberList = data.members || [];
-        // const userExecRole = execList.find(
-        //   (e) => e.userID === currentUserID
-        // )?.role;
-        // setIsExec(!!userExecRole);
-
-        // Format date and time using reservation.start and reservation.endTime
         let eventDate = "Date TBD";
         let eventTime = "Time TBD";
         let venueName = "Venue TBD";
@@ -66,7 +57,6 @@ const EventPage = () => {
           console.log("Parsed End Date:", endDate);
 
           if (!isNaN(startDate.getTime())) {
-            // Format date: e.g., "Tuesday, April 22, 2025"
             eventDate = startDate.toLocaleDateString("en-US", {
               weekday: "long",
               year: "numeric",
@@ -76,7 +66,6 @@ const EventPage = () => {
           }
 
           if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-            // Format time: e.g., "01:59 AM - 03:59 AM"
             const startTime = startDate.toLocaleTimeString("en-US", {
               hour: "2-digit",
               minute: "2-digit",
@@ -88,13 +77,12 @@ const EventPage = () => {
             eventTime = `${startTime} - ${endTime}`;
           }
 
-          // Extract venue information
           if (data.reservation.venue) {
             venueName = data.reservation.venue.name || "Venue TBD";
             venueAddress = data.reservation.venue.address || "Address TBD";
           }
         }
-
+        console.log("status: " + data.status);
         setEvent({
           eventTitle: data.name,
           logoUrl: data.club?.logo || "/images/default-club.png",
@@ -108,8 +96,8 @@ const EventPage = () => {
           clubID: data.clubID,
         });
         setEditedEventTitle(data.name);
+        setIsEditingPhoto(false);
 
-        // Fetch RSVPs for this event (use plural 'rsvps' to match server mount)
         const rsvpRes = await fetch(
           `http://localhost:5050/api/rsvps/${eventID}`,
           {
@@ -120,7 +108,6 @@ const EventPage = () => {
           const rsvpData = await rsvpRes.json();
           setHasRSVPed(rsvpData.some((r) => r.userID === currentUserID));
         } else if (rsvpRes.status === 404) {
-          // No RSVPs yet
           setHasRSVPed(false);
         } else {
           console.warn(`Unexpected RSVP fetch status: ${rsvpRes.status}`);
@@ -275,6 +262,62 @@ const EventPage = () => {
     }
   };
 
+  const handlePhotoDoubleClick = () => {
+    if (isExec) {
+      setIsEditingPhoto(true);
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setIsEditingPhoto(false);
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file.");
+      setIsEditingPhoto(false);
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await fetch(
+        `http://localhost:5050/api/events/photo/${eventID}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error ||
+            `Failed to update event photo (HTTP ${response.status})`
+        );
+      }
+
+      const updatedEvent = await response.json();
+      setEvent((prev) => ({
+        ...prev,
+        eventPhoto: updatedEvent.image || "/images/default.webp",
+      }));
+      setIsEditingPhoto(false);
+    } catch (err) {
+      console.error("Error updating event photo:", err);
+      alert(`Error updating event photo: ${err.message}`);
+      setIsEditingPhoto(false);
+    }
+  };
+
   if (loading) return <div>Loading event...</div>;
   if (error) return <div style={{ color: "red" }}>Error: {error}</div>;
   if (!event) return <div>Event not found</div>;
@@ -314,7 +357,6 @@ const EventPage = () => {
           border: "1px solid #e0e0e0",
         }}
       >
-        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -362,7 +404,6 @@ const EventPage = () => {
           <Logo imageUrl={logoUrl} size={80} />
         </div>
 
-        {/* Bio & Photo */}
         <div
           style={{
             display: "flex",
@@ -386,17 +427,32 @@ const EventPage = () => {
               overflow: "hidden",
               borderRadius: "8px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+              position: "relative",
             }}
           >
             <img
               src={eventPhoto}
               alt={eventTitle}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                cursor: isExec ? "pointer" : "default",
+              }}
+              onDoubleClick={handlePhotoDoubleClick}
             />
+            {isEditingPhoto && (
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={handlePhotoChange}
+                accept="image/*"
+              />
+            )}
           </div>
         </div>
 
-        {/* Date/Time, Venue & Actions */}
         <div
           style={{
             display: "flex",
@@ -449,7 +505,6 @@ const EventPage = () => {
           </div>
         </div>
 
-        {/* Exec Controls */}
         {isExec && (
           <div
             style={{
