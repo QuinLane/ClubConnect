@@ -92,7 +92,7 @@ const EventPage = () => {
           eventTime,
           venueName,
           venueAddress,
-          approvalStatus: data.status || "Pending",
+          approvalStatus: data.status || "Approved",
           clubID: data.clubID,
         });
         setEditedEventTitle(data.name);
