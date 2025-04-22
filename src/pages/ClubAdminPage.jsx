@@ -12,36 +12,35 @@ const AdminClubPage = ({
   memberCount = 42,
   logoSize = 80,
   titleSize = '2rem',
-  clubEmail = "club@su.edu" // Added club email prop
+  clubEmail = "club@su.edu"
 }) => {
   const navigate = useNavigate();
 
   const handleDeleteClub = () => {
     if (window.confirm(`Are you sure you want to delete ${clubName}? This action cannot be undone.`)) {
-      // Add your delete club logic here
+     
       alert(`${clubName} has been deleted`);
-      // navigate('/clubs'); // Uncomment to redirect after deletion
+  
     }
   };
 
   const handleMessageClub = () => {
-    // Check if chat exists with club (you'll need to implement this check)
+
     const existingChat = checkForExistingChat(clubEmail);
     
     if (existingChat) {
-      // Navigate to existing chat
+
       navigate('../chatBoard', { state: { presetEmail: clubEmail, autoOpen: true } });
     } else {
-      // Navigate to chat page with preset email
+
       navigate('../chatBoard', { state: { presetEmail: clubEmail } });
     }
   };
 
-  // Mock function - replace with your actual chat existence check
+
   const checkForExistingChat = (email) => {
-    // This should check your chat system/state for existing conversation
-    // Return the chat ID or true if exists, false otherwise
-    return false; // Default to false for this example
+
+    return false; 
   };
 
   const upcomingEvents = [

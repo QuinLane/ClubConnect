@@ -6,22 +6,18 @@ const DashboardPage = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const currentUserID = user.userID;
 
-  // State for RSVP'd events
   const [myEvents, setMyEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [errorEvents, setErrorEvents] = useState(null);
 
-  // State for member clubs
   const [memberClubs, setMemberClubs] = useState([]);
   const [loadingMemberClubs, setLoadingMemberClubs] = useState(false);
   const [errorMemberClubs, setErrorMemberClubs] = useState(null);
 
-  // State for managed clubs
   const [managedClubs, setManagedClubs] = useState([]);
   const [loadingManagedClubs, setLoadingManagedClubs] = useState(false);
   const [errorManagedClubs, setErrorManagedClubs] = useState(null);
 
-  // Helper function to create event elements
   const createEventElements = (events) => {
     return events.map((event) => {
       let eventDate = "Date TBD";
@@ -41,26 +37,26 @@ const DashboardPage = () => {
     });
   };
 
-  // In DashboardPage.js
+
   const createClubElements = (clubs) => {
     return clubs.map((club) => ({
       id: club.clubID,
       imageUrl: club.image,
-      // imageUrl: club.image || '/images/default-club.png',
+     
       title: club.clubName,
-      date: "", // Clubs don't need dates
+      date: "", 
       type: "club",
     }));
   };
 
-  // Update the carousel rendering to include type prop
+ 
   <CompressedEventCarousel
     items={managedClubs}
     title="Clubs I Manage"
     showTitle={true}
-    itemType="club" // Explicitly tell carousel these are clubs
+    itemType="club" 
   />;
-  // Fetch user's RSVP'd events
+  
   useEffect(() => {
     const fetchUserRSVPs = async () => {
       try {
@@ -78,7 +74,6 @@ const DashboardPage = () => {
         const events = rsvps.map((rsvp) => rsvp.event);
         const eventElements = createEventElements(events);
 
-        // Sort events by date (newest first)
         const sortedEvents = eventElements.sort((a, b) => {
           if (a.date === "Date TBD" && b.date === "Date TBD") return 0;
           if (a.date === "Date TBD") return 1;
@@ -97,7 +92,6 @@ const DashboardPage = () => {
     if (currentUserID) fetchUserRSVPs();
   }, [currentUserID, token]);
 
-  // Fetch member clubs
   useEffect(() => {
     const fetchMemberClubs = async () => {
       try {
@@ -124,7 +118,6 @@ const DashboardPage = () => {
     if (currentUserID) fetchMemberClubs();
   }, [currentUserID, token]);
 
-  // Fetch managed clubs using getUserExecClubs
   useEffect(() => {
     const fetchManagedClubs = async () => {
       try {
@@ -163,7 +156,6 @@ const DashboardPage = () => {
         minHeight: "100vh",
       }}
     >
-      {/* Header with gray bar */}
       <div
         style={{
           backgroundColor: "#f5f5f5",
@@ -185,7 +177,6 @@ const DashboardPage = () => {
         </h1>
       </div>
 
-      {/* Clubs I Manage (Executive) */}
       {loadingManagedClubs ? (
         <div style={{ textAlign: "center", padding: "20px" }}>
           Loading your managed clubs...
@@ -203,7 +194,7 @@ const DashboardPage = () => {
         />
       )}
 
-      {/* Clubs I'm a Member Of */}
+
       {loadingMemberClubs ? (
         <div style={{ textAlign: "center", padding: "20px" }}>
           Loading your clubs...
@@ -221,7 +212,6 @@ const DashboardPage = () => {
         />
       )}
 
-      {/* My Events (RSVP'd) */}
       {loadingEvents ? (
         <div style={{ textAlign: "center", padding: "20px" }}>
           Loading your events...

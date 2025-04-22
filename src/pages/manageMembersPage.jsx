@@ -9,7 +9,7 @@ const ManageMembers = () => {
   const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  // State management
+
   const [members, setMembers] = useState([]);
   const [presidentError, setPresidentError] = useState('');
   const [executives, setExecutives] = useState([]);
@@ -20,13 +20,13 @@ const ManageMembers = () => {
   const [executiveToModify, setExecutiveToModify] = useState(null);
   const [actionType, setActionType] = useState('');
 
-  // State for new executive form
+
   const [newExecutive, setNewExecutive] = useState({
     email: '',
     role: ''
   });
 
-  // Fetch data
+
   useEffect(() => {
     if (!token) {
       navigate('/login');
@@ -37,7 +37,7 @@ const ManageMembers = () => {
       try {
         setLoading(true);
         
-        // Fetch members
+
         const membersRes = await fetch(`http://localhost:5050/api/clubs/members/${clubID}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -45,7 +45,7 @@ const ManageMembers = () => {
         if (!membersRes.ok) throw new Error('Failed to fetch members');
         const membersData = await membersRes.json();
         
-        // Fetch executives
+
         const execsRes = await fetch(`http://localhost:5050/api/executives/club/${clubID}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -90,7 +90,7 @@ const ManageMembers = () => {
       const willBePresident = newRole === 'President';
       const isCurrentUser = executiveId === user.userID;
   
-      // If changing from president to non-president, check if there are other presidents
+
       if (wasPresident && !willBePresident) {
         const hasOtherPresident = executives.some(
           e => e.id !== executiveId && e.role === 'President'
@@ -135,7 +135,7 @@ const ManageMembers = () => {
       )
     );
   
-    // Check if current user is changing from president to non-president
+
     if (executiveId === user.userID && newRole.toLowerCase() !== 'president') {
       const wasPresident = executives.find(e => e.id === executiveId)?.role === 'President';
       if (wasPresident) {
@@ -205,13 +205,10 @@ const ManageMembers = () => {
           return;
         }
   
-        // First update the new president's role
         await performRoleUpdate(executiveToModify.id, 'President');
         
-        // Then update current user's role
         await performRoleUpdate(user.userID, newPresidentEmail.trim());
         
-        // Redirect after successful role change
         navigate(`/app/club/${clubID}`);
       } else {
         const newPresident = executives.find(
@@ -228,13 +225,11 @@ const ManageMembers = () => {
         if (actionType === 'remove') {
           await performExecutiveRemoval(executiveToModify.id);
           
-          // If we're removing ourselves as president (by assigning someone else)
           if (executiveToModify.id === user.userID) {
             navigate(`/app/club/${clubID}`);
           }
         }
         
-        // If we're assigning someone else as president (but not removing ourselves)
         if (actionType === 'update' && executiveToModify.id === user.userID) {
           navigate(`/app/club/${clubID}`);
         }
@@ -252,13 +247,10 @@ const ManageMembers = () => {
   };
   const handleRemoveMember = async (userID) => {
     try {
-      // Is this member also an executive President?
       const memberExec = executives.find(e => e.id === userID && e.role === 'President');
       if (memberExec) {
-        // Count how many presidents exist
         const presidentCount = executives.filter(e => e.role === 'President').length;
         if (presidentCount === 1) {
-          // If they're the last president, trigger the “assign new president” prompt
           setExecutiveToModify(memberExec);
           setActionType('remove');
           setShowPresidentPrompt(true);
@@ -345,7 +337,6 @@ const ManageMembers = () => {
 
   };
 
-  // Styles
   const containerStyles = {
     backgroundColor: '#f8f9fa',
     minHeight: '100vh',
@@ -527,7 +518,7 @@ const ManageMembers = () => {
     <input
       type="text"
       placeholder="Enter your new role"
-      value={newPresidentEmail} // Still reusing this state variable
+      value={newPresidentEmail}
       onChange={(e) => {
         setNewPresidentEmail(e.target.value);
         setPresidentError('');

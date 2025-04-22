@@ -8,23 +8,19 @@ const ExploreEvents = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // COMMON auth redirect
   useEffect(() => {
     if (!token) navigate("/login");
   }, [token, navigate]);
 
-  // DETAIL view
   const [eventDetail, setEventDetail] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [errorDetail, setErrorDetail] = useState(null);
   const [isExec, setIsExec] = useState(false);
 
-  // LIST view
   const [eventsList, setEventsList] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
   const [errorList, setErrorList] = useState(null);
 
-  // Fetch single event
   useEffect(() => {
     if (!eventId) return;
     setLoadingDetail(true);
@@ -40,14 +36,13 @@ const ExploreEvents = () => {
         return data;
       })
       .then((data) => {
-        // Check exec rights
+
         const execs = data.club?.executives || [];
         const currentUserID = JSON.parse(
           localStorage.getItem("user") || "{}"
         ).userID;
         setIsExec(execs.some((exec) => exec.userID === currentUserID));
 
-        // Format date, time, and venue to match EventPage.jsx
         let eventDate = "Date TBD";
         let eventTime = "Time TBD";
         let venueName = "Venue TBD";
@@ -84,7 +79,6 @@ const ExploreEvents = () => {
           }
         }
 
-        // Shape for EventPage
         setEventDetail({
           eventTitle: data.name,
           logoUrl: data.club?.image,
@@ -103,7 +97,6 @@ const ExploreEvents = () => {
       .finally(() => setLoadingDetail(false));
   }, [eventId, token]);
 
-  // Fetch events list
   useEffect(() => {
     if (eventId) return;
     setLoadingList(true);
@@ -182,7 +175,6 @@ const ExploreEvents = () => {
       .finally(() => setLoadingList(false));
   }, [eventId, token]);
 
-  // Handlers for detail actions
   const handleCancelEvent = async () => {
     try {
       const res = await fetch(`http://localhost:5050/api/events/${eventId}`, {
@@ -215,7 +207,7 @@ const ExploreEvents = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update event");
-      // update state
+
       setEventDetail((prev) => ({
         ...prev,
         eventTitle: data.name,
@@ -229,7 +221,6 @@ const ExploreEvents = () => {
     }
   };
 
-  // RENDER
   if (eventId) {
     if (loadingDetail) return <div>Loading event details...</div>;
     if (errorDetail) return <div>Error: {errorDetail}</div>;
@@ -244,7 +235,6 @@ const ExploreEvents = () => {
     );
   }
 
-  // list
   if (loadingList) return <div>Loading events...</div>;
   if (errorList) return <div style={{ color: "red" }}>Error: {errorList}</div>;
   return (

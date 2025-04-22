@@ -15,7 +15,6 @@ export default function EventRequestForm({
   const [loadingVenues, setLoadingVenues] = useState(true);
   const [filteredVenues, setFilteredVenues] = useState([]);
 
-  // Reservation fields
   const [date, setDate] = useState(initialData.date || '');
   const [startTime, setStartTime] = useState(initialData.startTime || '');
   const [endTime, setEndTime] = useState(initialData.endTime || '');
@@ -29,14 +28,13 @@ export default function EventRequestForm({
   const [isLoading, setIsLoading] = useState(false);
   const [minDate, setMinDate] = useState('');
 
-  // compute tomorrow's date for date picker
+
   useEffect(() => {
     const t = new Date();
     t.setDate(t.getDate());
     setMinDate(t.toISOString().split('T')[0]);
   }, []);
 
-  // Fetch clubs the user is an exec of
   useEffect(() => {
     if (!userID) {
       setError('User not found; please log in again.');
@@ -64,7 +62,7 @@ export default function EventRequestForm({
       .finally(() => setLoadingClubs(false));
   }, [userID, isReadOnly, initialData]);
 
-  // Fetch all venues with reservations
+
   useEffect(() => {
     fetch('http://localhost:5050/api/venues', {
       headers: { Authorization: `Bearer ${token}` },
@@ -78,7 +76,7 @@ export default function EventRequestForm({
       .finally(() => setLoadingVenues(false));
   }, []);
 
-  // Filter venues by selected date/time
+
   useEffect(() => {
     if (date && startTime && endTime && venues.length) {
       const selStart = new Date(`${date}T${startTime}`);
@@ -97,7 +95,6 @@ export default function EventRequestForm({
     }
   }, [date, startTime, endTime, venues]);
 
-  // Preload fields when read-only
   useEffect(() => {
     if (isReadOnly && initialData) {
       setDate(initialData.date || '');
@@ -113,7 +110,7 @@ export default function EventRequestForm({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    // validate times
+    
     if (!date || !startTime || !endTime) {
       setError('Please select date, start, and end time.');
       return;

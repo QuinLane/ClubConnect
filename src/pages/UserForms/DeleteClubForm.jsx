@@ -9,14 +9,13 @@ export default function DeleteClubForm({
   initialData = {},
   isReadOnly  = false,
 }) {
-  const [clubs,        setClubs]        = useState([]);    // [{ id, name }]
+  const [clubs,        setClubs]        = useState([]);   
   const [clubID,       setClubID]       = useState(initialData.clubID || '');
   const [confirmation, setConfirmation] = useState('');
   const [error,        setError]        = useState('');
   const [isLoading,    setIsLoading]    = useState(false);
   const [loadingClubs, setLoadingClubs] = useState(true);
 
-  // fetch clubs the user is an exec of
   useEffect(() => {
     if (!userID) {
       setError('User not found; please log in again.');
@@ -31,7 +30,7 @@ export default function DeleteClubForm({
         return res.json();
       })
       .then(data => {
-        // data is an array of exec records with rec.club
+
         const list = data.map(rec => ({
           id:   rec.club.clubID,
           name: rec.club.clubName,
@@ -104,7 +103,7 @@ export default function DeleteClubForm({
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {/* Club selector */}
+
         <Field
           label="Club"
           value={clubID}
@@ -115,7 +114,6 @@ export default function DeleteClubForm({
           readOnly={isReadOnly}
         />
 
-        {/* Confirmation input */}
         {!isReadOnly && (
           <Field
             label='Type "delete" to confirm'
@@ -125,7 +123,6 @@ export default function DeleteClubForm({
           />
         )}
 
-        {/* Error banner */}
         {error && (
           <div style={{
             padding: '0.75rem',
@@ -139,7 +136,6 @@ export default function DeleteClubForm({
           </div>
         )}
 
-        {/* Submit */}
         {!isReadOnly && (
           <button
             type="submit"

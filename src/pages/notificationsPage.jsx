@@ -12,7 +12,7 @@ const NotificationsPage = () => {
   const [managedClubs, setManagedClubs] = useState([]);
   const [isExecutive, setIsExecutive] = useState(false);
 
-  // Get current user from localStorage
+
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const currentUserID = user.userID;
   const token = localStorage.getItem('token');
@@ -31,7 +31,7 @@ const NotificationsPage = () => {
       try {
         setLoading(true);
         
-        // First check if user is an executive and get their managed clubs
+
         const execResponse = await fetch(`http://localhost:5050/api/executives/user/${currentUserID}`, {
           headers: { 
             Authorization: `Bearer ${token}`,
@@ -43,7 +43,7 @@ const NotificationsPage = () => {
           const execData = await execResponse.json();
           setIsExecutive(execData.length > 0);
           
-          // Extract clubs from executive data (similar to dashboard approach)
+
           const clubs = execData.map(exec => ({
             clubID: exec.clubID,
             clubName: exec.club.clubName,
@@ -52,7 +52,7 @@ const NotificationsPage = () => {
           setManagedClubs(clubs);
         }
 
-        // Fetch notifications
+
         const notificationsResponse = await fetch(`http://localhost:5050/api/notifications/user/${currentUserID}`, {
           headers: { 
             Authorization: `Bearer ${token}`,
@@ -66,7 +66,7 @@ const NotificationsPage = () => {
         
         const notificationsData = await notificationsResponse.json();
         
-        // Transform the API data
+
         const transformedAnnouncements = notificationsData.map(notification => ({
           id: notification.notificationID,
           message: notification.content,
@@ -100,14 +100,14 @@ const NotificationsPage = () => {
         senderID: parseInt(currentUserID)
       };
   
-      // Frontend validation - check if club is selected when needed
+
       if ((newAnnouncement.recipientType === 'specificclub' || 
            newAnnouncement.recipientType === 'clubmembers') && 
           (!newAnnouncement.specificClub || newAnnouncement.specificClub === '')) {
         throw new Error('Please select a valid club');
       }
   
-      // Determine endpoint and additional body params based on recipient type
+
       if (newAnnouncement.recipientType === 'allstudents' && isSUAdmin) {
         endpoint = 'http://localhost:5050/api/notifications/all';
       } else if (newAnnouncement.recipientType === 'specificclub') {
@@ -131,14 +131,14 @@ const NotificationsPage = () => {
   
       if (!response.ok) {
         const errorData = await response.json();
-        // Handle specific backend error for invalid club
+
         if (errorData.error && errorData.error.includes('valid clubID')) {
           throw new Error('Please select a valid club');
         }
         throw new Error(errorData.error || 'Failed to create announcement');
       }
   
-      // Refresh notifications after successful creation
+
       const notificationsResponse = await fetch(`http://localhost:5050/api/notifications/user/${currentUserID}`, {
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -165,7 +165,7 @@ const NotificationsPage = () => {
       
       setAnnouncements(transformedAnnouncements);
       setShowCreateForm(false);
-      setError(null); // Clear any previous errors
+      setError(null); 
     } catch (err) {
       console.error('Notification error:', err);
       setError(err.message);

@@ -18,7 +18,6 @@ export default function CreateClubForm({
   const [error,            setError]            = useState('');
   const [isLoading,        setIsLoading]        = useState(false);
 
-  // preload when viewing existing
   useEffect(() => {
     if (isReadOnly) {
       setClubName(initialData.clubName        || '');
@@ -34,7 +33,6 @@ export default function CreateClubForm({
     setIsLoading(true);
     setError('');
 
-    // send raw string for socialMediaLinks, backend will parse JSON
     const payload = {
       formType: 'ClubCreation',
       details: {

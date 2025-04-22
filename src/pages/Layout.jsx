@@ -8,10 +8,8 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
       {showSidebar && <Sidebar />}
 
-      {/* Main Content */}
       <main className={`flex-1 overflow-y-auto  p-4`}
       style={{ backgroundColor: 'white' }}>
         

@@ -17,7 +17,6 @@ const ChatSUConversation = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [contactName, setContactName] = useState('');
 
-  // Fetch conversation and sort messages
   const fetchConversation = async () => {
     try {
       const res = await fetch(`${API_URL}/api/su-messages/conversation/${ucid}`, {
@@ -37,7 +36,6 @@ const ChatSUConversation = () => {
     }
   };
 
-  // Fetch contact's display name
   useEffect(() => {
     const fetchContactName = async () => {
       try {
@@ -61,7 +59,6 @@ const ChatSUConversation = () => {
     fetchContactName();
   }, [ucid]);
 
-  // Send a new message
   const handleSend = async (text) => {
     try {
       const res = await fetch(`${API_URL}/api/su-messages/messageSU`, {
@@ -84,14 +81,14 @@ const ChatSUConversation = () => {
     }
   };
 
-  // Initial load and polling setup
+
   useEffect(() => {
     fetchConversation();
     const interval = setInterval(fetchConversation, 5000);
     return () => clearInterval(interval);
   }, [ucid]);
 
-  // Scroll to bottom whenever messages update
+
   useEffect(() => {
     if (messages.length > 0) {
       endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -109,7 +106,7 @@ const ChatSUConversation = () => {
       display: 'flex',
       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
     }}>
-      {/* Left Panel */}
+
       <div style={{ 
         width: '300px', 
         borderRight: '1px solid #ddd', 
@@ -132,7 +129,6 @@ const ChatSUConversation = () => {
         </button>
       </div>
 
-      {/* Right Panel */}
       <div style={{ 
         flex: 1, 
         display: 'flex', 
@@ -161,7 +157,7 @@ const ChatSUConversation = () => {
           </div>
         ) : (
           <>  
-            {/* Scrollable message list */}
+
             <div style={{ 
               flex: 1, 
               overflowY: 'auto', 
@@ -190,7 +186,6 @@ const ChatSUConversation = () => {
               <div ref={endRef} />
             </div>
 
-            {/* Input area */}
             <div style={{ 
               padding: '15px', 
               backgroundColor: '#f5f5f5', 

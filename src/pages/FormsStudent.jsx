@@ -19,7 +19,6 @@ export default function StudentFormPage() {
   const [error,           setError]           = useState('');
   
 
-  // fetch user's submitted forms
   useEffect(() => {
     if (!userID) {
       setError('User not found.');
@@ -141,7 +140,6 @@ export default function StudentFormPage() {
         backgroundColor: '#f3f4f6',
         fontFamily: 'Arial, sans-serif',
       }}>
-        {/* Top: submitted forms */}
         <section style={{
           flex: '0 0 50%',
           padding: '1rem',
@@ -214,7 +212,6 @@ export default function StudentFormPage() {
         </section>
       </div>
 
-      {/* Modal */}
       {modalOpen && (
         <div onClick={closeModal} style={{
           position: 'fixed',

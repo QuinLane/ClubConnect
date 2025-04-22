@@ -10,7 +10,6 @@ const ChatSUList = () => {
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
 
-  // Fetch threads and resolve user names
   const fetchThreads = async () => {
     setIsLoading(true);
     try {
@@ -61,7 +60,7 @@ const ChatSUList = () => {
   };
 
   useEffect(() => {
-    // initial load + polling every 5 seconds
+   
     fetchThreads();
     const interval = setInterval(fetchThreads, 5000);
     return () => clearInterval(interval);
@@ -78,7 +77,7 @@ const ChatSUList = () => {
       display: 'flex',
       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
     }}>
-      {/* Left Panel */}
+
       <div style={{
         width: '300px',
         borderRight: '1px solid #ddd',
@@ -97,7 +96,6 @@ const ChatSUList = () => {
         )}
       </div>
 
-      {/* Right Panel - Blank */}
       <div style={{
         flex: 1,
         display: 'flex',

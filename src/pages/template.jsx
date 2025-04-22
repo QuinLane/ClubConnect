@@ -3,7 +3,7 @@ import MemberTable from "../components/manageMembersPage/memberTable";
 import ExecutiveTable from "../components/manageMembersPage/executiveTable";
 
 const ManageMembers = () => {
-  // Temporary test data
+
   const testMembers = [
     { email: 'member1@club.com', status: 'Active' },
     { email: 'member2@club.com', status: 'Pending' },
@@ -41,13 +41,13 @@ const ManageMembers = () => {
     { email: 'pr@club.com', role: 'Public Relations' }
   ]);
 
-  // State for new executive form
+
   const [newExecutive, setNewExecutive] = React.useState({
     email: '',
     role: ''
   });
 
-  // Styles for the add executive form
+
   const addExecutiveBoxStyles = {
     border: '1px solid #ddd',
     padding: '15px',
@@ -86,7 +86,7 @@ const ManageMembers = () => {
     }
   };
 
-  // Main container styles
+
   const containerStyles = {
     backgroundColor: '#f8f9fa',
     minHeight: '100vh',
@@ -99,7 +99,7 @@ const ManageMembers = () => {
     overflowX: 'hidden'
   };
 
-  // Header container styles
+
   const headerContainerStyles = {
     backgroundColor: '#2c3e50',
     color: 'white',
@@ -108,7 +108,7 @@ const ManageMembers = () => {
     width: '100%'
   };
 
-  // Header styles
+
   const headerStyles = {
     textAlign: 'center',
     margin: '0 auto',
@@ -117,7 +117,7 @@ const ManageMembers = () => {
     width: '100%'
   };
 
-  // Subheader styles
+
   const subheaderStyles = {
     textAlign: 'center',
     color: '#bdc3c7',
@@ -127,7 +127,7 @@ const ManageMembers = () => {
     width: '100%'
   };
 
-  // Main content styles
+
   const contentStyles = {
     flex: 1,
     padding: '20px',
@@ -137,7 +137,7 @@ const ManageMembers = () => {
     boxSizing: 'border-box'
   };
 
-  // Tables container styles
+
   const tablesContainerStyles = {
     display: 'flex',
     gap: '30px',
@@ -146,7 +146,6 @@ const ManageMembers = () => {
     width: '100%'
   };
 
-  // Column styles
   const columnStyles = {
     flex: 1,
     backgroundColor: 'white',
@@ -159,7 +158,6 @@ const ManageMembers = () => {
     boxSizing: 'border-box'
   };
 
-  // Column header styles
   const columnHeaderStyles = {
     color: '#2c3e50',
     marginBottom: '20px',
@@ -174,7 +172,7 @@ const ManageMembers = () => {
 
   return (
     <div style={containerStyles}>
-      {/* Header Section */}
+
       <div style={headerContainerStyles}>
         <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
           <h1 style={headerStyles}>Member Management System</h1>
@@ -182,21 +180,20 @@ const ManageMembers = () => {
         </div>
       </div>
       
-      {/* Main Content */}
+
       <div style={contentStyles}>
         <div style={tablesContainerStyles}>
-          {/* Left Column - MemberTable */}
+
           <div style={columnStyles}>
      
             <MemberTable members={testMembers} />
           </div>
           
-          {/* Right Column - ExecutiveTable */}
+
           <div style={columnStyles}>
            
             <ExecutiveTable executives={executives} />
             
-            {/* Add Executive Form */}
             <div style={addExecutiveBoxStyles}>
               <h4 style={{ marginTop: 0, marginBottom: '15px', color: '#2c3e50' }}>Add New Executive</h4>
               <input
@@ -226,7 +223,7 @@ const ManageMembers = () => {
         </div>
       </div>
 
-      {/* Debugging footer - remove in production */}
+
       <div style={{
         textAlign: 'center',
         padding: '10px',

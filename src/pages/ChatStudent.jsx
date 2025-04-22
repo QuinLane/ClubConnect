@@ -63,7 +63,6 @@ const ChatStudent = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Scroll to bottom whenever messages update
   useEffect(() => {
     if (messages.length > 0) {
       endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -100,7 +99,6 @@ const ChatStudent = () => {
         Student Union Chat
       </header>
 
-      {/* Messages pane */}
       <div
         style={{
           flex: 1,
@@ -130,7 +128,6 @@ const ChatStudent = () => {
         <div ref={endRef} />
       </div>
 
-      {/* Input */}
       <div
         style={{
           padding: '15px',

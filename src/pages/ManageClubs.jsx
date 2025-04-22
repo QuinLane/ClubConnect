@@ -11,7 +11,6 @@ export default function ManageClubs() {
   const [deletingId, setDeletingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch all clubs
   useEffect(() => {
     async function fetchClubs() {
       try {
@@ -52,7 +51,6 @@ export default function ManageClubs() {
     }
   };
 
-  // Filter clubs by search term
   const displayedClubs = clubs.filter(club =>
     club.clubName.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -64,7 +62,7 @@ export default function ManageClubs() {
     <div style={{ padding: '20px' }}>
       <h1 style={{ marginBottom: '20px' }}>Manage Clubs</h1>
 
-      {/* Search bar */}
+
       <input
         type="text"
         placeholder="Search clubs..."

@@ -12,7 +12,7 @@ export default function ManageUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [menuOpenId, setMenuOpenId] = useState(null);
 
-  // Close menu on outside click
+
   useEffect(() => {
     function handleClickOutside(e) {
       if (!e.target.closest('.menu-container')) {
@@ -23,7 +23,7 @@ export default function ManageUsers() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch all users
+
   useEffect(() => {
     async function fetchUsers() {
       try {

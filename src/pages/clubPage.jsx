@@ -33,7 +33,6 @@ const ClubPage = () => {
       const data = await res.json();
       if (!res.ok) {
         if (res.status === 401) {
-          // Invalid token
           localStorage.removeItem("token");
           localStorage.removeItem("user");
           navigate("/login");
@@ -87,7 +86,7 @@ const ClubPage = () => {
       }
       setError(err.message);
     } finally {
-      setLoading(false); // Ensure loading is reset even on error
+      setLoading(false);
     }
   };
 
@@ -107,7 +106,7 @@ const ClubPage = () => {
 
         if (!res.ok) {
           if (res.status === 401) {
-            // Invalid token
+
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             navigate("/login");
@@ -138,7 +137,7 @@ const ClubPage = () => {
           navigate("/login");
           return;
         }
-        // Optionally set an error state for upcoming events
+   
       } finally {
         setLoading(false);
       }
@@ -187,7 +186,6 @@ const ClubPage = () => {
   const handleContactUpdate = async (updatedContact) => {
     if (!token || !clubID) return;
 
-    // Client-side validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(updatedContact.email)) {
       alert("Error: Please enter a valid email address");
@@ -226,18 +224,17 @@ const ClubPage = () => {
         ...prev,
         contact: {
           email: updatedContact.email,
-          socialMediaLinks: prev.contact.socialMediaLinks, // Will be updated via fetchClub
+          socialMediaLinks: prev.contact.socialMediaLinks,
           website: updatedContact.website,
         },
       }));
 
-      // Re-fetch the club to ensure socialMediaLinks is parsed correctly
       console.log("Fetching club after contact update...");
       await fetchClub();
     } catch (err) {
       console.error("Error in handleContactUpdate:", err);
       if (err.message.includes("Invalid token")) {
-        // Suppress alert; fetchClub will handle redirect
+
         return;
       }
       alert(`Error: ${err.message}`);
@@ -518,7 +515,6 @@ const ClubPage = () => {
           </div>
         </div>
 
-        {/* Events Carousel */}
         <div style={{ borderTop: "1px solid #e0e0e0", paddingTop: "40px" }}>
           <CompressedEventCarousel
             items={upcomingEvents}

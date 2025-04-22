@@ -18,8 +18,8 @@ export default function LoginPage() {
       const res = await fetch("http://localhost:5050/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }), // Changed from UCID to email
-        credentials: "include", // For cookies if using them
+        body: JSON.stringify({ email, password }), 
+        credentials: "include", 
       });
 
       if (!res.ok) {
@@ -29,7 +29,6 @@ export default function LoginPage() {
 
       const { token, user } = await res.json();
 
-      // Store the token in localStorage or context
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       setTimeout(() => {
@@ -38,7 +37,7 @@ export default function LoginPage() {
         } else {
           navigate("/app/dashboard", { replace: true });
         }
-      }, 0); // Delay to ensure localStorage is set and route re-evaluates
+      }, 0);
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {

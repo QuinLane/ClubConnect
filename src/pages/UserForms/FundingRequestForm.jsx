@@ -9,11 +9,11 @@ export default function FundingRequestForm({
   isReadOnly = false,
   initialData = {}
 }) {
-  // dynamic clubs fetch
+
   const [clubs,        setClubs]        = useState([]);
   const [loadingClubs, setLoadingClubs] = useState(true);
 
-  // form fields
+
   const [clubName,        setClubName]        = useState(initialData.clubName || '');
   const [requestAmount,   setRequestAmount]   = useState(initialData.requestAmount || '');
   const [purpose,         setPurpose]         = useState(initialData.purpose || '');
@@ -21,7 +21,7 @@ export default function FundingRequestForm({
   const [error,           setError]           = useState('');
   const [isLoading,       setIsLoading]       = useState(false);
 
-  // fetch clubs the user is an exec of
+
   useEffect(() => {
     if (!userID) {
       setError('User not found; please log in again.');
@@ -38,7 +38,7 @@ export default function FundingRequestForm({
       .then(data => {
         const names = data.map(rec => rec.club.clubName);
         setClubs(names);
-        // preload clubName when reviewing
+
         if (isReadOnly && initialData.clubName) {
           setClubName(initialData.clubName);
         }
@@ -47,7 +47,7 @@ export default function FundingRequestForm({
       .finally(() => setLoadingClubs(false));
   }, [userID, isReadOnly, initialData]);
 
-  // preload other fields when reviewing
+
   useEffect(() => {
     if (isReadOnly) {
       setRequestAmount(initialData.requestAmount || '');
@@ -271,7 +271,6 @@ function Field({
     );
   }
 
-  // default input
   return (
     <div>
       <label style={{

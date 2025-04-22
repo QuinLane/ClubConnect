@@ -82,7 +82,6 @@ export default function SUFormsPage() {
         const err = await res.json();
         throw new Error(err.error || 'Failed to update form');
       }
-      // remove it from the list
       setForms(forms.filter(f => f.id !== formID));
       setModalOpen(false);
     } catch (e) {
@@ -100,7 +99,6 @@ export default function SUFormsPage() {
 
   return (
     <>
-      {/* Pending forms table */}
       <div style={{ padding: '1rem' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>
           SU Admin: Pending Forms
@@ -111,7 +109,6 @@ export default function SUFormsPage() {
         />
       </div>
 
-      {/* Modal */}
       {modalOpen && activeForm && (
         <div
           onClick={closeModal}
@@ -150,10 +147,8 @@ export default function SUFormsPage() {
               &times;
             </button>
 
-            {/* read-only form */}
             {activeForm.FormComponent}
 
-            {/* Approve / Deny controls */}
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
               <button
                 onClick={() => handleDecision(activeForm.id, 'Approved')}
