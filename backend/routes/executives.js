@@ -6,15 +6,13 @@ import { authenticate, requireSUAdmin } from "../middleware/authenticate.js";
 
 const router = express.Router();
 
-// Joi schema for creating/updating executives
 const executiveSchema = Joi.object({
   email: Joi.string().email().required(),
   clubID: Joi.number().integer().required(),
   role: Joi.string().allow(null),
 });
-// Joi schema for assigning role
 const roleSchema = Joi.object({
-  role: Joi.string().allow(null).required(), // Changed from clubRoleID
+  role: Joi.string().allow(null).required(), 
 });
 
 router.put(
@@ -23,7 +21,6 @@ router.put(
   validate(roleSchema),
   executiveController.assignRoleToExecutive
 );
-// Executive routes
 router.get("/", authenticate, executiveController.getAllExecutives);
 router.get(
   "/club/:clubID",
@@ -42,7 +39,7 @@ router.get(
 );
 router.post(
   "/",
-  authenticate,  // Changed from requireSUAdmin
+  authenticate,  
   validate(executiveSchema),
   executiveController.createExecutive
 );

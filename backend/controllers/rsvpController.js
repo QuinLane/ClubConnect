@@ -1,8 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import fs from "fs/promises"; // For reading default image file
+import fs from "fs/promises"; 
 const prisma = new PrismaClient();
 
-// Helper to convert image buffer to base64 or load default image
 const getImageAsBase64 = async (imageBuffer) => {
   if (!imageBuffer) {
     const defaultImage = await fs.readFile("../public/images/default.webp");
@@ -38,7 +37,7 @@ export const unsubmitRSVP = async (req, res) => {
         eventID: parseInt(eventID),
       },
     });
-    res.status(204).json(); // No content on successful deletion
+    res.status(204).json(); 
   } catch (error) {
     res
       .status(500)
@@ -46,7 +45,6 @@ export const unsubmitRSVP = async (req, res) => {
   }
 };
 
-// Note: Available to all users
 export const getRSVPsForEvent = async (req, res) => {
   const { eventID } = req.params;
   try {
@@ -60,7 +58,6 @@ export const getRSVPsForEvent = async (req, res) => {
   }
 };
 
-// Note: Available to authenticated users
 export const getUserRSVPs = async (req, res) => {
   const { userID } = req.params;
   try {
@@ -76,7 +73,6 @@ export const getUserRSVPs = async (req, res) => {
         user: true,
       },
     });
-    // Convert event images to base64
     const rsvpsWithImages = await Promise.all(
       rsvps.map(async (rsvp) => ({
         ...rsvp,

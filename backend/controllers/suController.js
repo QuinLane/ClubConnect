@@ -2,7 +2,6 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Note: Available to SU admins
 export const getAllOpenForms = async (req, res) => {
   try {
     const forms = await prisma.form.findMany({
@@ -40,7 +39,7 @@ export const getSUStats = async (req, res) => {
       },
     });
     const totalClubsCount = await prisma.club.count({
-      where: { clubID: { not: 1 } }, // Exclude SU club
+      where: { clubID: { not: 1 } }, 
     });
     res.status(200).json({
       openFormsCount,

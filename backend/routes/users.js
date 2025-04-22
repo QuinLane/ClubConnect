@@ -12,7 +12,6 @@ const userSchema = Joi.object({
 
 const router = express.Router();
 
-// User CRUD
 router.post("/", userController.createUser);
 router.post("/login", userController.login); 
 router.get("/:id/name", userController.getNameFromId);

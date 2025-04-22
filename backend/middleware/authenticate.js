@@ -7,7 +7,7 @@ export const authenticate = (req, res, next) => {
   if (!token) return res.status(401).json({ error: "No token provided" });
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { userID, userType }
+    req.user = decoded; 
     next();
   } catch (error) {
     res.status(401).json({ error: "Invalid token" });
@@ -15,7 +15,7 @@ export const authenticate = (req, res, next) => {
 };
 
 export const requireSUAdmin = (req, res, next) => {
-  const { userType } = req.user; // From authenticate middleware
+  const { userType } = req.user;
   if (userType !== "SUAdmin") {
     return res.status(403).json({ error: "SUAdmin role required" });
   }

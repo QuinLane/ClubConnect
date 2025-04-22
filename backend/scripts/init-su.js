@@ -1,4 +1,3 @@
-//to run this script run node init-su.js
 
 const { PrismaClient } = require("@prisma/client");
 
@@ -6,7 +5,6 @@ const prisma = new PrismaClient();
 
 async function initSUClub() {
   try {
-    // Check if SU club exists
     const existingSU = await prisma.club.findUnique({
       where: { clubID: 1 },
     });
@@ -22,7 +20,7 @@ async function initSUClub() {
         clubName: "Student Union",
         description: "Central Student Union",
         createdAt: new Date(),
-        president: 2, // Default SU admin userID
+        president: 2, 
       },
     });
     await prisma.executive.create({

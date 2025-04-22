@@ -9,7 +9,6 @@ import {
 
 const router = express.Router();
 
-// Joi schema for form submission
 const formSchema = Joi.object({
   formType: Joi.string()
     .valid("ClubCreation", "EventApproval", "Funding", "DeleteClub")

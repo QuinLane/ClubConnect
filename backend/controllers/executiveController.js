@@ -197,7 +197,7 @@ export const getExecutivesByClub = async (req, res) => {
         user: true
       },
       orderBy: {
-        role: 'asc' // Optional: Sort by role if you want
+        role: 'asc' 
       }
     });
     

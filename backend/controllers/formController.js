@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export const submitForm = async (req, res) => {
   const { userID } = req.params;
-  const { formType, details } = req.body; // details is an object, will be stringified
+  const { formType, details } = req.body; 
   try {
     const form = await prisma.form.create({
       data: {
@@ -23,7 +23,6 @@ export const submitForm = async (req, res) => {
   }
 };
 
-// Note: Available to all (SU admins will filter on frontend)
 export const getAllForms = async (req, res) => {
   try {
     const forms = await prisma.form.findMany({
@@ -35,7 +34,6 @@ export const getAllForms = async (req, res) => {
   }
 };
 
-// Note: Available to all (SU admins will filter on frontend)
 export const getFormById = async (req, res) => {
   const { formID } = req.params;
   try {
@@ -70,7 +68,7 @@ export const getOpenForms = async (req, res) => {
 // Note: Only SU admins can approve/reject forms
 export const handleFormApproval = async (req, res) => {
   const { formID } = req.params;
-  const { status } = req.body; // "Approved" or "Rejected"
+  const { status } = req.body; 
   try {
     const form = await prisma.form.findUnique({
       where: { formID: parseInt(formID) },
@@ -87,7 +85,6 @@ export const handleFormApproval = async (req, res) => {
       return res.status(200).json({ message: "Form rejected" });
     }
 
-    // If approved, parse details and call the appropriate create function
     const details = JSON.parse(form.details);
     let result;
     switch (form.formType) {
@@ -114,13 +111,13 @@ export const handleFormApproval = async (req, res) => {
         return res.status(400).json({ error: "Invalid form type" });
     }
 
-    // Update form status to Approved
+    
     await prisma.form.update({
       where: { formID: parseInt(formID) },
       data: { status: "Approved" },
     });
 
-    return result; // The response is handled by the create function
+    return result; 
   } catch (error) {
     res.status(500).json({ error: `Failed to handle form: ${error.message}` });
   }

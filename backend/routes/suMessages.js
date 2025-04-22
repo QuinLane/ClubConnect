@@ -6,7 +6,6 @@ import { validate } from "../middleware/validate.js";
 
 const router = express.Router();
 
-// Joi schema for sending SU message
 const sendMessageSchema = Joi.object({
   userID: Joi.number().integer().required(),
   content: Joi.string().required(),
@@ -19,7 +18,6 @@ const replyMessageSchema = Joi.object({
   suAdminID: Joi.number().integer().required(),
 });
 
-// SU Message routes
 router.post(
   "/messageStudent",
   authenticate,

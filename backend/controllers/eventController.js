@@ -1,11 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import * as venueController from "./venueController.js";
 import fs from "fs/promises"; // For reading default image file
-import imageSize from "image-size"; // For validating image buffers
+import imageSize from "image-size"; 
 
 const prisma = new PrismaClient();
 
-// Helper to validate an image buffer
 const validateImageBuffer = (buffer) => {
   try {
     // Use image-size to validate the buffer and get dimensions
@@ -32,18 +31,14 @@ const getImageAsBase64 = async (imageBuffer, mimetype = "image/webp") => {
     throw new Error("Invalid image buffer");
   }
 
-  // Ensure the buffer is clean
   console.log("Image buffer type:", imageBuffer instanceof Buffer);
   const cleanBuffer = Buffer.from(imageBuffer);
   const base64String = cleanBuffer.toString("base64");
   console.log("Image base64 length:", base64String.length);
-  // Log the first 100 characters of the base64 string to inspect for invalid characters
   console.log("Image base64 first 100 chars:", base64String.substring(0, 100));
-  // Check for invalid characters
   const invalidChars = base64String.match(/[^A-Za-z0-9+/=]/g);
   if (invalidChars) {
     console.log("Invalid characters in base64 string:", invalidChars);
-    // Remove invalid characters (e.g., newlines, spaces)
     const cleanedBase64String = base64String.replace(/[^A-Za-z0-9+/=]/g, "");
     console.log("Cleaned base64 length:", cleanedBase64String.length);
     return `data:${mimetype};base64,${cleanedBase64String}`;
@@ -112,7 +107,7 @@ export const getEventById = async (req, res) => {
         rsvps: { include: { user: true } },
         reservation: {
           include: {
-            venue: true, // Include the Venue relation
+            venue: true, 
           },
         },
       },
@@ -130,12 +125,10 @@ export const getEventById = async (req, res) => {
   }
 };
 
-// Note: Only club execs can update events
 export const updateEvent = async (req, res) => {
   const { eventID } = req.params;
   const { name, description } = req.body;
   try {
-    // Check for uploaded image
     let image = undefined;
     if (req.files && req.files.image) {
       const file = req.files.image;
@@ -154,7 +147,6 @@ export const updateEvent = async (req, res) => {
         reservation: true,
       },
     });
-    // Convert image to base64
     const eventWithImage = {
       ...event,
       image: await getImageAsBase64(event.image),
@@ -170,11 +162,9 @@ export async function deleteEventById(eventID) {
 
   await prisma.rSVP.deleteMany({ where: { eventID: id } });
   await prisma.reservation.deleteMany({ where: { eventID: id } });
-  // remove the event itself
   await prisma.event.delete({ where: { eventID: id } });
 }
 
-// HTTP‑handler just calls the helper:
 export const deleteEvent = async (req, res) => {
   try {
     await deleteEventById(req.params.eventID);
@@ -192,7 +182,7 @@ export const createEvent = async (req, res) => {
 
   try {
     let image = null;
-    let mimetype = "image/webp"; // Default mimetype
+    let mimetype = "image/webp"; 
     if (req.files && req.files.image) {
       const file = req.files.image;
       if (!file.mimetype.startsWith("image/")) {
@@ -340,7 +330,6 @@ export const getUpcomingUserEvents = async (req, res) => {
   }
 };
 
-// Note: Available to all
 export const getRSVPCount = async (req, res) => {
   const { eventID } = req.params;
   try {
@@ -355,7 +344,6 @@ export const getRSVPCount = async (req, res) => {
   }
 };
 
-// Note: Available to all
 export const getEventsByClub = async (req, res) => {
   const { clubID } = req.params;
   try {
@@ -477,12 +465,11 @@ export const updateEventPhoto = async (req, res) => {
     const image = Buffer.isBuffer(file.data)
       ? file.data
       : Buffer.from(file.data, "binary");
-    const mimetype = file.mimetype; // e.g., "image/jpeg"
+    const mimetype = file.mimetype; 
     console.log("Uploaded image buffer length:", image.length);
     console.log("Uploaded image mimetype:", mimetype);
     console.log("Uploaded image buffer type:", image instanceof Buffer);
 
-    // Validate the image buffer before saving
     if (!validateImageBuffer(image)) {
       return res
         .status(400)

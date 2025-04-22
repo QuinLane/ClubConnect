@@ -10,7 +10,6 @@ import { validate } from "../middleware/validate.js";
 
 const router = express.Router();
 
-// Joi schema for creating notifications
 const createNotificationSchema = Joi.object({
   title: Joi.string().required(),
   content: Joi.string().required(),
@@ -26,7 +25,6 @@ const sendToAllSchema = Joi.object({
   senderID: Joi.number().integer().required(),
 });
 
-// Joi schema for sending to club
 const sendToClubSchema = Joi.object({
   title: Joi.string().required(),
   content: Joi.string().required(),
