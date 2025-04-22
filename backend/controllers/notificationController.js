@@ -28,7 +28,7 @@ export const createNotification = async (req, res) => {
     // Include sender in recipients if not already included
     const allRecipients = [...new Set([
       ...recipientIDs.map(id => parseInt(id)),
-      parseInt(senderID) // Add sender to recipients
+      parseInt(senderID) 
     ])];
 
     const notification = await prisma.notification.create({
@@ -60,7 +60,6 @@ export const createNotification = async (req, res) => {
     });
   }
 };
-// Updated sendNotificationToAll
 export const sendNotificationToAll = async (req, res) => {
   const { title, content, senderID } = req.body;
   try {
@@ -72,7 +71,6 @@ export const sendNotificationToAll = async (req, res) => {
       return res.status(403).json({ error: "Only SU admins can send to all" });
     }
 
-    // Get ALL students (not just club members)
     const students = await prisma.user.findMany({
       where: { userType: "Student" },
       select: { userID: true },
@@ -82,7 +80,6 @@ export const sendNotificationToAll = async (req, res) => {
       return res.status(404).json({ error: "No students found to notify" });
     }
 
-    // Include sender in recipients
     const allRecipients = [
       ...students.map(s => s.userID),
       parseInt(senderID)
@@ -116,7 +113,6 @@ export const sendNotificationToAll = async (req, res) => {
   }
 };
 
-// Updated sendNotificationToClub
 export const sendNotificationToClub = async (req, res) => {
   const { title, content, senderID, clubID } = req.body;
   try {
@@ -128,7 +124,6 @@ export const sendNotificationToClub = async (req, res) => {
       return res.status(404).json({ error: "Sender not found" });
     }
 
-    // First check if club exists
     const club = await prisma.club.findUnique({
       where: { clubID: parseInt(clubID) },
     });
@@ -137,7 +132,6 @@ export const sendNotificationToClub = async (req, res) => {
       return res.status(400).json({ error: "Please select a valid clubID" });
     }
 
-    // SUAdmins can send to any club without being admins
     if (sender.userType !== "SUAdmin") {
       const isClubAdmin = await prisma.executive.findFirst({
         where: { 
@@ -150,7 +144,6 @@ export const sendNotificationToClub = async (req, res) => {
       }
     }
 
-    // Get all club members (including executives)
     const members = await prisma.memberOf.findMany({
       where: { clubID: parseInt(clubID) },
       select: { userID: true },
@@ -166,7 +159,7 @@ export const sendNotificationToClub = async (req, res) => {
     const uniqueRecipientIDs = [
       ...new Set([
         ...allRecipients.map(r => r.userID),
-        parseInt(senderID) // Add sender to recipients
+        parseInt(senderID) 
       ])
     ];
 
@@ -203,9 +196,8 @@ export const sendNotificationToClub = async (req, res) => {
     });
   }
 };
-// [Rest of your existing functions remain unchanged...]
 
-// Note: Available to authenticated users
+
 export const getUserNotifications = async (req, res) => {
   const { userID } = req.params;
   try {
@@ -216,7 +208,6 @@ export const getUserNotifications = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Get all clubs where user is an executive
     const executiveClubs = await prisma.executive.findMany({
       where: { userID: parseInt(userID) },
       select: { clubID: true },
@@ -225,13 +216,11 @@ export const getUserNotifications = async (req, res) => {
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
-          // Notifications sent directly to this user
           { recipients: { some: { userID: parseInt(userID) } } },
-          // Notifications sent to clubs where user is executive
           {
             AND: [
               { clubID: { in: executiveClubs.map(ec => ec.clubID) } },
-              { sender: { userType: "SUAdmin" } }, // Only show SUAdmin notifications if user is executive
+              { sender: { userType: "SUAdmin" } }, 
             ],
           },
         ],
@@ -252,7 +241,6 @@ export const getUserNotifications = async (req, res) => {
 };
 
 
-// In notificationController.js
 export const getClubNotifications = async (req, res) => {
   const { clubID } = req.params;
   try {
@@ -277,19 +265,15 @@ export const getClubNotifications = async (req, res) => {
 export const getExecutiveNotifications = async (req, res) => {
   const { userID } = req.params;
   try {
-    // Get all clubs where user is an executive
     const executiveClubs = await prisma.executive.findMany({
       where: { userID: parseInt(userID) },
       select: { clubID: true },
     });
 
-    // Get notifications for these clubs
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
-          // Notifications sent directly to user
           { recipients: { some: { userID: parseInt(userID) } } },
-          // Notifications sent to clubs where user is executive
           { clubID: { in: executiveClubs.map((ec) => ec.clubID) } },
         ],
       },
@@ -308,16 +292,13 @@ export const getExecutiveNotifications = async (req, res) => {
   }
 };
 
-// In notificationController.js
 export const getNotificationsForUser = async (req, res) => {
   const { userID } = req.params;
   try {
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
-          // Notifications sent to this user
           { recipients: { some: { userID: parseInt(userID) } } },
-          // Notifications sent by this user
           { senderID: parseInt(userID) },
         ],
       },
@@ -342,11 +323,8 @@ export const getNotificationsForSender = async (req, res) => {
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
-          // Notifications sent by this user
           { senderID: parseInt(userID) },
-          // Notifications where this user is a recipient
           { recipients: { some: { userID: parseInt(userID) } } },
-          // Notifications sent to all users (if user is SUAdmin)
           {
             AND: [
               { recipients: { some: { user: { userType: "SUAdmin" } } } },
@@ -367,7 +345,6 @@ export const getNotificationsForSender = async (req, res) => {
       orderBy: { postedAt: "desc" },
     });
 
-    // Filter out duplicates and format the response
     const uniqueNotifications = notifications.filter(
       (notification, index, self) =>
         index ===
@@ -387,7 +364,6 @@ export const deleteClubNotifications = async (req, res) => {
 
   try {
 
-    // Delete all notifications for this club (Prisma cascades to recipients)
     const deleteResult = await prisma.notification.deleteMany({
       where: { clubID: parseInt(clubID) },
     });

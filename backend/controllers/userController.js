@@ -53,7 +53,6 @@ export const createUser = async (req, res) => {
   }
 };
 
-// Get a user's name by their userID
 export const getNameFromId = async (req, res) => {
   const { id } = req.params;
   try {
@@ -76,7 +75,6 @@ export const makeUserAdmin = async (req, res) => {
   const { userID } = req.params;
 
   try {
-    // Update the target user's type
     const updatedUser = await prisma.user.update({
       where: { userID: parseInt(userID) },
       data: { userType: "SUAdmin" },
@@ -93,7 +91,7 @@ export const makeUserAdmin = async (req, res) => {
       user: updatedUser
     });
   } catch (error) {
-    if (error.code === "P2025") { // Prisma "Record not found" error
+    if (error.code === "P2025") { 
       return res.status(404).json({ error: "User not found" });
     }
     console.error("[MAKE ADMIN ERROR]", error);
@@ -105,7 +103,6 @@ export const makeUserStudent = async (req, res) => {
   const { userID } = req.params;
 
   try {
-    // Update the user's type to Student
     const updatedUser = await prisma.user.update({
       where: { userID: parseInt(userID) },
       data: { userType: "Student" },
@@ -117,7 +114,6 @@ export const makeUserStudent = async (req, res) => {
       }
     });
 
-    // If the user was an executive in any clubs, remove those roles
     await prisma.executive.deleteMany({
       where: { userID: parseInt(userID) }
     });
@@ -127,14 +123,13 @@ export const makeUserStudent = async (req, res) => {
       user: updatedUser
     });
   } catch (error) {
-    if (error.code === "P2025") { // Prisma "Record not found" error
+    if (error.code === "P2025") { 
       return res.status(404).json({ error: "User not found" });
     }
     console.error("[MAKE STUDENT ERROR]", error);
     res.status(500).json({ error: "Failed to update user role" });
   }
 };
-// controllers/userController.js
 export const getAllUsers = async (req, res) => {
   try {
     const users = await prisma.user.findMany({

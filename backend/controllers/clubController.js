@@ -1,10 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
-import fs from "fs/promises"; // For reading default image file
+import fs from "fs/promises"; 
 import { deleteEventById } from "./eventController.js";
 const prisma = new PrismaClient();
 
-// Helper to convert image buffer to base64 or load default image
 const getImageAsBase64 = async (imageBuffer) => {
   if (!imageBuffer) {
     const defaultImage = await fs.readFile("../public/images/default.webp");
@@ -13,7 +12,6 @@ const getImageAsBase64 = async (imageBuffer) => {
   return `data:image/webp;base64,${imageBuffer.toString("base64")}`;
 };
 
-// Note: Available to all
 export const getAllClubs = async (req, res) => {
   try {
     const clubs = await prisma.club.findMany({
@@ -22,7 +20,6 @@ export const getAllClubs = async (req, res) => {
         members: { include: { user: true } },
       },
     });
-    // Convert images to base64
     const clubsWithImages = await Promise.all(
       clubs.map(async (club) => ({
         ...club,
@@ -35,7 +32,6 @@ export const getAllClubs = async (req, res) => {
   }
 };
 
-// Note: Available to all
 export const getClubById = async (req, res) => {
   const { clubID } = req.params;
   try {
@@ -49,7 +45,6 @@ export const getClubById = async (req, res) => {
     if (!club) {
       return res.status(404).json({ error: "Club not found" });
     }
-    // Convert image to base64
     const clubWithImage = {
       ...club,
       image: await getImageAsBase64(club.image),
@@ -60,7 +55,6 @@ export const getClubById = async (req, res) => {
   }
 };
 
-// Note: Only SU admins should be able to do this
 export const createClub = async (req, res) => {
   const {
     clubName,
@@ -71,15 +65,12 @@ export const createClub = async (req, res) => {
     clubEmail,
   } = req.body;
   try {
-    // Check for uploaded image
     let image = null;
     if (req.files && req.files.image) {
       const file = req.files.image;
-      // Validate file type
       if (!file.mimetype.startsWith("image/")) {
         return res.status(400).json({ error: "Only image files are allowed" });
       }
-      // Use Buffer directly (express-fileupload provides data as Buffer)
       image = file.data;
     }
 
@@ -91,7 +82,7 @@ export const createClub = async (req, res) => {
         socialMediaLinks,
         website,
         clubEmail,
-        image, // Save image as binary data
+        image, 
       },
     });
     await prisma.memberOf.create({
@@ -107,7 +98,6 @@ export const createClub = async (req, res) => {
         role: "President",
       },
     });
-    // Convert image to base64 for response
     const clubWithImage = {
       ...club,
       image: await getImageAsBase64(club.image),
@@ -118,15 +108,13 @@ export const createClub = async (req, res) => {
   }
 };
 
-// Note: Only club admins should be able to do this
 export const updateClub = async (req, res) => {
   const { clubID } = req.params;
   const { clubName, description, socialMediaLinks, website, clubEmail } =
     req.body;
 
   try {
-    // Check for uploaded image
-    let image = undefined; // Use undefined to avoid overwriting if no image is provided
+    let image = undefined; 
     if (req.files && req.files.image) {
       const file = req.files.image;
       if (!file.mimetype.startsWith("image/")) {
@@ -145,10 +133,9 @@ export const updateClub = async (req, res) => {
           : undefined,
         website,
         clubEmail,
-        image, // Only update image if provided
+        image, 
       },
     });
-    // Convert image to base64 for response
     const clubWithImage = {
       ...club,
       image: await getImageAsBase64(club.image),
@@ -159,23 +146,19 @@ export const updateClub = async (req, res) => {
   }
 };
 
-// Note: Only SU admins should be able to do this
 export const deleteClub = async (req, res) => {
   const clubID = parseInt(req.params.clubID, 10);
 
   try {
-    // 1. First delete all events and their related data (RSVPs, reservations)
     const events = await prisma.event.findMany({
       where: { clubID },
       select: { eventID: true },
     });
 
     for (const { eventID } of events) {
-      await deleteEventById(eventID); // Assuming this helper exists
+      await deleteEventById(eventID); 
     }
 
-    // 2. Delete all notifications and their recipients for this club
-    // First delete notification recipients (if not using cascade)
     await prisma.notificationRecipient.deleteMany({
       where: {
         notification: {
@@ -184,16 +167,13 @@ export const deleteClub = async (req, res) => {
       },
     });
 
-    // Then delete the notifications themselves
     await prisma.notification.deleteMany({
       where: { clubID },
     });
 
-    // 3. Delete all memberships and executive roles
     await prisma.memberOf.deleteMany({ where: { clubID } });
     await prisma.executive.deleteMany({ where: { clubID } });
 
-    // 4. Finally delete the club itself
     await prisma.club.delete({ where: { clubID } });
 
     return res.status(204).end();
@@ -204,10 +184,9 @@ export const deleteClub = async (req, res) => {
   }
 };
 
-// Note: Only club admins can update roles
 export const updateClubRoles = async (req, res) => {
   const { clubID, userID } = req.params;
-  const { role } = req.body; // Now assigns a role string
+  const { role } = req.body; 
   try {
     const executive = await prisma.executive.update({
       where: {
@@ -223,7 +202,6 @@ export const updateClubRoles = async (req, res) => {
   }
 };
 
-// Note: Only club admins can add executives (via Executive table)
 export const addExec = async (req, res) => {
   const { clubID } = req.params;
   const { userID, role } = req.body;
@@ -259,7 +237,6 @@ export const addExec = async (req, res) => {
   }
 };
 
-// Note: Only club admins can add members (via MemberOf table)
 export const addMember = async (req, res) => {
   const { clubID } = req.params;
   const { userID } = req.body;
@@ -276,7 +253,6 @@ export const addMember = async (req, res) => {
   }
 };
 
-// Note: Only club admins can remove members
 export const removeMember = async (req, res) => {
   const { clubID, userID } = req.params;
   try {
@@ -292,7 +268,7 @@ export const removeMember = async (req, res) => {
         userID: parseInt(userID),
       },
     });
-    res.status(204).json(); // No content on successful deletion
+    res.status(204).json(); 
   } catch (error) {
     res
       .status(500)
@@ -300,7 +276,6 @@ export const removeMember = async (req, res) => {
   }
 };
 
-// Note: Available to authenticated users
 export const getUserClubs = async (req, res) => {
   const { userID } = req.params;
   try {
@@ -318,7 +293,6 @@ export const getUserClubs = async (req, res) => {
         events: true,
       },
     });
-    // Convert images to base64
     const clubsWithImages = await Promise.all(
       clubs.map(async (club) => ({
         ...club,
@@ -333,7 +307,6 @@ export const getUserClubs = async (req, res) => {
   }
 };
 
-// Note: Available to authenticated users
 export const getUserExecClubs = async (req, res) => {
   const { userID } = req.params;
   try {
@@ -342,7 +315,7 @@ export const getUserExecClubs = async (req, res) => {
         executives: {
           some: {
             userID: parseInt(userID),
-            role: { not: null }, // Only clubs where user has a role
+            role: { not: null }, 
           },
         },
       },
@@ -351,7 +324,6 @@ export const getUserExecClubs = async (req, res) => {
         events: true,
       },
     });
-    // Convert images to base64
     const clubsWithImages = await Promise.all(
       clubs.map(async (club) => ({
         ...club,
@@ -366,7 +338,6 @@ export const getUserExecClubs = async (req, res) => {
   }
 };
 
-// Note: Only club admins
 export const getClubMembers = async (req, res) => {
   const { clubID } = req.params;
   try {
@@ -384,7 +355,6 @@ export const getClubMembers = async (req, res) => {
   }
 };
 
-// Note: Available to all
 export const searchClubs = async (req, res) => {
   const { query } = req.query;
   try {
@@ -403,7 +373,6 @@ export const searchClubs = async (req, res) => {
         events: true,
       },
     });
-    // Convert images to base64
     const clubsWithImages = await Promise.all(
       clubs.map(async (club) => ({
         ...club,
@@ -416,7 +385,6 @@ export const searchClubs = async (req, res) => {
   }
 };
 
-// Note: Available to all
 export const getClubStats = async (req, res) => {
   const { clubID } = req.params;
   try {
@@ -446,15 +414,13 @@ export const getClubStats = async (req, res) => {
   }
 };
 
-// Checks if user is an executive of the club
 export const checkClubAdminPermissions = async (userID, clubID) => {
   const executive = await prisma.executive.findFirst({
     where: { userID, clubID },
   });
-  return !!executive; // Returns true if user is an executive, false otherwise
+  return !!executive; 
 };
 
-// Returns the list of club executives for a given club
 export const getClubExecutives = async (clubID) => {
   const execs = await prisma.executive.findMany({
     where: { clubID },
@@ -463,13 +429,11 @@ export const getClubExecutives = async (clubID) => {
   return execs;
 };
 
-// Note: Available to authenticated users to join clubs
 export const joinClub = async (req, res) => {
   const { clubID } = req.params;
-  const { userID } = req.user; // Assuming user is authenticated
+  const { userID } = req.user; 
 
   try {
-    // Check if user is already a member
     const existingMember = await prisma.memberOf.findUnique({
       where: {
         userID_clubID: {
@@ -485,7 +449,6 @@ export const joinClub = async (req, res) => {
         .json({ error: "User is already a member of this club" });
     }
 
-    // Add user as member
     const member = await prisma.memberOf.create({
       data: {
         userID: userID,
@@ -499,13 +462,11 @@ export const joinClub = async (req, res) => {
   }
 };
 
-// Note: Available to authenticated members to leave clubs
 export const leaveClub = async (req, res) => {
   const { clubID } = req.params;
-  const { userID } = req.user; // Assuming user is authenticated
+  const { userID } = req.user; 
 
   try {
-    // Check if user is a member
     const existingMember = await prisma.memberOf.findUnique({
       where: {
         userID_clubID: {
@@ -521,7 +482,6 @@ export const leaveClub = async (req, res) => {
         .json({ error: "User is not a member of this club" });
     }
 
-    // Remove user as member and from executives if they were one
     await prisma.executive.deleteMany({
       where: {
         clubID: parseInt(clubID),
@@ -538,12 +498,11 @@ export const leaveClub = async (req, res) => {
       },
     });
 
-    res.status(204).json(); // No content on successful deletion
+    res.status(204).json(); 
   } catch (error) {
     res.status(500).json({ error: `Failed to leave club: ${error.message}` });
   }
 };
-// Note: Only club admins can update bio
 export const updateBio = async (req, res) => {
   const { clubID } = req.params;
   const { description } = req.body;
@@ -587,7 +546,6 @@ export const updateContact = async (req, res) => {
   const { clubEmail, socialMediaLinks, website } = req.body;
 
   try {
-    // Check if the club exists
     const club = await prisma.club.findUnique({
       where: { clubID: parseInt(clubID) },
     });
@@ -604,7 +562,7 @@ export const updateContact = async (req, res) => {
 
     res.status(200).json(updatedClub);
   } catch (error) {
-    console.error(`Error updating contact for club ${clubID}:`, error); // Log the full error
+    console.error(`Error updating contact for club ${clubID}:`, error); 
     if (error.code === "P2002") {
       return res.status(400).json({ error: "Database constraint violation" });
     }

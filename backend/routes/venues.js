@@ -6,15 +6,13 @@ import { authenticate, requireSUAdmin } from "../middleware/authenticate.js";
 
 const router = express.Router();
 
-// Joi schema for Venue (POST)
 const venueSchema = Joi.object({
   name: Joi.string().required(),
   capacity: Joi.number().integer().min(1).required(),
   address: Joi.string().required(),
-  type: Joi.string().allow(null), // Optional type field
+  type: Joi.string().allow(null), 
 });
 
-// Joi schema for Venue (PUT - partial updates)
 const venueUpdateSchema = Joi.object({
   name: Joi.string(),
   capacity: Joi.number().integer().min(1),
@@ -22,10 +20,9 @@ const venueUpdateSchema = Joi.object({
   type: Joi.string().allow(null),
 }).min(1); // At least one field required
 
-// Joi schema for Reservation
 const reservationSchema = Joi.object({
   venueID: Joi.number().integer().required(),
-  eventID: Joi.number().integer().required(), // Added eventID
+  eventID: Joi.number().integer().required(), 
   date: Joi.date().required(),
 });
 

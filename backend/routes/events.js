@@ -10,18 +10,15 @@ import {
 
 const router = express.Router();
 
-// Joi schema for updating events
 const updateEventSchema = Joi.object({
   name: Joi.string().optional(),
   description: Joi.string().optional(),
-}).or("name", "description"); // Allow requests with either name or description, but not required if image is present via FormData
+}).or("name", "description"); 
 
-// Joi schema for searching events
 const searchSchema = Joi.object({
   query: Joi.string().required(),
 });
 
-// Event routes
 router.get("/", authenticate, eventController.getAllEvents);
 router.get("/upcoming", authenticate, eventController.getUpcomingEvents);
 router.get(
@@ -52,9 +49,8 @@ router.put(
   "/:eventID",
   authenticate,
   requireClubAdminForEvent,
-  // validate(updateEventSchema),
   eventController.updateEvent
-); // EXPECTS FORMDATA IF YOU NEED TO UPDATE IMAGE
+); 
 router.delete(
   "/:eventID",
   authenticate,

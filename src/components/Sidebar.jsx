@@ -12,7 +12,7 @@ import {
   Bell,
   StickyNote,
   User,
-  MessageSquareText, // 👈 Importing a suitable message icon from Lucide
+  MessageSquareText, 
 } from "lucide-react";
 
 export default function Sidebar() {

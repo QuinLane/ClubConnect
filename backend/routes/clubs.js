@@ -9,28 +9,23 @@ import {
 } from "../middleware/authenticate.js";
 
 const router = express.Router();
-// Joi schema for creating/updating clubs
 const clubSchema = Joi.object({
   clubName: Joi.string().required(),
   description: Joi.string().allow(""),
 });
 
-// Joi schema for updating club roles
 const updateRoleSchema = Joi.object({
   clubRoleID: Joi.number().integer().allow(null),
 });
 
-// Joi schema for adding club roles
 const addRoleSchema = Joi.object({
   roleName: Joi.string().required(),
 });
 
-// Joi schema for adding members
 const addMemberSchema = Joi.object({
   userID: Joi.number().integer().required(),
 });
 
-// Joi schema for searching clubs
 const searchSchema = Joi.object({
   query: Joi.string().required(),
 });
@@ -58,14 +53,14 @@ router.post(
   requireSUAdmin,
   validate(clubSchema),
   clubController.createClub
-); //EXPECTS FORMDATA IF YOU NEED TO INCLUDE IMAGE OTHERWISE IT USES DEFAULT
+); 
 router.put(
   "/:clubID",
   authenticate,
   requireClubAdmin,
   validate(clubSchema),
   clubController.updateClub
-); //EXPECTS FORMDATA IF YOU NEED TO UPDATE IMAGE
+); 
 router.delete(
   "/:clubID",
   authenticate,
@@ -93,10 +88,8 @@ router.delete(
   clubController.removeMember
 );
 
-// Add this with your other routes
 router.post("/:clubID/join", authenticate, clubController.joinClub);
 
-// Add this with your other routes
 router.patch(
   "/:clubID/bio",
   authenticate,

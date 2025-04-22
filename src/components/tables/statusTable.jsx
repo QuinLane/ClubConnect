@@ -1,4 +1,3 @@
-// src/components/tables/StatusTable.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -19,7 +18,7 @@ const FormRequestsTable = ({ requests, onRowClick, selectedId, maxHeight = '400p
       boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
       width: '100%',
       maxHeight: maxHeight,
-      overflow: 'auto'            // both X and Y scroll when needed
+      overflow: 'auto'            
     }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>

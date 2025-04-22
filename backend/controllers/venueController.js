@@ -2,7 +2,6 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Note: available to all
 export const getAllVenues = async (req, res) => {
   try {
     const venues = await prisma.venue.findMany({
@@ -14,7 +13,6 @@ export const getAllVenues = async (req, res) => {
   }
 };
 
-// Note: available to all
 export const getVenueById = async (req, res) => {
   const { venueID } = req.params;
   try {
@@ -31,7 +29,6 @@ export const getVenueById = async (req, res) => {
   }
 };
 
-// Note: Limit to only SU admins
 export const createVenue = async (req, res) => {
   const { name, capacity, address, type } = req.body;
   try {
@@ -44,10 +41,9 @@ export const createVenue = async (req, res) => {
   }
 };
 
-// Note: Limit to only SU admins
 export const updateVenue = async (req, res) => {
   const { venueID } = req.params;
-  const data = req.body; // { name, capacity, address, type } - only fields sent are present
+  const data = req.body; 
   try {
     const venue = await prisma.venue.update({
       where: { venueID: parseInt(venueID) },
@@ -59,20 +55,18 @@ export const updateVenue = async (req, res) => {
   }
 };
 
-// Note: Limit to only SU admins
 export const deleteVenue = async (req, res) => {
   const { venueID } = req.params;
   try {
     await prisma.venue.delete({
       where: { venueID: parseInt(venueID) },
     });
-    res.status(204).json(); // No content on successful deletion
+    res.status(204).json(); 
   } catch (error) {
     res.status(500).json({ error: `Failed to delete venue: ${error.message}` });
   }
 };
 
-// Note: available to all
 export const createReservation = async (req, res) => {
   const { venueID, eventID, date, startTime, endTime } = req.body;
   try {
@@ -92,14 +86,13 @@ export const createReservation = async (req, res) => {
   }
 };
 
-// Note: available to all
 export const deleteReservation = async (req, res) => {
   const { reservationID } = req.params;
   try {
     await prisma.reservation.delete({
       where: { reservationID: parseInt(reservationID) },
     });
-    res.status(204).json(); // No content on successful deletion
+    res.status(204).json(); 
   } catch (error) {
     res
       .status(500)
