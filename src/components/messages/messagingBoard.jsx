@@ -33,7 +33,7 @@ const MessagingBoard = ({
           setUnreadContacts(prev => new Set(prev).add(randomContact.email));
         }
       }
-    }, 15000); // Every 15 seconds
+    }, 15000); 
 
     return () => clearInterval(interval);
   }, [contacts, selectedContact]);

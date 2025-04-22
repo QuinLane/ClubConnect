@@ -14,7 +14,6 @@ const EventCompressed = ({
 }) => {
   const navigate = useNavigate();
 
-  // Format only the date for display
   const formatDate = () => {
     if (!date) return "";
     try {

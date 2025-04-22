@@ -34,8 +34,8 @@ const Bio = ({ text, width = '800px', height = '800px', isEditable = false, onSa
         alignItems: 'center',
         justifyContent: 'center',
         cursor: isEditable ? 'pointer' : 'default',
-        padding: '15px', // Added padding inside the border
-        boxSizing: 'border-box' // Ensures padding is included in width/height
+        padding: '15px', 
+        boxSizing: 'border-box' 
       }}
       onDoubleClick={handleDoubleClick}
     >
@@ -78,13 +78,13 @@ const Bio = ({ text, width = '800px', height = '800px', isEditable = false, onSa
           fontSize: '14px',
           lineHeight: '1.5',
           color: '#333333',
-          overflowY: 'auto', // Re-added scroll for content if needed
+          overflowY: 'auto', 
           textAlign: 'center',
           padding: '10px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          wordBreak: 'break-word' // Ensures long text wraps properly
+          wordBreak: 'break-word' 
         }}>
           {text}
         </div>

@@ -21,7 +21,7 @@ const CreateAnnouncement = ({ onAnnouncementCreate, isSUAdmin, managedClubs = []
           : 'clubmembers',
         specificClub: isSUAdmin 
           ? specificClubID 
-          : recipientType // For executives, recipientType is the clubID
+          : recipientType 
       };
 
       await onAnnouncementCreate(newAnnouncement);

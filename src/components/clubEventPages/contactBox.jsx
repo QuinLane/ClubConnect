@@ -22,7 +22,6 @@ const Contact = ({
   };
 
   const handleSave = () => {
-    // Prepare the updated social media links as a comma-separated string
     const socialMediaArray = [];
     if (editedSocialMediaLinks.instagram)
       socialMediaArray.push(editedSocialMediaLinks.instagram);
@@ -32,7 +31,6 @@ const Contact = ({
       socialMediaArray.push(editedSocialMediaLinks.linkedin);
     const socialMediaLinksString = socialMediaArray.join(",");
 
-    // Call the onSave callback with updated values
     onSave({
       email: editedEmail,
       socialMediaLinks: socialMediaLinksString,
@@ -43,7 +41,6 @@ const Contact = ({
   };
 
   const handleCancel = () => {
-    // Reset to original values
     setEditedEmail(email);
     setEditedSocialMediaLinks(socialMediaLinks);
     setEditedWebsite(website);

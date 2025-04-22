@@ -6,7 +6,6 @@ import EventCompressed from '../clubEventPages/compressedElements';
 const ExploreComponent = ({ title, items = [], type = 'event' }) => {
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Enhanced search to include all relevant fields
   const filteredItems = items.filter(item => {
     const searchTerm = searchQuery.toLowerCase();
     return (
@@ -69,7 +68,7 @@ const ExploreComponent = ({ title, items = [], type = 'event' }) => {
           <div style={styles.grid}>
             {filteredItems.map((item) => (
               <EventCompressed
-                key={item.id} // Using item.id as key is better than index
+                key={item.id} 
                 id={item.id}
                 imageUrl={item.imageUrl || item.image}
                 title={item.title || item.name}
@@ -178,9 +177,9 @@ ExploreComponent.propTypes = {
     PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       imageUrl: PropTypes.string,
-      image: PropTypes.string, // For direct image data
+      image: PropTypes.string, 
       title: PropTypes.string,
-      name: PropTypes.string, // Alternative title field
+      name: PropTypes.string, 
       date: PropTypes.string,
       startTime: PropTypes.string,
       endTime: PropTypes.string,
