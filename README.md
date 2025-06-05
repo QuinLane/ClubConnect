@@ -1,5 +1,6 @@
 # ClubConnect
 Creators: Kya Broderick, Jerry Mukalel, Quin Lane
+<br>
 Campus Club Event Management System
 
 ## Table of Contents
